@@ -1,0 +1,62 @@
+---
+trigger:
+  - master
+
+jobs:
+  - job: precommit
+    pool:
+      vmImage: 'ubuntu-16.04'
+
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.7'
+
+      - script: python -m pip install --upgrade pre-commit
+        displayName: install pre-commit
+
+      - script: pre-commit run --all-files --show-diff-on-failure
+        displayName: run pre-commit
+
+  - job:
+    pool:
+      vmImage: 'ubuntu-16.04'
+
+    strategy:
+      matrix:
+        Python35:
+          python.version: '3.5'
+        Python36:
+          python.version: '3.6'
+        Python37:
+          python.version: '3.7'
+
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '$(python.version)'
+        displayName: 'Use Python $(python.version)'
+
+      - script: |
+          python -m pip install --upgrade pip
+          pip install -r requirements_test.txt
+          pip install -r requirements.txt
+          pip install pytest-azurepipelines
+        displayName: 'Install dependencies'
+
+      - script: |
+          pytest --doctest-modules --junitxml=test-results.xml --cov=adguardhome --cov-report=xml --cov-report=html
+        displayName: 'pytest'
+
+      - task: PublishTestResults@2
+        inputs:
+          testResultsFiles: 'test-results.xml'
+          testRunTitle: '$(Build.BuildNumber)[$(Agent.JobName)] - Python $(python.version)'
+        condition: succeededOrFailed()
+        displayName: 'publish test results'
+
+      - task: PublishCodeCoverageResults@1
+        inputs:
+          codeCoverageTool: cobertura
+          summaryFileLocation: coverage.xml
+        displayName: publish coverage artifact

@@ -1,0 +1,9 @@
+autopep8==1.4.4
+black==19.3b0
+blacken-docs==0.5.0
+pip==19.1.1
+pre-commit==1.16.1
+Sphinx==2.0.1
+twine==1.13.0
+wheel==0.33.4
+yamllint==1.15.0
