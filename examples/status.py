@@ -9,7 +9,7 @@ from adguardhome import AdGuardHome
 
 async def main(loop):
     """Show example how to get status of your AdGuard Home instance."""
-    async with AdGuardHome("10.10.100.10", port=8585, loop=loop) as adguard:
+    async with AdGuardHome("192.168.1.2", loop=loop) as adguard:
         version = await adguard.version()
         print("AdGuard version:", version)
 
