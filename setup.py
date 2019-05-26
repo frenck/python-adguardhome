@@ -31,7 +31,8 @@ setup(
     author="Franck Nijhof",
     author_email="opensource@frenck.dev",
     classifiers=[
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 4 - Beta",
+        "Framework :: AsyncIO",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
