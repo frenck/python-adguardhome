@@ -4,6 +4,7 @@
 ![Project Stage][project-stage-shield]
 [![License][license-shield]](LICENSE.md)
 
+[![Build Status][build-shield]][build]
 ![Project Maintenance][maintenance-shield]
 [![GitHub Activity][commits-shield]][commits]
 
@@ -152,6 +153,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+[build-shield]: https://dev.azure.com/frenck/python-adguardhome/_apis/build/status/frenck.python-adguardhome?branchName=master
+[build]: https://dev.azure.com/frenck/python-adguardhome/_build/latest?definitionId=2&branchName=master
 [buymeacoffee-shield]: https://www.buymeacoffee.com/assets/img/guidelines/download-assets-sm-2.svg
 [buymeacoffee]: https://www.buymeacoffee.com/frenck
 [commits-shield]: https://img.shields.io/github/commit-activity/y/frenck/python-adguardhome.svg
