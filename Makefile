@@ -102,7 +102,7 @@ dist: clean ## Builds source and wheel package.
 
 .PHONY: release
 release:  ## Release build on PyP
-	twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+	twine upload dist/*
 
 .PHONY: tox
 tox: ## Run tests on every Python version with tox.
