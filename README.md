@@ -163,7 +163,7 @@ SOFTWARE.
 [maintenance-shield]: https://img.shields.io/maintenance/yes/2019.svg
 [patreon-shield]: https://www.frenck.nl/images/patreon.png
 [patreon]: https://www.patreon.com/frenck
-[project-stage-shield]: https://img.shields.io/badge/Project%20Stage-Production%20Ready-brightgreen.svg
+[project-stage-shield]: https://img.shields.io/badge/project%20stage-experimental-yellow.svg
 [releases-shield]: https://img.shields.io/github/release/frenck/python-adguardhome.svg
 [releases]: https://github.com/frenck/python-adguardhome/releases
 [semver]: http://semver.org/spec/v2.0.0.html
