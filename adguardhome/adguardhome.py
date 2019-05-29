@@ -9,6 +9,7 @@ import aiohttp
 import async_timeout
 from yarl import URL
 
+from .__version__ import __version__
 from .exceptions import AdGuardHomeConnectionError, AdGuardHomeError
 from .filtering import AdGuardHomeFiltering
 from .parental import AdGuardHomeParental
@@ -60,7 +61,7 @@ class AdGuardHome:
             self._close_session = True
 
         if self.user_agent is None:
-            self.user_agent = "PtyhonAdGuardHome/{}".format("Lorem ipsum")
+            self.user_agent = "PtyhonAdGuardHome/{}".format(__version__)
 
         if self.base_path[-1] != "/":
             self.base_path = self.base_path + "/"

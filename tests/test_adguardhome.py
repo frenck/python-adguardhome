@@ -5,6 +5,7 @@ import asyncio
 import aiohttp
 import pytest
 from adguardhome import AdGuardHome
+from adguardhome.__version__ import __version__
 from adguardhome.exceptions import AdGuardHomeConnectionError, AdGuardHomeError
 
 
@@ -146,6 +147,46 @@ async def test_request_base_path(event_loop, aresponses):
         )
         response = await adguard._request("status")
         assert response == "OMG PUPPIES!"
+
+
+@pytest.mark.asyncio
+async def test_request_user_agent(event_loop, aresponses):
+    """Test AdGuard Home client sending correct user agent headers."""
+    # Handle to run asserts on request in
+    async def response_handler(request):
+        assert request.headers["User-Agent"] == "PtyhonAdGuardHome/{}".format(
+            __version__
+        )
+        return aresponses.Response(text="TEDDYBEAR", status=200)
+
+    aresponses.add("example.com:3000", "/", "GET", response_handler)
+
+    async with aiohttp.ClientSession(loop=event_loop) as session:
+        adguard = AdGuardHome(
+            "example.com", base_path="/", session=session, loop=event_loop
+        )
+        await adguard._request("/")
+
+
+@pytest.mark.asyncio
+async def test_request_custom_user_agent(event_loop, aresponses):
+    """Test AdGuard Home client sending correct user agent headers."""
+    # Handle to run asserts on request in
+    async def response_handler(request):
+        assert request.headers["User-Agent"] == "LoremIpsum/1.0"
+        return aresponses.Response(text="TEDDYBEAR", status=200)
+
+    aresponses.add("example.com:3000", "/", "GET", response_handler)
+
+    async with aiohttp.ClientSession(loop=event_loop) as session:
+        adguard = AdGuardHome(
+            "example.com",
+            base_path="/",
+            session=session,
+            loop=event_loop,
+            user_agent="LoremIpsum/1.0",
+        )
+        await adguard._request("/")
 
 
 @pytest.mark.asyncio
