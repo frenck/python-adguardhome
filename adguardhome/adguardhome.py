@@ -2,7 +2,6 @@
 """Asynchronous Python client for the AdGuard Home API."""
 import asyncio
 import json
-import logging
 import socket
 
 import aiohttp
@@ -17,8 +16,6 @@ from .querylog import AdGuardHomeQueryLog
 from .safebrowsing import AdGuardHomeSafeBrowsing
 from .safesearch import AdGuardHomeSafeSearch
 from .stats import AdGuardHomeStats
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class AdGuardHome:
@@ -104,15 +101,13 @@ class AdGuardHome:
                     ssl=self.verify_ssl,
                 )
         except asyncio.TimeoutError as exception:
-            msg = "Timeout occurred while trying to contact AdGuard Home instance."
-            _LOGGER.error(msg)
-            _LOGGER.exception(exception, exc_info=exception)
-            raise AdGuardHomeConnectionError(msg)
+            raise AdGuardHomeConnectionError(
+                "Timeout occurred while connecting to AdGuard Home instance."
+            ) from exception
         except (aiohttp.ClientError, socket.gaierror) as exception:
-            msg = "Error occurred while communicating with AdGuard Home."
-            _LOGGER.error(msg)
-            _LOGGER.exception(exception, exc_info=exception)
-            raise AdGuardHomeConnectionError(msg)
+            raise AdGuardHomeConnectionError(
+                "Error occurred while communicating with AdGuard Home."
+            ) from exception
 
         content_type = response.headers.get("Content-Type", "")
         if (response.status // 100) in [4, 5]:

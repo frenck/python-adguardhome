@@ -8,7 +8,7 @@ class AdGuardHomeError(Exception):
     pass
 
 
-class AdGuardHomeConnectionError(Exception):
+class AdGuardHomeConnectionError(AdGuardHomeError):
     """AdGuard Home connection exception."""
 
     pass
