@@ -12,7 +12,7 @@ from setuptools import find_packages, setup
 def get_version():
     """Get current version from code."""
     regex = r"__version__\s=\s\"(?P<version>[\d\.]+?)\""
-    path = ("adguardhome", "__init__.py")
+    path = ("adguardhome", "__version__.py")
     return re.search(regex, read(*path)).group("version")
 
 
