@@ -40,11 +40,14 @@ async def test_enabled(event_loop, aresponses):
 @pytest.mark.asyncio
 async def test_enable(event_loop, aresponses):
     """Test enabling AdGuard Home parental control."""
+    # Handle to run asserts on request in
+    async def response_handler(request):
+        data = await request.text()
+        assert data == "sensitivity=TEEN"
+        return aresponses.Response(status=200, text="OK")
+
     aresponses.add(
-        "example.com:3000",
-        "/control/parental/enable",
-        "POST",
-        aresponses.Response(status=200, text="OK"),
+        "example.com:3000", "/control/parental/enable", "POST", response_handler
     )
     aresponses.add(
         "example.com:3000",
