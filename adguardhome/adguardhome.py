@@ -58,7 +58,7 @@ class AdGuardHome:
             self._close_session = True
 
         if self.user_agent is None:
-            self.user_agent = "PtyhonAdGuardHome/{}".format(__version__)
+            self.user_agent = "PythonAdGuardHome/{}".format(__version__)
 
         if self.base_path[-1] != "/":
             self.base_path = self.base_path + "/"

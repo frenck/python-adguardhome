@@ -154,7 +154,7 @@ async def test_request_user_agent(event_loop, aresponses):
     """Test AdGuard Home client sending correct user agent headers."""
     # Handle to run asserts on request in
     async def response_handler(request):
-        assert request.headers["User-Agent"] == "PtyhonAdGuardHome/{}".format(
+        assert request.headers["User-Agent"] == "PythonAdGuardHome/{}".format(
             __version__
         )
         return aresponses.Response(text="TEDDYBEAR", status=200)
