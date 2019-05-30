@@ -86,6 +86,38 @@ async def test_disable(event_loop, aresponses):
 
 
 @pytest.mark.asyncio
+async def test_rules_count(event_loop, aresponses):
+    """Test getting rules count of the AdGuard Home filtering."""
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"filters": [{"rulesCount": 99}, {"rulesCount": 1}]}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"filters": []}',
+        ),
+    )
+
+    async with aiohttp.ClientSession(loop=event_loop) as session:
+        adguard = AdGuardHome("example.com", session=session, loop=event_loop)
+        result = await adguard.filtering.rules_count()
+        assert result == 100
+        result = await adguard.filtering.rules_count()
+        assert result == 0
+
+
+@pytest.mark.asyncio
 async def test_add_url(event_loop, aresponses):
     """Test add new filter subscription to AdGuard Home filtering."""
     # Handle to run asserts on request in

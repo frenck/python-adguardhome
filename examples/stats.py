@@ -37,6 +37,9 @@ async def main(loop):
         result = await adguard.stats.replaced_safesearch()
         print("Number of enforced safe searches:", result)
 
+        result = await adguard.filtering.rules_count()
+        print("Total number of active rules:", result)
+
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()

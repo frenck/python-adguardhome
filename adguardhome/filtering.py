@@ -34,6 +34,14 @@ class AdGuardHomeFiltering:
             )
         return True
 
+    async def rules_count(self) -> int:
+        """Return the number of rules loaded."""
+        response = await self._adguard._request("filtering/status")
+        count = 0
+        for filt in response["filters"]:
+            count += filt["rulesCount"]
+        return count
+
     async def add_url(self, name: str, url: str) -> bool:
         """Add a new filter subscription to AdGuard Home."""
         response = await self._adguard._request(
