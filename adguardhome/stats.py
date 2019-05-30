@@ -21,6 +21,11 @@ class AdGuardHomeStats:
         response = await self._adguard._request("stats")
         return response["blocked_filtering"]
 
+    async def blocked_percentage(self) -> float:
+        """Return the blocked percentage ratio of DNS queries."""
+        response = await self._adguard._request("stats")
+        return (response["blocked_filtering"] / response["dns_queries"]) * 100.0
+
     async def replaced_safebrowsing(self) -> int:
         """Return number of blocked pages by safe browsing."""
         response = await self._adguard._request("stats")

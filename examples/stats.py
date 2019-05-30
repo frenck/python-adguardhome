@@ -25,6 +25,9 @@ async def main(loop):
         result = await adguard.stats.blocked_filtering()
         print("Blocked DNS queries:", result)
 
+        result = await adguard.stats.blocked_percentage()
+        print("Blocked DNS queries ratio:", result)
+
         result = await adguard.stats.replaced_safebrowsing()
         print("Pages blocked by safe browsing:", result)
 

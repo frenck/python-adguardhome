@@ -45,6 +45,25 @@ async def test_blocked_filtering(event_loop, aresponses):
 
 
 @pytest.mark.asyncio
+async def test_blocked_percentage(event_loop, aresponses):
+    """Test requesting AdGuard Home filtering stats."""
+    aresponses.add(
+        "example.com:3000",
+        "/control/stats",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"dns_queries": 100, "blocked_filtering": 25}',
+        ),
+    )
+    async with aiohttp.ClientSession(loop=event_loop) as session:
+        adguard = AdGuardHome("example.com", session=session, loop=event_loop)
+        result = await adguard.stats.blocked_percentage()
+        assert result == 25.0
+
+
+@pytest.mark.asyncio
 async def test_replaced_safebrowsing(event_loop, aresponses):
     """Test requesting AdGuard Home safebrowsing stats."""
     aresponses.add(
