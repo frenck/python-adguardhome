@@ -44,8 +44,8 @@ async def main(loop):
         print("AdGuard version:", version)
 
         active = await adguard.protection_enabled()
-        active = "Yes" if active else "No"
-        print("Protection enabled?", active)
+        activestr = "Yes" if active else "No"
+        print("Protection enabled?", activestr)
 
         if not active:
             print("AdGuard Home protection disabled. Enabling...")
