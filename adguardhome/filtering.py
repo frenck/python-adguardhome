@@ -56,7 +56,7 @@ class AdGuardHomeFiltering:
     async def remove_url(self, url: str) -> bool:
         """Remove a new filter subscription from AdGuard Home."""
         response = await self._adguard._request(
-            "filtering/remove_url", method="POST", data="url={}".format(url)
+            "filtering/remove_url", method="POST", json_data={"url": url}
         )
         if response.rstrip() != "OK":
             raise AdGuardHomeError(

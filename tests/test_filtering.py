@@ -149,8 +149,8 @@ async def test_remove_url(event_loop, aresponses):
     """Test remove filter subscription from AdGuard Home filtering."""
     # Handle to run asserts on request in
     async def response_handler(request):
-        data = await request.text()
-        assert data == "url=https://example.com/1.txt"
+        data = await request.json()
+        assert data == {"url": "https://example.com/1.txt"}
         return aresponses.Response(status=200, text="OK")
 
     aresponses.add(
