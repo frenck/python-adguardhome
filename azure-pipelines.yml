@@ -12,6 +12,11 @@ jobs:
         inputs:
           versionSpec: '3.7'
 
+      - script: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libsqlite3-dev
+        displayName: install libsqlite
+
       - script: python -m pip install --upgrade pre-commit
         displayName: install pre-commit
 
