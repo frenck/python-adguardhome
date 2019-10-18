@@ -1,0 +1,47 @@
+---
+name: CI for Asynchronous Python client for the AdGuard Home API
+
+# yamllint disable-line rule:truthy
+on: [push, pull_request]
+
+jobs:
+  precommit:
+    name: Pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checking out code from GitHub
+        uses: actions/checkout@v1
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - name: Install pre-commit
+        run: |
+          pip install pre-commit
+          pre-commit --version
+      - name: Run pre-commit on all files
+        run: |
+          pre-commit run --all-files --show-diff-on-failure
+  test:
+    name: Testing with Python ${{ matrix.python }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      max-parallel: 6
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: [3.6, 3.7]
+    steps:
+      - name: Checking out code from GitHub
+        uses: actions/checkout@v1
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements_test.txt
+          pip install -r requirements.txt
+      - name: Pytest
+        run: |
+          pytest
