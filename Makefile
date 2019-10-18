@@ -62,7 +62,7 @@ coverage: test ## Check code coverage quickly with the default Python.
 .PHONY: install
 install: clean ## Install the package to the active Python's site-packages.
 	pip install -Ur requirements.txt; \
-	python setup.py install;
+	pip install -e .;
 
 .PHONY: clean clean-all
 clean: clean-build clean-pyc clean-test ## Removes build, test, coverage and Python artifacts.
