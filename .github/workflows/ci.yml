@@ -5,8 +5,8 @@ name: Continuous Integration
 on: [push, pull_request]
 
 jobs:
-  precommit:
-    name: Pre-commit
+  linting:
+    name: Linting
     runs-on: ubuntu-latest
     steps:
       - name: Checking out code from GitHub
