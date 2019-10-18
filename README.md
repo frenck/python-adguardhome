@@ -2,12 +2,12 @@
 
 [![GitHub Release][releases-shield]][releases]
 ![Project Stage][project-stage-shield]
+![Project Maintenance][maintenance-shield]
 [![License][license-shield]](LICENSE.md)
 
 [![Build Status][build-shield]][build]
+[![Code Coverage][codecov-shield]][codecov]
 [![Code Quality][code-quality-shield]][code-quality]
-![Project Maintenance][maintenance-shield]
-[![GitHub Activity][commits-shield]][commits]
 
 [![Buy me a coffee][buymeacoffee-shield]][buymeacoffee]
 
@@ -160,8 +160,8 @@ SOFTWARE.
 [buymeacoffee]: https://www.buymeacoffee.com/frenck
 [code-quality-shield]: https://img.shields.io/lgtm/grade/python/g/frenck/python-adguardhome.svg?logo=lgtm&logoWidth=18
 [code-quality]: https://lgtm.com/projects/g/frenck/python-adguardhome/context:python
-[commits-shield]: https://img.shields.io/github/commit-activity/y/frenck/python-adguardhome.svg
-[commits]: https://github.com/frenck/python-adguardhome/commits/master
+[codecov-shield]: https://codecov.io/gh/frenck/python-adguardhome/branch/master/graph/badge.svg
+[codecov]: https://codecov.io/gh/frenck/python-adguardhome
 [contributors]: https://github.com/frenck/python-adguardhome/graphs/contributors
 [frenck]: https://github.com/frenck
 [keepchangelog]: http://keepachangelog.com/en/1.0.0/
