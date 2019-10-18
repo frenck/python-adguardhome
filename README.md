@@ -5,6 +5,7 @@
 [![License][license-shield]](LICENSE.md)
 
 [![Build Status][build-shield]][build]
+[![Code Quality][code-quality-shield]][code-quality]
 ![Project Maintenance][maintenance-shield]
 [![GitHub Activity][commits-shield]][commits]
 
@@ -153,10 +154,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-[build-shield]: https://dev.azure.com/frenck/python-adguardhome/_apis/build/status/frenck.python-adguardhome?branchName=master
-[build]: https://dev.azure.com/frenck/python-adguardhome/_build/latest?definitionId=2&branchName=master
+[build-shield]: https://github.com/frenck/python-adguardhome/workflows/Continuous%20Integration/badge.svg
+[build]: https://github.com/frenck/python-adguardhome/actions
 [buymeacoffee-shield]: https://www.buymeacoffee.com/assets/img/guidelines/download-assets-sm-2.svg
 [buymeacoffee]: https://www.buymeacoffee.com/frenck
+[code-quality-shield]: https://img.shields.io/lgtm/grade/python/g/frenck/python-adguardhome.svg?logo=lgtm&logoWidth=18
+[code-quality]: https://lgtm.com/projects/g/frenck/python-adguardhome/context:python
 [commits-shield]: https://img.shields.io/github/commit-activity/y/frenck/python-adguardhome.svg
 [commits]: https://github.com/frenck/python-adguardhome/commits/master
 [contributors]: https://github.com/frenck/python-adguardhome/graphs/contributors
