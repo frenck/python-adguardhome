@@ -277,18 +277,18 @@ async def test_enable_url(event_loop, aresponses):
     """Test enabling filter subscription in AdGuard Home filtering."""
     # Handle to run asserts on request in
     async def response_handler(request):
-        data = await request.text()
-        assert data == "url=https://example.com/1.txt"
+        data = await request.json()
+        assert data == {"url": "https://example.com/1.txt", "enabled": True}
         return aresponses.Response(status=200, text="OK")
 
     aresponses.add(
-        "example.com:3000", "/control/filtering/enable_url", "POST", response_handler
+        "example.com:3000", "/control/filtering/set_url", "POST", response_handler
     )
     aresponses.add(
         "example.com:3000",
-        "/control/filtering/enable_url",
+        "/control/filtering/set_url",
         "POST",
-        aresponses.Response(status=200, text="Invalid URL"),
+        aresponses.Response(status=400),
     )
 
     async with aiohttp.ClientSession(loop=event_loop) as session:
@@ -303,18 +303,18 @@ async def test_disable_url(event_loop, aresponses):
     """Test enabling filter subscription in AdGuard Home filtering."""
     # Handle to run asserts on request in
     async def response_handler(request):
-        data = await request.text()
-        assert data == "url=https://example.com/1.txt"
-        return aresponses.Response(status=200, text="OK")
+        data = await request.json()
+        assert data == {"url": "https://example.com/1.txt", "enabled": False}
+        return aresponses.Response(status=200)
 
     aresponses.add(
-        "example.com:3000", "/control/filtering/disable_url", "POST", response_handler
+        "example.com:3000", "/control/filtering/set_url", "POST", response_handler
     )
     aresponses.add(
         "example.com:3000",
-        "/control/filtering/disable_url",
+        "/control/filtering/set_url",
         "POST",
-        aresponses.Response(status=200, text="Invalid URL"),
+        aresponses.Response(status=400),
     )
 
     async with aiohttp.ClientSession(loop=event_loop) as session:

@@ -85,22 +85,28 @@ class AdGuardHomeFiltering:
 
     async def enable_url(self, url: str) -> None:
         """Enable a filter subscription in AdGuard Home."""
-        response = await self._adguard._request(
-            "filtering/enable_url", method="POST", data="url={}".format(url)
-        )
-        if response.rstrip() != "OK":
+        try:
+            await self._adguard._request(
+                "filtering/set_url",
+                method="POST",
+                json_data={"url": url, "enabled": True},
+            )
+        except AdGuardHomeError as exception:
             raise AdGuardHomeError(
-                "Failed enabling URL on AdGuard Home filter", {"response": response}
+                "Failed enabling URL on AdGuard Home filter", exception
             )
 
     async def disable_url(self, url: str) -> None:
         """Disable a filter subscription in AdGuard Home."""
-        response = await self._adguard._request(
-            "filtering/disable_url", method="POST", data="url={}".format(url)
-        )
-        if response.rstrip() != "OK":
+        try:
+            await self._adguard._request(
+                "filtering/set_url",
+                method="POST",
+                json_data={"url": url, "enabled": False},
+            )
+        except AdGuardHomeError as exception:
             raise AdGuardHomeError(
-                "Failed disabling URL on AdGuard Home filter", {"response": response}
+                "Failed disabling URL on AdGuard Home filter", exception
             )
 
     async def refresh(self, force=False) -> None:
