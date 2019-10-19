@@ -57,7 +57,7 @@ async def test_enable(event_loop, aresponses):
         ),
     )
     aresponses.add(
-        "example.com:3000", "/control/filtering_config", "POST", response_handler
+        "example.com:3000", "/control/filtering/config", "POST", response_handler
     )
     aresponses.add(
         "example.com:3000",
@@ -71,7 +71,7 @@ async def test_enable(event_loop, aresponses):
     )
     aresponses.add(
         "example.com:3000",
-        "/control/filtering_config",
+        "/control/filtering/config",
         "POST",
         aresponses.Response(status=500),
     )
@@ -103,7 +103,7 @@ async def test_disable(event_loop, aresponses):
         ),
     )
     aresponses.add(
-        "example.com:3000", "/control/filtering_config", "POST", response_handler
+        "example.com:3000", "/control/filtering/config", "POST", response_handler
     )
     aresponses.add(
         "example.com:3000",
@@ -117,7 +117,7 @@ async def test_disable(event_loop, aresponses):
     )
     aresponses.add(
         "example.com:3000",
-        "/control/filtering_config",
+        "/control/filtering/config",
         "POST",
         aresponses.Response(status=400),
     )
@@ -159,7 +159,7 @@ async def test_interval(event_loop, aresponses):
         ),
     )
     aresponses.add(
-        "example.com:3000", "/control/filtering_config", "POST", response_handler
+        "example.com:3000", "/control/filtering/config", "POST", response_handler
     )
     aresponses.add(
         "example.com:3000",
@@ -173,7 +173,7 @@ async def test_interval(event_loop, aresponses):
     )
     aresponses.add(
         "example.com:3000",
-        "/control/filtering_config",
+        "/control/filtering/config",
         "POST",
         aresponses.Response(status=400),
     )

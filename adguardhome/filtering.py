@@ -22,7 +22,7 @@ class AdGuardHomeFiltering:
         if interval is None:
             interval = await self.interval()
         await self._adguard._request(
-            "filtering_config",
+            "filtering/config",
             method="POST",
             json_data={"enabled": enabled, "interval": interval},
         )
