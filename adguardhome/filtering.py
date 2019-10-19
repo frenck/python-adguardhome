@@ -60,7 +60,7 @@ class AdGuardHomeFiltering:
         response = await self._adguard._request("filtering/status")
         count = 0
         for filt in response["filters"]:
-            count += filt["rulesCount"]
+            count += filt["rules_count"]
         return count
 
     async def add_url(self, name: str, url: str) -> None:

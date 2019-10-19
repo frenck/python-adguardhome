@@ -198,7 +198,7 @@ async def test_rules_count(event_loop, aresponses):
         aresponses.Response(
             status=200,
             headers={"Content-Type": "application/json"},
-            text='{"filters": [{"rulesCount": 99}, {"rulesCount": 1}]}',
+            text='{"filters": [{"rules_count": 99}, {"rules_count": 1}]}',
         ),
     )
     aresponses.add(
