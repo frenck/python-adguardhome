@@ -128,7 +128,7 @@ class AdGuardHome:
                 response.status, {"message": contents.decode("utf8")}
             )
 
-        if "application/json" in response.headers["Content-Type"]:
+        if "application/json" in content_type:
             return await response.json()
 
         # Workaround for incorrect content-type headers for the stats call
