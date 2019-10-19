@@ -40,23 +40,45 @@ async def test_enabled(event_loop, aresponses):
 @pytest.mark.asyncio
 async def test_enable(event_loop, aresponses):
     """Test enabling AdGuard Home filtering."""
+
+    async def response_handler(request):
+        data = await request.json()
+        assert data == {"enabled": True, "interval": 1}
+        return aresponses.Response(status=200)
+
     aresponses.add(
         "example.com:3000",
-        "/control/filtering/enable",
-        "POST",
-        aresponses.Response(status=200, text="OK"),
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"interval": 1}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000", "/control/filtering/config", "POST", response_handler
     )
     aresponses.add(
         "example.com:3000",
-        "/control/filtering/enable",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"interval": 1}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/config",
         "POST",
-        aresponses.Response(status=200, text="NOT OK"),
+        aresponses.Response(status=500),
     )
 
     async with aiohttp.ClientSession(loop=event_loop) as session:
         adguard = AdGuardHome("example.com", session=session, loop=event_loop)
-        result = await adguard.filtering.enable()
-        assert result
+        await adguard.filtering.enable()
         with pytest.raises(AdGuardHomeError):
             await adguard.filtering.enable()
 
@@ -64,25 +86,106 @@ async def test_enable(event_loop, aresponses):
 @pytest.mark.asyncio
 async def test_disable(event_loop, aresponses):
     """Test disabling AdGuard Home filtering."""
+
+    async def response_handler(request):
+        data = await request.json()
+        assert data == {"enabled": False, "interval": 1}
+        return aresponses.Response(status=200)
+
     aresponses.add(
         "example.com:3000",
-        "/control/filtering/disable",
-        "POST",
-        aresponses.Response(status=200, text="OK"),
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"interval": 1}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000", "/control/filtering/config", "POST", response_handler
     )
     aresponses.add(
         "example.com:3000",
-        "/control/filtering/disable",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"interval": 1}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/config",
         "POST",
-        aresponses.Response(status=200, text="NOT OK"),
+        aresponses.Response(status=400),
     )
 
     async with aiohttp.ClientSession(loop=event_loop) as session:
         adguard = AdGuardHome("example.com", session=session, loop=event_loop)
-        result = await adguard.filtering.disable()
-        assert result
+        await adguard.filtering.disable()
         with pytest.raises(AdGuardHomeError):
             await adguard.filtering.disable()
+
+
+@pytest.mark.asyncio
+async def test_interval(event_loop, aresponses):
+    """Test interval settings of the AdGuard Home filtering."""
+
+    async def response_handler(request):
+        data = await request.json()
+        assert data == {"enabled": True, "interval": 1}
+        return aresponses.Response(status=200)
+
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"interval": 7}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"enabled": true}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000", "/control/filtering/config", "POST", response_handler
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"enabled": true}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/config",
+        "POST",
+        aresponses.Response(status=400),
+    )
+
+    async with aiohttp.ClientSession(loop=event_loop) as session:
+        adguard = AdGuardHome("example.com", session=session, loop=event_loop)
+        interval = await adguard.filtering.interval()
+        assert interval == 7
+        interval = await adguard.filtering.interval(interval=1)
+        assert interval == 1
+        with pytest.raises(AdGuardHomeError):
+            await adguard.filtering.interval(interval=1)
 
 
 @pytest.mark.asyncio
@@ -95,7 +198,7 @@ async def test_rules_count(event_loop, aresponses):
         aresponses.Response(
             status=200,
             headers={"Content-Type": "application/json"},
-            text='{"filters": [{"rulesCount": 99}, {"rulesCount": 1}]}',
+            text='{"filters": [{"rules_count": 99}, {"rules_count": 1}]}',
         ),
     )
     aresponses.add(
@@ -138,8 +241,7 @@ async def test_add_url(event_loop, aresponses):
 
     async with aiohttp.ClientSession(loop=event_loop) as session:
         adguard = AdGuardHome("example.com", session=session, loop=event_loop)
-        result = await adguard.filtering.add_url("Example", "https://example.com/1.txt")
-        assert result
+        await adguard.filtering.add_url("Example", "https://example.com/1.txt")
         with pytest.raises(AdGuardHomeError):
             await adguard.filtering.add_url("Example", "https://example.com/1.txt")
 
@@ -165,8 +267,7 @@ async def test_remove_url(event_loop, aresponses):
 
     async with aiohttp.ClientSession(loop=event_loop) as session:
         adguard = AdGuardHome("example.com", session=session, loop=event_loop)
-        result = await adguard.filtering.remove_url("https://example.com/1.txt")
-        assert result
+        await adguard.filtering.remove_url("https://example.com/1.txt")
         with pytest.raises(AdGuardHomeError):
             await adguard.filtering.remove_url("https://example.com/1.txt")
 
@@ -176,24 +277,23 @@ async def test_enable_url(event_loop, aresponses):
     """Test enabling filter subscription in AdGuard Home filtering."""
     # Handle to run asserts on request in
     async def response_handler(request):
-        data = await request.text()
-        assert data == "url=https://example.com/1.txt"
+        data = await request.json()
+        assert data == {"url": "https://example.com/1.txt", "enabled": True}
         return aresponses.Response(status=200, text="OK")
 
     aresponses.add(
-        "example.com:3000", "/control/filtering/enable_url", "POST", response_handler
+        "example.com:3000", "/control/filtering/set_url", "POST", response_handler
     )
     aresponses.add(
         "example.com:3000",
-        "/control/filtering/enable_url",
+        "/control/filtering/set_url",
         "POST",
-        aresponses.Response(status=200, text="Invalid URL"),
+        aresponses.Response(status=400),
     )
 
     async with aiohttp.ClientSession(loop=event_loop) as session:
         adguard = AdGuardHome("example.com", session=session, loop=event_loop)
-        result = await adguard.filtering.enable_url("https://example.com/1.txt")
-        assert result
+        await adguard.filtering.enable_url("https://example.com/1.txt")
         with pytest.raises(AdGuardHomeError):
             await adguard.filtering.enable_url("https://example.com/1.txt")
 
@@ -203,24 +303,23 @@ async def test_disable_url(event_loop, aresponses):
     """Test enabling filter subscription in AdGuard Home filtering."""
     # Handle to run asserts on request in
     async def response_handler(request):
-        data = await request.text()
-        assert data == "url=https://example.com/1.txt"
-        return aresponses.Response(status=200, text="OK")
+        data = await request.json()
+        assert data == {"url": "https://example.com/1.txt", "enabled": False}
+        return aresponses.Response(status=200)
 
     aresponses.add(
-        "example.com:3000", "/control/filtering/disable_url", "POST", response_handler
+        "example.com:3000", "/control/filtering/set_url", "POST", response_handler
     )
     aresponses.add(
         "example.com:3000",
-        "/control/filtering/disable_url",
+        "/control/filtering/set_url",
         "POST",
-        aresponses.Response(status=200, text="Invalid URL"),
+        aresponses.Response(status=400),
     )
 
     async with aiohttp.ClientSession(loop=event_loop) as session:
         adguard = AdGuardHome("example.com", session=session, loop=event_loop)
-        result = await adguard.filtering.disable_url("https://example.com/1.txt")
-        assert result
+        await adguard.filtering.disable_url("https://example.com/1.txt")
         with pytest.raises(AdGuardHomeError):
             await adguard.filtering.disable_url("https://example.com/1.txt")
 
@@ -252,9 +351,7 @@ async def test_refresh(event_loop, aresponses):
 
     async with aiohttp.ClientSession(loop=event_loop) as session:
         adguard = AdGuardHome("example.com", session=session, loop=event_loop)
-        result = await adguard.filtering.refresh(False)
-        assert result
-        result = await adguard.filtering.refresh(True)
-        assert result
+        await adguard.filtering.refresh(False)
+        await adguard.filtering.refresh(True)
         with pytest.raises(AdGuardHomeError):
             await adguard.filtering.refresh(False)

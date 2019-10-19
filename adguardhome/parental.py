@@ -16,7 +16,7 @@ class AdGuardHomeParental:
         response = await self._adguard._request("parental/status")
         return response["enabled"]
 
-    async def enable(self) -> bool:
+    async def enable(self) -> None:
         """Enable AdGuard Home parental control."""
         response = await self._adguard._request(
             "parental/enable", method="POST", data="sensitivity=TEEN"
@@ -25,13 +25,11 @@ class AdGuardHomeParental:
             raise AdGuardHomeError(
                 "Enabling AdGuard Home parental control failed", {"response": response}
             )
-        return True
 
-    async def disable(self) -> bool:
+    async def disable(self) -> None:
         """Disable AdGuard Home parental control."""
         response = await self._adguard._request("parental/disable", method="POST")
         if response.rstrip() != "OK":
             raise AdGuardHomeError(
                 "Disabling AdGuard Home parental control failed", {"response": response}
             )
-        return True
