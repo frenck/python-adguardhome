@@ -181,3 +181,22 @@ async def test_reset(event_loop, aresponses):
         assert result
         with pytest.raises(AdGuardHomeError):
             await adguard.stats.reset()
+
+
+@pytest.mark.asyncio
+async def test_content_type_workarond(event_loop, aresponses):
+    """Test for working around content-type issue in AdGuard Home v0.99.0."""
+    aresponses.add(
+        "example.com:3000",
+        "/control/stats",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "text/plain; charset=utf-8"},
+            text='{"avg_processing_time": 3.14}',
+        ),
+    )
+    async with aiohttp.ClientSession(loop=event_loop) as session:
+        adguard = AdGuardHome("example.com", session=session, loop=event_loop)
+        result = await adguard.stats.avg_processing_time()
+        assert result == 3.14

@@ -130,7 +130,14 @@ class AdGuardHome:
 
         if "application/json" in response.headers["Content-Type"]:
             return await response.json()
-        return await response.text()
+
+        # Workaround for incorrect content-type headers for the stats call
+        # https://github.com/AdguardTeam/AdGuardHome/issues/1086
+        text = await response.text()
+        if uri == "stats":
+            return json.loads(text)
+
+        return text
 
     async def protection_enabled(self) -> bool:
         """Return if AdGuard Home protection is enabled or not."""
