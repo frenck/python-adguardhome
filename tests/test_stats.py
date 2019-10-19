@@ -177,8 +177,7 @@ async def test_reset(event_loop, aresponses):
 
     async with aiohttp.ClientSession(loop=event_loop) as session:
         adguard = AdGuardHome("example.com", session=session, loop=event_loop)
-        result = await adguard.stats.reset()
-        assert result
+        await adguard.stats.reset()
         with pytest.raises(AdGuardHomeError):
             await adguard.stats.reset()
 

@@ -53,11 +53,10 @@ class AdGuardHomeStats:
         response = await self._adguard._request("stats_info")
         return response["interval"]
 
-    async def reset(self) -> bool:
+    async def reset(self) -> None:
         """Reset all stats."""
         response = await self._adguard._request("stats_reset", method="POST")
         if response.rstrip() != "OK":
             raise AdGuardHomeError(
                 "Resetting AdGuard Home stats failed", {"response": response}
             )
-        return True
