@@ -57,10 +57,34 @@ async def test_blocked_percentage(event_loop, aresponses):
             text='{"num_dns_queries": 100, "num_blocked_filtering": 25}',
         ),
     )
+    aresponses.add(
+        "example.com:3000",
+        "/control/stats",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"num_dns_queries": 0, "num_blocked_filtering": 25}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/stats",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"num_dns_queries": 100, "num_blocked_filtering": 0}',
+        ),
+    )
     async with aiohttp.ClientSession(loop=event_loop) as session:
         adguard = AdGuardHome("example.com", session=session, loop=event_loop)
         result = await adguard.stats.blocked_percentage()
         assert result == 25.0
+        result = await adguard.stats.blocked_percentage()
+        assert result == 0.0
+        result = await adguard.stats.blocked_percentage()
+        assert result == 0.0
 
 
 @pytest.mark.asyncio
