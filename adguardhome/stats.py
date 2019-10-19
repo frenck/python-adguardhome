@@ -48,7 +48,7 @@ class AdGuardHomeStats:
         response = await self._adguard._request("stats")
         return response["avg_processing_time"]
 
-    async def period(self) -> str:
+    async def period(self) -> int:
         """Return the time period to keep data (in days)."""
         response = await self._adguard._request("stats_info")
         return response["interval"]
