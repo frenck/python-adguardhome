@@ -8,7 +8,7 @@ from adguardhome.exceptions import AdGuardHomeError
 
 @pytest.mark.asyncio
 async def test_dns_queries(event_loop, aresponses):
-    """Test requesting AdGuard Home DNS query stats."""
+    """Test requesting AdGuard Home number of DNS query stats."""
     aresponses.add(
         "example.com:3000",
         "/control/stats",
@@ -16,7 +16,7 @@ async def test_dns_queries(event_loop, aresponses):
         aresponses.Response(
             status=200,
             headers={"Content-Type": "application/json"},
-            text='{"dns_queries": 666}',
+            text='{"num_dns_queries": 666}',
         ),
     )
     async with aiohttp.ClientSession(loop=event_loop) as session:
@@ -35,7 +35,7 @@ async def test_blocked_filtering(event_loop, aresponses):
         aresponses.Response(
             status=200,
             headers={"Content-Type": "application/json"},
-            text='{"blocked_filtering": 1337}',
+            text='{"num_blocked_filtering": 1337}',
         ),
     )
     async with aiohttp.ClientSession(loop=event_loop) as session:
@@ -54,7 +54,7 @@ async def test_blocked_percentage(event_loop, aresponses):
         aresponses.Response(
             status=200,
             headers={"Content-Type": "application/json"},
-            text='{"dns_queries": 100, "blocked_filtering": 25}',
+            text='{"num_dns_queries": 100, "num_blocked_filtering": 25}',
         ),
     )
     async with aiohttp.ClientSession(loop=event_loop) as session:
@@ -73,7 +73,7 @@ async def test_replaced_safebrowsing(event_loop, aresponses):
         aresponses.Response(
             status=200,
             headers={"Content-Type": "application/json"},
-            text='{"replaced_safebrowsing": 42}',
+            text='{"num_replaced_safebrowsing": 42}',
         ),
     )
     async with aiohttp.ClientSession(loop=event_loop) as session:
@@ -92,7 +92,7 @@ async def test_replaced_parental(event_loop, aresponses):
         aresponses.Response(
             status=200,
             headers={"Content-Type": "application/json"},
-            text='{"replaced_parental": 13}',
+            text='{"num_replaced_parental": 13}',
         ),
     )
     async with aiohttp.ClientSession(loop=event_loop) as session:
@@ -111,7 +111,7 @@ async def test_replaced_safesearch(event_loop, aresponses):
         aresponses.Response(
             status=200,
             headers={"Content-Type": "application/json"},
-            text='{"replaced_safesearch": 18}',
+            text='{"num_replaced_safesearch": 18}',
         ),
     )
     async with aiohttp.ClientSession(loop=event_loop) as session:
@@ -144,19 +144,19 @@ async def test_period(event_loop, aresponses):
     """Test requesting AdGuard Home stats period."""
     aresponses.add(
         "example.com:3000",
-        "/control/stats",
+        "/control/stats_info",
         "GET",
         aresponses.Response(
             status=200,
             headers={"Content-Type": "application/json"},
-            text='{"stats_period": "24 hours"}',
+            text='{"interval": 7}',
         ),
     )
 
     async with aiohttp.ClientSession(loop=event_loop) as session:
         adguard = AdGuardHome("example.com", session=session, loop=event_loop)
         result = await adguard.stats.period()
-        assert result == "24 hours"
+        assert result == 7
 
 
 @pytest.mark.asyncio
