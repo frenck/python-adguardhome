@@ -55,8 +55,7 @@ async def test_enable(event_loop, aresponses):
 
     async with aiohttp.ClientSession(loop=event_loop) as session:
         adguard = AdGuardHome("example.com", session=session, loop=event_loop)
-        result = await adguard.safebrowsing.enable()
-        assert result
+        await adguard.safebrowsing.enable()
         with pytest.raises(AdGuardHomeError):
             await adguard.safebrowsing.enable()
 
@@ -79,7 +78,6 @@ async def test_disable(event_loop, aresponses):
 
     async with aiohttp.ClientSession(loop=event_loop) as session:
         adguard = AdGuardHome("example.com", session=session, loop=event_loop)
-        result = await adguard.safebrowsing.disable()
-        assert result
+        await adguard.safebrowsing.disable()
         with pytest.raises(AdGuardHomeError):
             await adguard.safebrowsing.disable()

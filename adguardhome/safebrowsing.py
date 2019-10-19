@@ -16,20 +16,18 @@ class AdGuardHomeSafeBrowsing:
         response = await self._adguard._request("safebrowsing/status")
         return response["enabled"]
 
-    async def enable(self) -> bool:
+    async def enable(self) -> None:
         """Enable AdGuard Home browsing security."""
         response = await self._adguard._request("safebrowsing/enable", method="POST")
         if response.rstrip() != "OK":
             raise AdGuardHomeError(
                 "Enabling AdGuard Home safe browsing failed", {"response": response}
             )
-        return True
 
-    async def disable(self) -> bool:
+    async def disable(self) -> None:
         """Disable AdGuard Home browsing security."""
         response = await self._adguard._request("safebrowsing/disable", method="POST")
         if response.rstrip() != "OK":
             raise AdGuardHomeError(
                 "Disabling AdGuard Home safe browsing failed", {"response": response}
             )
-        return True
