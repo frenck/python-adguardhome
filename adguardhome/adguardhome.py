@@ -3,6 +3,7 @@
 import asyncio
 import json
 import socket
+from typing import Any, Mapping, Optional
 
 import aiohttp
 import async_timeout
@@ -29,12 +30,12 @@ class AdGuardHome:
         password: str = None,
         port: int = 3000,
         request_timeout: int = 10,
-        session=None,
+        session: aiohttp.client.ClientSession = None,
         tls: bool = False,
         username: str = None,
         verify_ssl: bool = True,
         user_agent: str = None,
-    ):
+    ) -> None:
         """Initialize connection with AdGuard Home."""
         self._loop = loop
         self._session = session
@@ -50,18 +51,11 @@ class AdGuardHome:
         self.verify_ssl = verify_ssl
         self.user_agent = user_agent
 
-        if self._loop is None:
-            self._loop = asyncio.get_event_loop()
-
-        if self._session is None:
-            self._session = aiohttp.ClientSession(loop=self._loop)
-            self._close_session = True
-
-        if self.user_agent is None:
+        if user_agent is None:
             self.user_agent = "PythonAdGuardHome/{}".format(__version__)
 
         if self.base_path[-1] != "/":
-            self.base_path = self.base_path + "/"
+            self.base_path += "/"
 
         self.filtering = AdGuardHomeFiltering(self)
         self.parental = AdGuardHomeParental(self)
@@ -71,8 +65,13 @@ class AdGuardHome:
         self.stats = AdGuardHomeStats(self)
 
     async def _request(
-        self, uri: str, method: str = "GET", data=None, json_data=None, params=None
-    ):
+        self,
+        uri: str,
+        method: str = "GET",
+        data: Optional[Any] = None,
+        json_data: Optional[dict] = None,
+        params: Optional[Mapping[str, str]] = None,
+    ) -> Any:
         """Handle a request to the AdGuard Home instance."""
         scheme = "https" if self.tls else "http"
         url = URL.build(
@@ -87,6 +86,13 @@ class AdGuardHome:
             "User-Agent": self.user_agent,
             "Accept": "application/json, text/plain, */*",
         }
+
+        if self._loop is None:
+            self._loop = asyncio.get_event_loop()
+
+        if self._session is None:
+            self._session = aiohttp.ClientSession(loop=self._loop)
+            self._close_session = True
 
         try:
             with async_timeout.timeout(self.request_timeout):
@@ -156,7 +162,7 @@ class AdGuardHome:
 
     async def close(self) -> None:
         """Close open client session."""
-        if self._close_session:
+        if self._session and self._close_session:
             await self._session.close()
 
     async def __aenter__(self) -> "AdGuardHome":
