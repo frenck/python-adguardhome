@@ -126,3 +126,62 @@ async def test_disable(event_loop, aresponses):
         await adguard.querylog.disable()
         with pytest.raises(AdGuardHomeError):
             await adguard.querylog.disable()
+
+
+@pytest.mark.asyncio
+async def test_interval(event_loop, aresponses):
+    """Test interval settings of the AdGuard Home filtering."""
+
+    async def response_handler(request):
+        data = await request.json()
+        assert data == {"enabled": True, "interval": 1}
+        return aresponses.Response(status=200)
+
+    aresponses.add(
+        "example.com:3000",
+        "/control/querylog_info",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"interval": 7}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/querylog_info",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"enabled": true}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000", "/control/querylog_config", "POST", response_handler
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/querylog_info",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"enabled": true}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/querylog_config",
+        "POST",
+        aresponses.Response(status=400),
+    )
+
+    async with aiohttp.ClientSession(loop=event_loop) as session:
+        adguard = AdGuardHome("example.com", session=session, loop=event_loop)
+        interval = await adguard.querylog.interval()
+        assert interval == 7
+        interval = await adguard.querylog.interval(interval=1)
+        assert interval == 1
+        with pytest.raises(AdGuardHomeError):
+            await adguard.querylog.interval(interval=1)
