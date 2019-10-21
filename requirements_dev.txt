@@ -6,4 +6,4 @@ pre-commit==1.16.1
 Sphinx==2.0.1
 twine==1.13.0
 wheel==0.33.6
-yamllint==1.15.0
+yamllint==1.18.0
