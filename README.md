@@ -119,7 +119,6 @@ Usage:
   make clean-venv                      Removes Python virtual environment artifacts.
   make dist                            Builds source and wheel package.
   make release                         Release build on PyP
-  make tox                             Run tests on every Python version with tox.
   make venv                            Create Python venv environment.
 ```
 
