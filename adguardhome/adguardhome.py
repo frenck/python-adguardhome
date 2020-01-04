@@ -26,7 +26,6 @@ class AdGuardHome:
         self,
         host: str,
         base_path: str = "/control",
-        loop=None,
         password: str = None,
         port: int = 3000,
         request_timeout: int = 10,
@@ -37,7 +36,6 @@ class AdGuardHome:
         user_agent: str = None,
     ) -> None:
         """Initialize connection with AdGuard Home."""
-        self._loop = loop
         self._session = session
         self._close_session = False
 
@@ -87,11 +85,8 @@ class AdGuardHome:
             "Accept": "application/json, text/plain, */*",
         }
 
-        if self._loop is None:
-            self._loop = asyncio.get_event_loop()
-
         if self._session is None:
-            self._session = aiohttp.ClientSession(loop=self._loop)
+            self._session = aiohttp.ClientSession()
             self._close_session = True
 
         try:

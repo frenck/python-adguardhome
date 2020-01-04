@@ -7,9 +7,9 @@ import asyncio
 from adguardhome import AdGuardHome
 
 
-async def main(loop):
+async def main():
     """Show example how to get status of your AdGuard Home instance."""
-    async with AdGuardHome("192.168.1.2", loop=loop) as adguard:
+    async with AdGuardHome("192.168.1.2") as adguard:
         version = await adguard.version()
         print("AdGuard version:", version)
 
@@ -36,4 +36,4 @@ async def main(loop):
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(main(loop))
+    loop.run_until_complete(main())

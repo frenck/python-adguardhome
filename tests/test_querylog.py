@@ -7,7 +7,7 @@ from adguardhome.exceptions import AdGuardHomeError
 
 
 @pytest.mark.asyncio
-async def test_enabled(event_loop, aresponses):
+async def test_enabled(aresponses):
     """Test request of current AdGuard Home query log status."""
     aresponses.add(
         "example.com:3000",
@@ -29,15 +29,15 @@ async def test_enabled(event_loop, aresponses):
             text='{"enabled": false,"interval": 1}',
         ),
     )
-    async with aiohttp.ClientSession(loop=event_loop) as session:
-        adguard = AdGuardHome("example.com", session=session, loop=event_loop)
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
         enabled = await adguard.querylog.enabled()
         enabled = await adguard.querylog.enabled()
         assert not enabled
 
 
 @pytest.mark.asyncio
-async def test_enable(event_loop, aresponses):
+async def test_enable(aresponses):
     """Test enabling AdGuard Home query log."""
 
     async def response_handler(request):
@@ -75,15 +75,15 @@ async def test_enable(event_loop, aresponses):
         aresponses.Response(status=500),
     )
 
-    async with aiohttp.ClientSession(loop=event_loop) as session:
-        adguard = AdGuardHome("example.com", session=session, loop=event_loop)
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
         await adguard.querylog.enable()
         with pytest.raises(AdGuardHomeError):
             await adguard.querylog.enable()
 
 
 @pytest.mark.asyncio
-async def test_disable(event_loop, aresponses):
+async def test_disable(aresponses):
     """Test disabling AdGuard Home query log."""
 
     async def response_handler(request):
@@ -121,15 +121,15 @@ async def test_disable(event_loop, aresponses):
         aresponses.Response(status=500),
     )
 
-    async with aiohttp.ClientSession(loop=event_loop) as session:
-        adguard = AdGuardHome("example.com", session=session, loop=event_loop)
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
         await adguard.querylog.disable()
         with pytest.raises(AdGuardHomeError):
             await adguard.querylog.disable()
 
 
 @pytest.mark.asyncio
-async def test_interval(event_loop, aresponses):
+async def test_interval(aresponses):
     """Test interval settings of the AdGuard Home filtering."""
 
     async def response_handler(request):
@@ -177,8 +177,8 @@ async def test_interval(event_loop, aresponses):
         aresponses.Response(status=400),
     )
 
-    async with aiohttp.ClientSession(loop=event_loop) as session:
-        adguard = AdGuardHome("example.com", session=session, loop=event_loop)
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
         interval = await adguard.querylog.interval()
         assert interval == 7
         interval = await adguard.querylog.interval(interval=1)

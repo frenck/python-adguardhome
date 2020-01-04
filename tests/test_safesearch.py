@@ -7,7 +7,7 @@ from adguardhome.exceptions import AdGuardHomeError
 
 
 @pytest.mark.asyncio
-async def test_enabled(event_loop, aresponses):
+async def test_enabled(aresponses):
     """Test request of current AdGuard Home safe search enforcing status."""
     aresponses.add(
         "example.com:3000",
@@ -29,8 +29,8 @@ async def test_enabled(event_loop, aresponses):
             text='{"enabled": false}',
         ),
     )
-    async with aiohttp.ClientSession(loop=event_loop) as session:
-        adguard = AdGuardHome("example.com", session=session, loop=event_loop)
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
         enabled = await adguard.safesearch.enabled()
         assert enabled
         enabled = await adguard.safesearch.enabled()
@@ -38,7 +38,7 @@ async def test_enabled(event_loop, aresponses):
 
 
 @pytest.mark.asyncio
-async def test_enable(event_loop, aresponses):
+async def test_enable(aresponses):
     """Test enabling AdGuard Home safe search enforcing."""
     aresponses.add(
         "example.com:3000",
@@ -53,15 +53,15 @@ async def test_enable(event_loop, aresponses):
         aresponses.Response(status=200, text="NOT OK"),
     )
 
-    async with aiohttp.ClientSession(loop=event_loop) as session:
-        adguard = AdGuardHome("example.com", session=session, loop=event_loop)
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
         await adguard.safesearch.enable()
         with pytest.raises(AdGuardHomeError):
             await adguard.safesearch.enable()
 
 
 @pytest.mark.asyncio
-async def test_disable(event_loop, aresponses):
+async def test_disable(aresponses):
     """Test disabling AdGuard Home safe search enforcing."""
     aresponses.add(
         "example.com:3000",
@@ -76,8 +76,8 @@ async def test_disable(event_loop, aresponses):
         aresponses.Response(status=200, text="NOT OK"),
     )
 
-    async with aiohttp.ClientSession(loop=event_loop) as session:
-        adguard = AdGuardHome("example.com", session=session, loop=event_loop)
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
         await adguard.safesearch.disable()
         with pytest.raises(AdGuardHomeError):
             await adguard.safesearch.disable()
