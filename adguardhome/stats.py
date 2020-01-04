@@ -46,7 +46,7 @@ class AdGuardHomeStats:
     async def avg_processing_time(self) -> float:
         """Return avarage processing time of DNS queries (in ms)."""
         response = await self._adguard._request("stats")
-        return response["avg_processing_time"]
+        return round(response["avg_processing_time"] * 100, 2)
 
     async def period(self) -> int:
         """Return the time period to keep data (in days)."""
