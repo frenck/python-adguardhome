@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for `adguardhome.parental`."""
 import aiohttp
 import pytest

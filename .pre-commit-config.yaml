@@ -25,6 +25,10 @@ repos:
       - id: check-case-conflict
       - id: check-executables-have-shebangs
       - id: fix-encoding-pragma
+        args: ["--remove"]
+      - id: check-ast
+      - id: detect-private-key
+      - id: forbid-new-submodules
   - repo: https://github.com/pre-commit/pre-commit
     rev: v1.21.0
     hooks:
