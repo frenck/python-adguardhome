@@ -54,3 +54,7 @@ repos:
     sha: v1.20.0
     hooks:
       - id: yamllint
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v1.25.2
+    hooks:
+      - id: pyupgrade
