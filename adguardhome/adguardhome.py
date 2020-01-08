@@ -138,23 +138,17 @@ class AdGuardHome:
         response = await self._request("status")
         return response["protection_enabled"]
 
-    async def enable_protection(self) -> bool:
+    async def enable_protection(self) -> None:
         """Enable AdGuard Home protection."""
-        response = await self._request("enable_protection", method="POST")
-        if response.rstrip() != "OK":
-            raise AdGuardHomeError(
-                "Enabling AdGuard Home protection failed", {"response": response}
-            )
-        return True
+        await self._request(
+            "dns_config", method="POST", json_data={"protection_enabled": True},
+        )
 
-    async def disable_protection(self) -> bool:
+    async def disable_protection(self) -> None:
         """Disable AdGuard Home protection."""
-        response = await self._request("disable_protection", method="POST")
-        if response.rstrip() != "OK":
-            raise AdGuardHomeError(
-                "Disabling AdGuard Home protection failed", {"response": response}
-            )
-        return True
+        await self._request(
+            "dns_config", method="POST", json_data={"protection_enabled": False},
+        )
 
     async def version(self) -> str:
         """Return the current version of the AdGuard Home instance."""

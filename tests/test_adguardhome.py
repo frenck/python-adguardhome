@@ -244,21 +244,20 @@ async def test_enable_protection(aresponses):
     """Test enabling AdGuard Home protection."""
     aresponses.add(
         "example.com:3000",
-        "/control/enable_protection",
+        "/control/dns_config",
         "POST",
-        aresponses.Response(status=200, text="OK"),
+        aresponses.Response(status=200),
     )
     aresponses.add(
         "example.com:3000",
-        "/control/enable_protection",
+        "/control/dns_config",
         "POST",
-        aresponses.Response(status=200, text="NOT OK"),
+        aresponses.Response(status=400),
     )
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        result = await adguard.enable_protection()
-        assert result
+        await adguard.enable_protection()
         with pytest.raises(AdGuardHomeError):
             await adguard.enable_protection()
 
@@ -268,21 +267,20 @@ async def test_disable_protection(aresponses):
     """Test disabling AdGuard Home protection."""
     aresponses.add(
         "example.com:3000",
-        "/control/disable_protection",
+        "/control/dns_config",
         "POST",
-        aresponses.Response(status=200, text="OK"),
+        aresponses.Response(status=200),
     )
     aresponses.add(
         "example.com:3000",
-        "/control/disable_protection",
+        "/control/dns_config",
         "POST",
-        aresponses.Response(status=200, text="NOT OK"),
+        aresponses.Response(status=500),
     )
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        result = await adguard.disable_protection()
-        assert result
+        await adguard.disable_protection()
         with pytest.raises(AdGuardHomeError):
             await adguard.disable_protection()
 
