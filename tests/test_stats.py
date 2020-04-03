@@ -153,13 +153,13 @@ async def test_avg_processing_time(aresponses):
         aresponses.Response(
             status=200,
             headers={"Content-Type": "application/json"},
-            text='{"avg_processing_time": 0.0314}',
+            text='{"avg_processing_time": 0.03141}',
         ),
     )
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
         result = await adguard.stats.avg_processing_time()
-        assert result == 3.14
+        assert result == 31.41
 
 
 @pytest.mark.asyncio
@@ -215,10 +215,10 @@ async def test_content_type_workarond(aresponses):
         aresponses.Response(
             status=200,
             headers={"Content-Type": "text/plain; charset=utf-8"},
-            text='{"avg_processing_time": 0.0314}',
+            text='{"avg_processing_time": 0.03141}',
         ),
     )
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
         result = await adguard.stats.avg_processing_time()
-        assert result == 3.14
+        assert result == 31.41
