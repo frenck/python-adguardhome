@@ -1,8 +1,22 @@
 """Asynchronous Python client for the AdGuard Home API."""
 
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import List, Optional
 
 from .exceptions import AdGuardHomeError
+from dataclasses_json import dataclass_json
+
+
+@dataclass_json
+@dataclass
+class Check_Host:
+    reason: str = field(hash=False, repr=True, compare=False, default=None)
+    filter_id: str = field(hash=False, repr=True, compare=False, default=None)
+    rule: str = field(hash=False, repr=True, compare=False, default=None)
+    service_name: str = field(hash=False, repr=True, compare=False, default=None)
+    cname: str = field(hash=False, repr=True, compare=False, default=None)
+    ip_addrs: Optional[List[str]] = field(
+        hash=False, repr=True, compare=False, default=None)
 
 
 class AdGuardHomeFiltering:
@@ -118,3 +132,11 @@ class AdGuardHomeFiltering:
             raise AdGuardHomeError(
                 "Failed refreshing filter URLs in AdGuard Home", {"response": response}
             )
+
+    async def check_host(self, name: str) -> Check_Host:
+        """Check if host name is filtered"""
+
+        response = await self._adguard._request(
+            "filtering/check_host", params={"name": name}
+        )
+        return Check_Host.from_dict(response)
