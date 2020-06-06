@@ -1,7 +1,7 @@
 """Tests for `adguardhome.filtering`."""
 import aiohttp
 import pytest
-from adguardhome import AdGuardHome
+from adguardhome import AdGuardHome, types
 from adguardhome.exceptions import AdGuardHomeError
 
 
@@ -354,3 +354,43 @@ async def test_refresh(aresponses):
         await adguard.filtering.refresh(True)
         with pytest.raises(AdGuardHomeError):
             await adguard.filtering.refresh(False)
+
+
+@pytest.mark.asyncio
+async def test_status(aresponses):
+    """Test getting rules count of the AdGuard Home filtering."""
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"enabled":true,"interval":1,"filters":[{"id":1591149173,"enabled":true,"url":"https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt","name":"AdGuard Simplified Domain Names filter","rules_count":37359,"last_updated":"2020-06-06T09:49:51Z"}],"whitelist_filters":null,"user_rules":[]}',
+        ),
+    )
+
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
+        result = await adguard.filtering.status()
+        assert isinstance(result, types.Status)
+
+
+@pytest.mark.asyncio
+async def test_check_host(aresponses):
+    """Test getting rules count of the AdGuard Home filtering."""
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/check_host",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"reason":"NotFilteredNotFound","filter_id":0,"rule":"","service_name":"","cname":"","ip_addrs":null}',
+        ),
+    )
+
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
+        result = await adguard.filtering.check_host(name="example.com")
+        assert isinstance(result, types.Check_Host)

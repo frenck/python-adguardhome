@@ -129,3 +129,8 @@ class AdGuardHomeFiltering:
             "filtering/check_host", params={"name": name}
         )
         return Check_Host.from_dict(response)
+
+    async def status(self) -> Status:
+        """Get filtering parameters"""
+        response = await self._adguard._request("filtering/status")
+        return Status.from_dict(response)
