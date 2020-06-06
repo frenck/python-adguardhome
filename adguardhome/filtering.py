@@ -1,11 +1,9 @@
 """Asynchronous Python client for the AdGuard Home API."""
 
-from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
 from .exceptions import AdGuardHomeError
-from dataclasses_json import dataclass_json
-from .types import Status, Check_Host
+from .types import Check_Host, Status
 
 
 class AdGuardHomeFiltering:
