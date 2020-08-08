@@ -2,6 +2,8 @@
 
 from .exceptions import AdGuardHomeError
 
+from .types.stats import Stats
+
 
 class AdGuardHomeStats:
     """Provides stats of AdGuard Home."""
@@ -9,6 +11,11 @@ class AdGuardHomeStats:
     def __init__(self, adguard):
         """Initialize object."""
         self._adguard = adguard
+
+    async def all_stats(self) -> Stats:
+        """Return All Stats Info"""
+        response = await self._adguard._request("stats")
+        return Stats.from_dict(response)
 
     async def dns_queries(self) -> int:
         """Return number of DNS queries."""
