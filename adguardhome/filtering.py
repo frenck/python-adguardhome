@@ -3,7 +3,7 @@
 from typing import Optional
 
 from .exceptions import AdGuardHomeError
-from .types import Check_Host, Status
+from .types.filtering import Check_Host, Status
 
 
 class AdGuardHomeFiltering:
