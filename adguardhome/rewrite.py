@@ -1,6 +1,6 @@
 """Asynchronous Python client for the AdGuard Home API."""
 
-from typing import List, Dict
+from typing import Dict, List
 
 from .exceptions import AdGuardHomeError
 
