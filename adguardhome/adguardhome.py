@@ -9,6 +9,7 @@ import async_timeout
 from yarl import URL
 
 from .__version__ import __version__
+from .client import AdGuardHomeClient
 from .exceptions import AdGuardHomeConnectionError, AdGuardHomeError
 from .filtering import AdGuardHomeFiltering
 from .parental import AdGuardHomeParental
@@ -54,6 +55,7 @@ class AdGuardHome:
         if self.base_path[-1] != "/":
             self.base_path += "/"
 
+        self.client = AdGuardHomeClient(self)
         self.filtering = AdGuardHomeFiltering(self)
         self.parental = AdGuardHomeParental(self)
         self.querylog = AdGuardHomeQueryLog(self)
