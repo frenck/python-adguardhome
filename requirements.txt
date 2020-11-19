@@ -1,2 +1,2 @@
-aiohttp==3.7.2
+aiohttp==3.7.3
 yarl==1.6.3
