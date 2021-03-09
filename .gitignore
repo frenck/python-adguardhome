@@ -111,3 +111,9 @@ target/
 # Cookiecutter
 output/
 python_boilerplate/
+
+# Node
+node_modules/
+
+# Deepcode AI
+.dccache

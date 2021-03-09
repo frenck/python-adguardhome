@@ -1,6 +1,7 @@
 """Tests for `adguardhome.querylog`."""
 import aiohttp
 import pytest
+
 from adguardhome import AdGuardHome
 from adguardhome.exceptions import AdGuardHomeError
 

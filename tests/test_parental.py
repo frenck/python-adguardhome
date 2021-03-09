@@ -1,6 +1,7 @@
 """Tests for `adguardhome.parental`."""
 import aiohttp
 import pytest
+
 from adguardhome import AdGuardHome
 from adguardhome.exceptions import AdGuardHomeError
 
@@ -52,7 +53,7 @@ async def test_enable(aresponses):
         "example.com:3000",
         "/control/parental/enable",
         "POST",
-        aresponses.Response(status=200, text="NOT OK"),
+        aresponses.Response(status=400, text="NOT OK"),
     )
 
     async with aiohttp.ClientSession() as session:
@@ -75,7 +76,7 @@ async def test_disable(aresponses):
         "example.com:3000",
         "/control/parental/disable",
         "POST",
-        aresponses.Response(status=200, text="NOT OK"),
+        aresponses.Response(status=400, text="NOT OK"),
     )
 
     async with aiohttp.ClientSession() as session:

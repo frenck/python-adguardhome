@@ -1,6 +1,7 @@
 """Tests for `adguardhome.filtering`."""
 import aiohttp
 import pytest
+
 from adguardhome import AdGuardHome
 from adguardhome.exceptions import AdGuardHomeError
 
@@ -235,7 +236,7 @@ async def test_add_url(aresponses):
         "example.com:3000",
         "/control/filtering/add_url",
         "POST",
-        aresponses.Response(status=200, text="Invalid URL"),
+        aresponses.Response(status=400, text="Invalid URL"),
     )
 
     async with aiohttp.ClientSession() as session:
@@ -261,7 +262,7 @@ async def test_remove_url(aresponses):
         "example.com:3000",
         "/control/filtering/remove_url",
         "POST",
-        aresponses.Response(status=200, text="Invalid URL"),
+        aresponses.Response(status=400, text="Invalid URL"),
     )
 
     async with aiohttp.ClientSession() as session:
@@ -344,7 +345,7 @@ async def test_refresh(aresponses):
         "example.com:3000",
         "/control/filtering/refresh?force=false",
         "POST",
-        aresponses.Response(status=200, text="Not OK"),
+        aresponses.Response(status=400, text="Not OK"),
         match_querystring=True,
     )
 
