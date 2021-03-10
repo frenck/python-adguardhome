@@ -1,6 +1,7 @@
 """Tests for `adguardhome.stats`."""
 import aiohttp
 import pytest
+
 from adguardhome import AdGuardHome
 from adguardhome.exceptions import AdGuardHomeError
 
@@ -145,7 +146,7 @@ async def test_replaced_safesearch(aresponses):
 
 @pytest.mark.asyncio
 async def test_avg_processing_time(aresponses):
-    """Test requesting AdGuard Home DNS avarage processing time stats."""
+    """Test requesting AdGuard Home DNS average processing time stats."""
     aresponses.add(
         "example.com:3000",
         "/control/stats",
@@ -195,7 +196,7 @@ async def test_reset(aresponses):
         "example.com:3000",
         "/control/stats_reset",
         "POST",
-        aresponses.Response(status=200, text="Not OK"),
+        aresponses.Response(status=400, text="Not OK"),
     )
 
     async with aiohttp.ClientSession() as session:
@@ -203,22 +204,3 @@ async def test_reset(aresponses):
         await adguard.stats.reset()
         with pytest.raises(AdGuardHomeError):
             await adguard.stats.reset()
-
-
-@pytest.mark.asyncio
-async def test_content_type_workarond(aresponses):
-    """Test for working around content-type issue in AdGuard Home v0.99.0."""
-    aresponses.add(
-        "example.com:3000",
-        "/control/stats",
-        "GET",
-        aresponses.Response(
-            status=200,
-            headers={"Content-Type": "text/plain; charset=utf-8"},
-            text='{"avg_processing_time": 0.03141}',
-        ),
-    )
-    async with aiohttp.ClientSession() as session:
-        adguard = AdGuardHome("example.com", session=session)
-        result = await adguard.stats.avg_processing_time()
-        assert result == 31.41

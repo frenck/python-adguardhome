@@ -3,8 +3,8 @@ import asyncio
 
 import aiohttp
 import pytest
+
 from adguardhome import AdGuardHome
-from adguardhome.__version__ import __version__
 from adguardhome.exceptions import AdGuardHomeConnectionError, AdGuardHomeError
 
 
@@ -23,7 +23,7 @@ async def test_json_request(aresponses):
     )
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        response = await adguard._request("/")
+        response = await adguard.request("/")
         assert response["status"] == "ok"
 
 
@@ -41,10 +41,13 @@ async def test_authenticated_request(aresponses):
         ),
     )
     async with aiohttp.ClientSession() as session:
-        adguard = AdGuardHome(
-            "example.com", username="frenck", password="zerocool", session=session,
+        adguard = AdGuardHome(  # noqa: S106
+            "example.com",
+            username="frenck",
+            password="zerocool",
+            session=session,
         )
-        response = await adguard._request("/")
+        response = await adguard.request("/")
         assert response["status"] == "ok"
 
 
@@ -56,8 +59,8 @@ async def test_text_request(aresponses):
     )
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        response = await adguard._request("/")
-        assert response == "OK"
+        response = await adguard.request("/")
+        assert response == {"message": "OK"}
 
 
 @pytest.mark.asyncio
@@ -74,7 +77,7 @@ async def test_internal_session(aresponses):
         ),
     )
     async with AdGuardHome("example.com") as adguard:
-        response = await adguard._request("/")
+        response = await adguard.request("/")
         assert response["status"] == "ok"
 
 
@@ -86,8 +89,8 @@ async def test_post_request(aresponses):
     )
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        response = await adguard._request("/", method="POST")
-        assert response == "OK"
+        response = await adguard.request("/", method="POST")
+        assert response == {"message": "OK"}
 
 
 @pytest.mark.asyncio
@@ -102,8 +105,8 @@ async def test_request_port(aresponses):
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", port=3333, session=session)
-        response = await adguard._request("/")
-        assert response == "OMG PUPPIES!"
+        response = await adguard.request("/")
+        assert response == {"message": "OMG PUPPIES!"}
 
 
 @pytest.mark.asyncio
@@ -118,8 +121,8 @@ async def test_request_base_path(aresponses):
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", base_path="/admin", session=session)
-        response = await adguard._request("status")
-        assert response == "OMG PUPPIES!"
+        response = await adguard.request("status")
+        assert response == {"message": "OMG PUPPIES!"}
 
 
 @pytest.mark.asyncio
@@ -127,16 +130,14 @@ async def test_request_user_agent(aresponses):
     """Test AdGuard Home client sending correct user agent headers."""
     # Handle to run asserts on request in
     async def response_handler(request):
-        assert request.headers["User-Agent"] == "PythonAdGuardHome/{}".format(
-            __version__
-        )
+        assert request.headers["User-Agent"] == "PythonAdGuardHome/0.0.0"
         return aresponses.Response(text="TEDDYBEAR", status=200)
 
     aresponses.add("example.com:3000", "/", "GET", response_handler)
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", base_path="/", session=session)
-        await adguard._request("/")
+        await adguard.request("/")
 
 
 @pytest.mark.asyncio
@@ -151,9 +152,12 @@ async def test_request_custom_user_agent(aresponses):
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome(
-            "example.com", base_path="/", session=session, user_agent="LoremIpsum/1.0",
+            "example.com",
+            base_path="/",
+            session=session,
+            user_agent="LoremIpsum/1.0",
         )
-        await adguard._request("/")
+        await adguard.request("/")
 
 
 @pytest.mark.asyncio
@@ -169,7 +173,7 @@ async def test_timeout(aresponses):
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session, request_timeout=1)
         with pytest.raises(AdGuardHomeConnectionError):
-            assert await adguard._request("/")
+            assert await adguard.request("/")
 
 
 @pytest.mark.asyncio
@@ -185,7 +189,7 @@ async def test_http_error400(aresponses):
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
         with pytest.raises(AdGuardHomeError):
-            assert await adguard._request("/")
+            assert await adguard.request("/")
 
 
 @pytest.mark.asyncio
@@ -205,7 +209,7 @@ async def test_http_error500(aresponses):
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
         with pytest.raises(AdGuardHomeError):
-            assert await adguard._request("/")
+            assert await adguard.request("/")
 
 
 @pytest.mark.asyncio

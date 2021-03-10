@@ -16,7 +16,7 @@ async def main():
         print("Stats period:", period)
 
         result = await adguard.stats.avg_processing_time()
-        print("Avarage processing time per query in ms:", result)
+        print("Average processing time per query in ms:", result)
 
         result = await adguard.stats.dns_queries()
         print("DNS queries:", result)

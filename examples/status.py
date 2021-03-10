@@ -8,7 +8,7 @@ from adguardhome import AdGuardHome
 
 async def main():
     """Show example how to get status of your AdGuard Home instance."""
-    async with AdGuardHome("192.168.1.2") as adguard:
+    async with AdGuardHome(host="192.168.1.2") as adguard:
         version = await adguard.version()
         print("AdGuard version:", version)
 
