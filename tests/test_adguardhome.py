@@ -169,6 +169,7 @@ async def test_timeout(aresponses):
     """Test request timeout from AdGuard Home."""
     # Faking a timeout by sleeping
     async def response_handler(_):
+        """Response handler for this test."""
         await asyncio.sleep(2)
         return aresponses.Response(body="Goodmorning!")
 
