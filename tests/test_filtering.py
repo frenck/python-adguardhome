@@ -334,11 +334,31 @@ async def test_disable_url(aresponses):
 @pytest.mark.asyncio
 async def test_refresh(aresponses):
     """Test enabling filter subscription in AdGuard Home filtering."""
+
+    async def response_handler_whitelist(request):
+        """Response handler for this test."""
+        data = await request.json()
+        assert data == {"whitelist": True}
+        return aresponses.Response(status=200)
+
+    async def response_handler_blocklist(request):
+        """Response handler for this test."""
+        data = await request.json()
+        assert data == {"whitelist": False}
+        return aresponses.Response(status=200)
+
     aresponses.add(
         "example.com:3000",
         "/control/filtering/refresh?force=false",
         "POST",
-        aresponses.Response(status=200, text="OK"),
+        response_handler_blocklist,
+        match_querystring=True,
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/refresh?force=false",
+        "POST",
+        response_handler_whitelist,
         match_querystring=True,
     )
     aresponses.add(
@@ -358,7 +378,8 @@ async def test_refresh(aresponses):
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        await adguard.filtering.refresh(False)
-        await adguard.filtering.refresh(True)
+        await adguard.filtering.refresh(force=False)
+        await adguard.filtering.refresh(force=False, allowlist=True)
+        await adguard.filtering.refresh(force=True)
         with pytest.raises(AdGuardHomeError):
-            await adguard.filtering.refresh(False)
+            await adguard.filtering.refresh(force=False)

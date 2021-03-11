@@ -176,20 +176,24 @@ class AdGuardHomeFiltering:
                 "Failed disabling URL on AdGuard Home filter"
             ) from exception
 
-    async def refresh(self, force=False) -> None:
+    async def refresh(self, *, allowlist: bool = False, force: bool = False) -> None:
         """Reload filtering subscriptions from URLs specified in AdGuard Home.
 
         Args:
             force: Force the reload of all filter subscriptions.
+            allowlist: True to update the allowlists, False for the blocklists.
 
         Raises:
             AdGuardHomeError: Failed to refresh filter subscriptions.
         """
-        force = "true" if force else "false"
+        force_value = "true" if force else "false"
 
         try:
             await self._adguard.request(
-                "filtering/refresh", method="POST", params={"force": force}
+                "filtering/refresh",
+                method="POST",
+                json_data={"whitelist": allowlist},
+                params={"force": force_value},
             )
         except AdGuardHomeError as exception:
             raise AdGuardHomeError(
