@@ -41,6 +41,7 @@ async def test_enable(aresponses):
     """Test enabling AdGuard Home query log."""
 
     async def response_handler(request):
+        """Response handler for this test."""
         data = await request.json()
         assert data == {"enabled": True, "interval": 1}
         return aresponses.Response(status=200)
@@ -87,6 +88,7 @@ async def test_disable(aresponses):
     """Test disabling AdGuard Home query log."""
 
     async def response_handler(request):
+        """Response handler for this test."""
         data = await request.json()
         assert data == {"enabled": False, "interval": 1}
         return aresponses.Response(status=200)
@@ -133,6 +135,7 @@ async def test_interval(aresponses):
     """Test interval settings of the AdGuard Home filtering."""
 
     async def response_handler(request):
+        """Response handler for this test."""
         data = await request.json()
         assert data == {"enabled": True, "interval": 1}
         return aresponses.Response(status=200)
