@@ -162,6 +162,20 @@ class AdGuardHomeFiltering:
         Raises:
             AdGuardHomeError: Failed enabling filter subscription.
         """
+        response = await self._adguard.request("filtering/status")
+        filter_type = "whitelist_filters" if allowlist else "filters"
+
+        # Excluded from coverage:
+        # https://github.com/nedbat/coveragepy/issues/515
+        name = next(  # pragma: no cover
+            (
+                fil["name"]
+                for fil in response[filter_type]
+                if fil["url"].lower() == url.lower()
+            ),
+            "Unknown",
+        )
+
         try:
             await self._adguard.request(
                 "filtering/set_url",
@@ -169,7 +183,7 @@ class AdGuardHomeFiltering:
                 json_data={
                     "url": url,
                     "whitelist": allowlist,
-                    "data": {"enabled": True},
+                    "data": {"enabled": True, "name": name, "url": url},
                 },
             )
         except AdGuardHomeError as exception:
@@ -187,6 +201,20 @@ class AdGuardHomeFiltering:
         Raises:
             AdGuardHomeError: Failed disabling filter subscription.
         """
+        response = await self._adguard.request("filtering/status")
+        filter_type = "whitelist_filters" if allowlist else "filters"
+
+        # Excluded from coverage:
+        # https://github.com/nedbat/coveragepy/issues/515
+        name = next(  # pragma: no cover
+            (
+                fil["name"]
+                for fil in response[filter_type]
+                if fil["url"].lower() == url.lower()
+            ),
+            "Unknown",
+        )
+
         try:
             await self._adguard.request(
                 "filtering/set_url",
@@ -194,7 +222,7 @@ class AdGuardHomeFiltering:
                 json_data={
                     "url": url,
                     "whitelist": allowlist,
-                    "data": {"enabled": False},
+                    "data": {"enabled": False, "name": name, "url": url},
                 },
             )
         except AdGuardHomeError as exception:
