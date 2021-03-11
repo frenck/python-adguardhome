@@ -71,7 +71,7 @@ source = ["src"]
 
 [tool.coverage.report]
 show_missing = true
-exclude_lines = ["if TYPE_CHECKING:"]
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
 
 [tool.coverage.run]
 branch = true
