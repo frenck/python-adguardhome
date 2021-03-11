@@ -214,12 +214,36 @@ async def test_rules_count(aresponses):
             text='{"filters": []}',
         ),
     )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"whitelist_filters": [{"rules_count": 98}, {"rules_count": 1}]}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"whitelist_filters": null}',
+        ),
+    )
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        result = await adguard.filtering.rules_count()
+        result = await adguard.filtering.rules_count(allowlist=False)
         assert result == 100
-        result = await adguard.filtering.rules_count()
+        result = await adguard.filtering.rules_count(allowlist=False)
+        assert result == 0
+        result = await adguard.filtering.rules_count(allowlist=True)
+        assert result == 99
+        result = await adguard.filtering.rules_count(allowlist=True)
         assert result == 0
 
 
@@ -230,7 +254,11 @@ async def test_add_url(aresponses):
     async def response_handler(request):
         """Response handler for this test."""
         data = await request.json()
-        assert data == {"name": "Example", "url": "https://example.com/1.txt"}
+        assert data == {
+            "name": "Example",
+            "url": "https://example.com/1.txt",
+            "whitelist": False,
+        }
         return aresponses.Response(status=200, text="OK 12345 filters added")
 
     aresponses.add(
@@ -245,9 +273,13 @@ async def test_add_url(aresponses):
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        await adguard.filtering.add_url("Example", "https://example.com/1.txt")
+        await adguard.filtering.add_url(
+            name="Example", url="https://example.com/1.txt", allowlist=False
+        )
         with pytest.raises(AdGuardHomeError):
-            await adguard.filtering.add_url("Example", "https://example.com/1.txt")
+            await adguard.filtering.add_url(
+                name="Example", url="https://example.com/1.txt", allowlist=False
+            )
 
 
 @pytest.mark.asyncio
@@ -257,7 +289,7 @@ async def test_remove_url(aresponses):
     async def response_handler(request):
         """Response handler for this test."""
         data = await request.json()
-        assert data == {"url": "https://example.com/1.txt"}
+        assert data == {"url": "https://example.com/1.txt", "whitelist": False}
         return aresponses.Response(status=200, text="OK")
 
     aresponses.add(
@@ -272,9 +304,13 @@ async def test_remove_url(aresponses):
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        await adguard.filtering.remove_url("https://example.com/1.txt")
+        await adguard.filtering.remove_url(
+            allowlist=False, url="https://example.com/1.txt"
+        )
         with pytest.raises(AdGuardHomeError):
-            await adguard.filtering.remove_url("https://example.com/1.txt")
+            await adguard.filtering.remove_url(
+                allowlist=False, url="https://example.com/1.txt"
+            )
 
 
 @pytest.mark.asyncio
@@ -284,7 +320,11 @@ async def test_enable_url(aresponses):
     async def response_handler(request):
         """Response handler for this test."""
         data = await request.json()
-        assert data == {"url": "https://example.com/1.txt", "enabled": True}
+        assert data == {
+            "url": "https://example.com/1.txt",
+            "whitelist": False,
+            "data": {"enabled": True},
+        }
         return aresponses.Response(status=200, text="OK")
 
     aresponses.add(
@@ -299,9 +339,13 @@ async def test_enable_url(aresponses):
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        await adguard.filtering.enable_url("https://example.com/1.txt")
+        await adguard.filtering.enable_url(
+            allowlist=False, url="https://example.com/1.txt"
+        )
         with pytest.raises(AdGuardHomeError):
-            await adguard.filtering.enable_url("https://example.com/1.txt")
+            await adguard.filtering.enable_url(
+                allowlist=False, url="https://example.com/1.txt"
+            )
 
 
 @pytest.mark.asyncio
@@ -311,7 +355,11 @@ async def test_disable_url(aresponses):
     async def response_handler(request):
         """Response handler for this test."""
         data = await request.json()
-        assert data == {"url": "https://example.com/1.txt", "enabled": False}
+        assert data == {
+            "url": "https://example.com/1.txt",
+            "whitelist": False,
+            "data": {"enabled": False},
+        }
         return aresponses.Response(status=200)
 
     aresponses.add(
@@ -326,9 +374,13 @@ async def test_disable_url(aresponses):
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        await adguard.filtering.disable_url("https://example.com/1.txt")
+        await adguard.filtering.disable_url(
+            allowlist=False, url="https://example.com/1.txt"
+        )
         with pytest.raises(AdGuardHomeError):
-            await adguard.filtering.disable_url("https://example.com/1.txt")
+            await adguard.filtering.disable_url(
+                allowlist=False, url="https://example.com/1.txt"
+            )
 
 
 @pytest.mark.asyncio
@@ -378,8 +430,8 @@ async def test_refresh(aresponses):
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        await adguard.filtering.refresh(force=False)
-        await adguard.filtering.refresh(force=False, allowlist=True)
-        await adguard.filtering.refresh(force=True)
+        await adguard.filtering.refresh(allowlist=False, force=False)
+        await adguard.filtering.refresh(allowlist=True, force=False)
+        await adguard.filtering.refresh(allowlist=False, force=True)
         with pytest.raises(AdGuardHomeError):
-            await adguard.filtering.refresh(force=False)
+            await adguard.filtering.refresh(allowlist=False, force=False)
