@@ -1,5 +1,6 @@
 """Tests for `adguardhome.adguardhome`."""
 import asyncio
+from unittest.mock import patch
 
 import aiohttp
 import pytest
@@ -25,6 +26,7 @@ async def test_json_request(aresponses):
         adguard = AdGuardHome("example.com", session=session)
         response = await adguard.request("/")
         assert response["status"] == "ok"
+        await adguard.close()
 
 
 @pytest.mark.asyncio
@@ -173,6 +175,18 @@ async def test_timeout(aresponses):
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session, request_timeout=1)
         with pytest.raises(AdGuardHomeConnectionError):
+            assert await adguard.request("/")
+
+
+@pytest.mark.asyncio
+async def test_client_error():
+    """Test request client error from AdGuard Home."""
+    # Faking a timeout by sleeping
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
+        with patch.object(
+            session, "request", side_effect=aiohttp.ClientError
+        ), pytest.raises(AdGuardHomeConnectionError):
             assert await adguard.request("/")
 
 
