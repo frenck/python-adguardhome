@@ -36,7 +36,7 @@ async def main():
         result = await adguard.stats.replaced_safesearch()
         print("Number of enforced safe searches:", result)
 
-        result = await adguard.filtering.rules_count()
+        result = await adguard.filtering.rules_count(allowlist=False)
         print("Total number of active rules:", result)
 
 
