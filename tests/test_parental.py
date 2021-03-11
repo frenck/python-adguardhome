@@ -42,6 +42,7 @@ async def test_enable(aresponses):
     """Test enabling AdGuard Home parental control."""
     # Handle to run asserts on request in
     async def response_handler(request):
+        """Response handler for this test."""
         data = await request.text()
         assert data == "sensitivity=TEEN"
         return aresponses.Response(status=200, text="OK")

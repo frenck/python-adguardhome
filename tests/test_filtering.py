@@ -42,6 +42,7 @@ async def test_enable(aresponses):
     """Test enabling AdGuard Home filtering."""
 
     async def response_handler(request):
+        """Response handler for this test."""
         data = await request.json()
         assert data == {"enabled": True, "interval": 1}
         return aresponses.Response(status=200)
@@ -88,6 +89,7 @@ async def test_disable(aresponses):
     """Test disabling AdGuard Home filtering."""
 
     async def response_handler(request):
+        """Response handler for this test."""
         data = await request.json()
         assert data == {"enabled": False, "interval": 1}
         return aresponses.Response(status=200)
@@ -134,6 +136,7 @@ async def test_interval(aresponses):
     """Test interval settings of the AdGuard Home filtering."""
 
     async def response_handler(request):
+        """Response handler for this test."""
         data = await request.json()
         assert data == {"enabled": True, "interval": 1}
         return aresponses.Response(status=200)
@@ -225,6 +228,7 @@ async def test_add_url(aresponses):
     """Test add new filter subscription to AdGuard Home filtering."""
     # Handle to run asserts on request in
     async def response_handler(request):
+        """Response handler for this test."""
         data = await request.json()
         assert data == {"name": "Example", "url": "https://example.com/1.txt"}
         return aresponses.Response(status=200, text="OK 12345 filters added")
@@ -251,6 +255,7 @@ async def test_remove_url(aresponses):
     """Test remove filter subscription from AdGuard Home filtering."""
     # Handle to run asserts on request in
     async def response_handler(request):
+        """Response handler for this test."""
         data = await request.json()
         assert data == {"url": "https://example.com/1.txt"}
         return aresponses.Response(status=200, text="OK")
@@ -277,6 +282,7 @@ async def test_enable_url(aresponses):
     """Test enabling filter subscription in AdGuard Home filtering."""
     # Handle to run asserts on request in
     async def response_handler(request):
+        """Response handler for this test."""
         data = await request.json()
         assert data == {"url": "https://example.com/1.txt", "enabled": True}
         return aresponses.Response(status=200, text="OK")
@@ -303,6 +309,7 @@ async def test_disable_url(aresponses):
     """Test enabling filter subscription in AdGuard Home filtering."""
     # Handle to run asserts on request in
     async def response_handler(request):
+        """Response handler for this test."""
         data = await request.json()
         assert data == {"url": "https://example.com/1.txt", "enabled": False}
         return aresponses.Response(status=200)
