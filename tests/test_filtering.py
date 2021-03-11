@@ -323,12 +323,36 @@ async def test_enable_url(aresponses):
         assert data == {
             "url": "https://example.com/1.txt",
             "whitelist": False,
-            "data": {"enabled": True},
+            "data": {
+                "enabled": True,
+                "url": "https://example.com/1.txt",
+                "name": "test",
+            },
         }
         return aresponses.Response(status=200, text="OK")
 
     aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"filters": [{"url": "https://EXAMPLE.com/1.txt", "name": "test"}]}',
+        ),
+    )
+    aresponses.add(
         "example.com:3000", "/control/filtering/set_url", "POST", response_handler
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"filters": [{"url": "https://EXAMPLE.com/1.txt", "name": "test"}]}',
+        ),
     )
     aresponses.add(
         "example.com:3000",
@@ -358,12 +382,36 @@ async def test_disable_url(aresponses):
         assert data == {
             "url": "https://example.com/1.txt",
             "whitelist": False,
-            "data": {"enabled": False},
+            "data": {
+                "enabled": False,
+                "name": "test",
+                "url": "https://example.com/1.txt",
+            },
         }
         return aresponses.Response(status=200)
 
     aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"filters": [{"url": "https://EXAMPLE.com/1.txt", "name": "test"}]}',
+        ),
+    )
+    aresponses.add(
         "example.com:3000", "/control/filtering/set_url", "POST", response_handler
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"filters": [{"url": "https://example.com/1.txt", "name": "test"}]}',
+        ),
     )
     aresponses.add(
         "example.com:3000",
