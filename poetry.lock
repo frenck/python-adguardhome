@@ -844,7 +844,7 @@ python-versions = "*"
 
 [[package]]
 name = "yamllint"
-version = "1.26.0"
+version = "1.26.1"
 description = "A linter for YAML files."
 category = "dev"
 optional = false
@@ -869,7 +869,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "55b8957e7207af6942b45d5b0be22e91ed82607e50bbd7cc7cbb5174d20d5d59"
+content-hash = "7b44bfaf83585d0875cb9c55629eb94d9690650013bfa093bb6efad95e12caec"
 
 [metadata.files]
 aiohttp = [
@@ -1463,8 +1463,7 @@ wrapt = [
     {file = "wrapt-1.12.1.tar.gz", hash = "sha256:b62ffa81fb85f4332a4f609cab4ac40709470da05643a082ec1eb88e6d9b97d7"},
 ]
 yamllint = [
-    {file = "yamllint-1.26.0-py2.py3-none-any.whl", hash = "sha256:8a5f8e442f49309eaf3e9d7232ce76f2fc8026f5c0c0b164b83f33fed1399637"},
-    {file = "yamllint-1.26.0.tar.gz", hash = "sha256:b0e4c89985c7f5f8451c2eb8c67d804d10ac13a4abe031cbf49bdf3465d01087"},
+    {file = "yamllint-1.26.1.tar.gz", hash = "sha256:87d9462b3ed7e9dfa19caa177f7a77cd9888b3dc4044447d6ae0ab233bcd1324"},
 ]
 yarl = [
     {file = "yarl-1.6.3-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:0355a701b3998dcd832d0dc47cc5dedf3874f966ac7f870e0f3a6788d802d434"},
