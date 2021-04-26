@@ -104,11 +104,11 @@ stevedore = ">=1.20.0"
 
 [[package]]
 name = "black"
-version = "20.8b1"
+version = "21.4b0"
 description = "The uncompromising code formatter."
 category = "dev"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.6.2"
 
 [package.dependencies]
 appdirs = "*"
@@ -117,12 +117,11 @@ mypy-extensions = ">=0.4.3"
 pathspec = ">=0.6,<1"
 regex = ">=2020.1.8"
 toml = ">=0.10.1"
-typed-ast = ">=1.4.0"
-typing-extensions = ">=3.7.4"
 
 [package.extras]
 colorama = ["colorama (>=0.4.3)"]
 d = ["aiohttp (>=3.3.2)", "aiohttp-cors"]
+python2 = ["typed-ast (>=1.4.2)"]
 
 [[package]]
 name = "blacken-docs"
@@ -869,7 +868,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "6f659dc5e078a1c56090e66294ee446fcbb44a5895bd55863783466042f6ba51"
+content-hash = "79566992b2c242692fbfb6e909282c9c198bbe1c03bf54894fc462d80f8e6150"
 
 [metadata.files]
 aiohttp = [
@@ -944,7 +943,8 @@ bandit = [
     {file = "bandit-1.7.0.tar.gz", hash = "sha256:8a4c7415254d75df8ff3c3b15cfe9042ecee628a1e40b44c15a98890fbfc2608"},
 ]
 black = [
-    {file = "black-20.8b1.tar.gz", hash = "sha256:1c02557aa099101b9d21496f8a914e9ed2222ef70336404eeeac8edba836fbea"},
+    {file = "black-21.4b0-py3-none-any.whl", hash = "sha256:2db7040bbbbaa46247bfcc05c6efdebd7ebe50c1c3ca745ca6e0f6776438c96c"},
+    {file = "black-21.4b0.tar.gz", hash = "sha256:915d916c48646dbe8040d5265cff7111421a60a3dfe7f7e07273176a57c24a34"},
 ]
 blacken-docs = [
     {file = "blacken_docs-1.10.0-py2.py3-none-any.whl", hash = "sha256:149197a0b17e83121fc10aca9eda1417728fdccebde930a6722f97d87ed30f4b"},
