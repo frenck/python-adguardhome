@@ -31,7 +31,7 @@ yarl = ">=1.6.0"
 
 [tool.poetry.dev-dependencies]
 aresponses = "^2.1.4"
-black = "^21.4b0"
+black = "^21.4b1"
 blacken-docs = "^1.10.0"
 coverage = {version = "^5.5", extras = ["toml"]}
 flake8 = "^3.9.1"
