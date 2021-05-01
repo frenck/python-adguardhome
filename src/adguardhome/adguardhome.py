@@ -29,13 +29,13 @@ class AdGuardHome:
         host: str,
         *,
         base_path: str = "/control",
-        password: str = None,
+        password: str | None = None,
         port: int = 3000,
         request_timeout: int = 10,
         session: aiohttp.client.ClientSession | None = None,
         tls: bool = False,
-        user_agent: str = None,
-        username: str = None,
+        user_agent: str | None = None,
+        username: str | None = None,
         verify_ssl: bool = True,
     ) -> None:
         """Initialize connection with AdGuard Home.
