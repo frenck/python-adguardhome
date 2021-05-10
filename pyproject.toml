@@ -34,7 +34,7 @@ aresponses = "^2.1.4"
 black = "^21.5b0"
 blacken-docs = "^1.10.0"
 coverage = {version = "^5.5", extras = ["toml"]}
-flake8 = "^3.9.1"
+flake8 = "^3.9.2"
 flake8-docstrings = "^1.6.0"
 isort = "^5.8.0"
 mypy = "^0.812"
