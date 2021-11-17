@@ -123,7 +123,7 @@ stevedore = ">=1.20.0"
 
 [[package]]
 name = "black"
-version = "21.10b0"
+version = "21.11b0"
 description = "The uncompromising code formatter."
 category = "dev"
 optional = false
@@ -957,7 +957,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "c1e6a77af33a6379f7819839e846f575540e1e1724caf46dd78f7374a63da537"
+content-hash = "ef50a205ab3dc8b7d6d21bfab706a29729095da0207216c9b24b13ce8bca4342"
 
 [metadata.files]
 aiohttp = [
@@ -1071,8 +1071,8 @@ bandit = [
     {file = "bandit-1.7.1.tar.gz", hash = "sha256:a81b00b5436e6880fa8ad6799bc830e02032047713cbb143a12939ac67eb756c"},
 ]
 black = [
-    {file = "black-21.10b0-py3-none-any.whl", hash = "sha256:6eb7448da9143ee65b856a5f3676b7dda98ad9abe0f87fce8c59291f15e82a5b"},
-    {file = "black-21.10b0.tar.gz", hash = "sha256:a9952229092e325fe5f3dae56d81f639b23f7131eb840781947e4b2886030f33"},
+    {file = "black-21.11b0-py3-none-any.whl", hash = "sha256:0b1f66cbfadcd332ceeaeecf6373d9991d451868d2e2219ad0ac1213fb701117"},
+    {file = "black-21.11b0.tar.gz", hash = "sha256:83f3852301c8dcb229e9c444dd79f573c8d31c7c2dad9bbaaa94c808630e32aa"},
 ]
 blacken-docs = [
     {file = "blacken_docs-1.11.0-py2.py3-none-any.whl", hash = "sha256:9fcd6c11fd6e128fa25b0bbb30e6a054bf81e818ffdee4c6c2281a77e75696f0"},
