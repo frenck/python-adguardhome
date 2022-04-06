@@ -11,6 +11,7 @@ import aiohttp
 import async_timeout
 from yarl import URL
 
+from .clients import AdGuardHomeClients
 from .exceptions import AdGuardHomeConnectionError, AdGuardHomeError
 from .filtering import AdGuardHomeFiltering
 from .parental import AdGuardHomeParental
@@ -75,6 +76,7 @@ class AdGuardHome:
         if self.base_path[-1] != "/":
             self.base_path += "/"
 
+        self.clients = AdGuardHomeClients(self)
         self.filtering = AdGuardHomeFiltering(self)
         self.parental = AdGuardHomeParental(self)
         self.querylog = AdGuardHomeQueryLog(self)
