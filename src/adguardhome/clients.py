@@ -24,7 +24,7 @@ class AdGuardHomeClient:
 
 
     async def getFiltering(self) -> bool:
-        response = await self.getConfig(self._name)
+        response = await self.getConfig()
         return response["filtering_enabled"]
 
     async def setFiltering(self, filtering_enabled: bool) -> None:
@@ -32,7 +32,7 @@ class AdGuardHomeClient:
 
 
     async def getParental(self) -> bool:
-        response = await self.getConfig(self._name)
+        response = await self.getConfig()
         return response["parental_enabled"]
 
     async def setParental(self, parental_enabled: bool) -> None:
@@ -40,7 +40,7 @@ class AdGuardHomeClient:
 
 
     async def getSafeBrowsing(self) -> bool:
-        response = await self.getConfig(self._name)
+        response = await self.getConfig()
         return response["safebrowsing_enabled"]
 
     async def setSafeBrowsing(self, safebrowsing_enabled: bool) -> None:
@@ -48,7 +48,7 @@ class AdGuardHomeClient:
 
 
     async def getSafeSearch(self) -> bool:
-        response = await self.getConfig(self._name)
+        response = await self.getConfig()
         return response["safesearch_enabled"]
 
     async def setSafeSearch(self, safesearch_enabled: bool) -> None:
@@ -103,7 +103,7 @@ class AdGuardHomeClients:
         response = await self._adguard.request("clients")
         names = [client["name"] for client in response["clients"]]
         return names
-        
+
     async def getClientConfig(self, clientName: str) -> dict:
         """Return the requested client configuration or None.
 
