@@ -34,7 +34,7 @@ yarl = ">=1.6.0"
 aresponses = "^2.1.5"
 black = "^22.3"
 blacken-docs = "^1.12.1"
-coverage = {version = "^6.3", extras = ["toml"]}
+coverage = {version = "^6.4", extras = ["toml"]}
 flake8 = "^4.0.1"
 flake8-docstrings = "^1.6.0"
 isort = "^5.10.1"
