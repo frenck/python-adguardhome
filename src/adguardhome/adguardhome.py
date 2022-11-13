@@ -11,6 +11,7 @@ import aiohttp
 import async_timeout
 from yarl import URL
 
+from .blocked_services import AdGuardHomeBlockedServices
 from .exceptions import AdGuardHomeConnectionError, AdGuardHomeError
 from .filtering import AdGuardHomeFiltering
 from .parental import AdGuardHomeParental
@@ -75,6 +76,7 @@ class AdGuardHome:
         if self.base_path[-1] != "/":
             self.base_path += "/"
 
+        self.blocked_services = AdGuardHomeBlockedServices(self)
         self.filtering = AdGuardHomeFiltering(self)
         self.parental = AdGuardHomeParental(self)
         self.querylog = AdGuardHomeQueryLog(self)
@@ -88,9 +90,9 @@ class AdGuardHome:
         uri: str,
         method: str = "GET",
         data: Any | None = None,
-        json_data: dict | None = None,
+        json_data: list | dict | None = None,
         params: Mapping[str, str] | None = None,
-    ) -> dict[str, Any]:
+    ) -> list | dict[str, Any]:
         """Handle a request to the AdGuard Home instance.
 
         Make a request against the AdGuard Home API and handles the response.
