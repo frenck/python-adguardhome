@@ -1,6 +1,7 @@
 """Asynchronous Python client for the AdGuard Home API."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from .exceptions import AdGuardHomeError
@@ -9,16 +10,11 @@ if TYPE_CHECKING:
     from . import AdGuardHome
 
 
+@dataclass
 class AdGuardHomeFiltering:
     """Controls AdGuard Home filtering. Blocks domains."""
 
-    def __init__(self, adguard: AdGuardHome) -> None:
-        """Initialize object.
-
-        Args:
-            adguard: The AdGuard Home instance.
-        """
-        self._adguard = adguard
+    adguard: AdGuardHome
 
     async def _config(
         self, *, enabled: bool | None = None, interval: int | None = None
@@ -34,7 +30,7 @@ class AdGuardHomeFiltering:
         if interval is None:
             interval = await self.interval()
 
-        await self._adguard.request(
+        await self.adguard.request(
             "filtering/config",
             method="POST",
             json_data={"enabled": enabled, "interval": interval},
@@ -46,7 +42,7 @@ class AdGuardHomeFiltering:
         Returns:
             The current state of the AdGuard Home filtering.
         """
-        response = await self._adguard.request("filtering/status")
+        response = await self.adguard.request("filtering/status")
         return response["enabled"]
 
     async def enable(self) -> None:
@@ -88,7 +84,7 @@ class AdGuardHomeFiltering:
             await self._config(interval=interval)
             return interval
 
-        response = await self._adguard.request("filtering/status")
+        response = await self.adguard.request("filtering/status")
         return response["interval"]
 
     async def rules_count(self, *, allowlist: bool) -> int:
@@ -101,7 +97,7 @@ class AdGuardHomeFiltering:
             The number of filtering rules currently loaded in the AdGuard
             Home instance.
         """
-        response = await self._adguard.request("filtering/status")
+        response = await self.adguard.request("filtering/status")
 
         count = "whitelist_filters" if allowlist else "filters"
         if not response.get(count):
@@ -121,7 +117,7 @@ class AdGuardHomeFiltering:
             AdGuardHomeError: Failed adding the filter subscription.
         """
         try:
-            await self._adguard.request(
+            await self.adguard.request(
                 "filtering/add_url",
                 method="POST",
                 json_data={"whitelist": allowlist, "name": name, "url": url},
@@ -142,7 +138,7 @@ class AdGuardHomeFiltering:
             AdGuardHomeError: Failed removing the filter subscription.
         """
         try:
-            await self._adguard.request(
+            await self.adguard.request(
                 "filtering/remove_url",
                 method="POST",
                 json_data={"whitelist": allowlist, "url": url},
@@ -162,7 +158,7 @@ class AdGuardHomeFiltering:
         Raises:
             AdGuardHomeError: Failed enabling filter subscription.
         """
-        response = await self._adguard.request("filtering/status")
+        response = await self.adguard.request("filtering/status")
         filter_type = "whitelist_filters" if allowlist else "filters"
 
         # Excluded from coverage:
@@ -177,7 +173,7 @@ class AdGuardHomeFiltering:
         )
 
         try:
-            await self._adguard.request(
+            await self.adguard.request(
                 "filtering/set_url",
                 method="POST",
                 json_data={
@@ -201,7 +197,7 @@ class AdGuardHomeFiltering:
         Raises:
             AdGuardHomeError: Failed disabling filter subscription.
         """
-        response = await self._adguard.request("filtering/status")
+        response = await self.adguard.request("filtering/status")
         filter_type = "whitelist_filters" if allowlist else "filters"
 
         # Excluded from coverage:
@@ -216,7 +212,7 @@ class AdGuardHomeFiltering:
         )
 
         try:
-            await self._adguard.request(
+            await self.adguard.request(
                 "filtering/set_url",
                 method="POST",
                 json_data={
@@ -243,7 +239,7 @@ class AdGuardHomeFiltering:
         force_value = "true" if force else "false"
 
         try:
-            await self._adguard.request(
+            await self.adguard.request(
                 "filtering/refresh",
                 method="POST",
                 json_data={"whitelist": allowlist},
