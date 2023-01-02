@@ -1,6 +1,7 @@
 """Asynchronous Python client for the AdGuard Home API."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from .exceptions import AdGuardHomeError
@@ -9,16 +10,11 @@ if TYPE_CHECKING:
     from . import AdGuardHome
 
 
+@dataclass
 class AdGuardHomeParental:
     """Controls AdGuard Home parental control."""
 
-    def __init__(self, adguard: AdGuardHome) -> None:
-        """Initialize object.
-
-        Args:
-            adguard: The AdGuard Home instance.
-        """
-        self._adguard = adguard
+    adguard: AdGuardHome
 
     async def enabled(self) -> bool:
         """Return if AdGuard Home parental control is enabled or not.
@@ -26,7 +22,7 @@ class AdGuardHomeParental:
         Returns:
             The current state of the AdGuard Home parental control.
         """
-        response = await self._adguard.request("parental/status")
+        response = await self.adguard.request("parental/status")
         return response["enabled"]
 
     async def enable(self) -> None:
@@ -36,7 +32,7 @@ class AdGuardHomeParental:
             AdGuardHomeError: If enabling parental control failed.
         """
         try:
-            await self._adguard.request(
+            await self.adguard.request(
                 "parental/enable", method="POST", data="sensitivity=TEEN"
             )
         except AdGuardHomeError as exception:
@@ -51,7 +47,7 @@ class AdGuardHomeParental:
             AdGuardHomeError: If disabling parental control failed.
         """
         try:
-            await self._adguard.request("parental/disable", method="POST")
+            await self.adguard.request("parental/disable", method="POST")
         except AdGuardHomeError as exception:
             raise AdGuardHomeError(
                 "Disabling AdGuard Home parental control failed"

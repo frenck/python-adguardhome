@@ -1,6 +1,7 @@
 """Asynchronous Python client for the AdGuard Home API."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from .exceptions import AdGuardHomeError
@@ -9,16 +10,11 @@ if TYPE_CHECKING:
     from . import AdGuardHome
 
 
+@dataclass
 class AdGuardHomeSafeBrowsing:
     """Controls AdGuard Home browsing security."""
 
-    def __init__(self, adguard: AdGuardHome) -> None:
-        """Initialize object.
-
-        Args:
-            adguard: The AdGuard Home instance.
-        """
-        self._adguard = adguard
+    adguard: AdGuardHome
 
     async def enabled(self) -> bool:
         """Return if AdGuard Home browsing security is enabled or not.
@@ -26,7 +22,7 @@ class AdGuardHomeSafeBrowsing:
         Returns:
             The current state of the AdGuard safe browsing feature.
         """
-        response = await self._adguard.request("safebrowsing/status")
+        response = await self.adguard.request("safebrowsing/status")
         return response["enabled"]
 
     async def enable(self) -> None:
@@ -36,7 +32,7 @@ class AdGuardHomeSafeBrowsing:
             AdGuardHomeError: If enabling the safe browsing didn't succeed.
         """
         try:
-            await self._adguard.request("safebrowsing/enable", method="POST")
+            await self.adguard.request("safebrowsing/enable", method="POST")
         except AdGuardHomeError as exception:
             raise AdGuardHomeError(
                 "Enabling AdGuard Home safe browsing failed"
@@ -49,7 +45,7 @@ class AdGuardHomeSafeBrowsing:
             AdGuardHomeError: If disabling the safe browsing didn't succeed.
         """
         try:
-            await self._adguard.request("safebrowsing/disable", method="POST")
+            await self.adguard.request("safebrowsing/disable", method="POST")
         except AdGuardHomeError as exception:
             raise AdGuardHomeError(
                 "Disabling AdGuard Home safe browsing failed"

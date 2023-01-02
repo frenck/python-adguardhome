@@ -1,6 +1,7 @@
 """Asynchronous Python client for the AdGuard Home API."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from .exceptions import AdGuardHomeError
@@ -9,16 +10,11 @@ if TYPE_CHECKING:
     from . import AdGuardHome
 
 
+@dataclass
 class AdGuardHomeQueryLog:
     """Controls AdGuard Home query log."""
 
-    def __init__(self, adguard: AdGuardHome) -> None:
-        """Initialize object.
-
-        Args:
-            adguard: The AdGuard Home instance.
-        """
-        self._adguard = adguard
+    adguard: AdGuardHome
 
     async def _config(self, enabled: bool | None = None, interval: int | None = None):
         """Configure query log on AdGuard Home.
@@ -31,7 +27,7 @@ class AdGuardHomeQueryLog:
             enabled = await self.enabled()
         if interval is None:
             interval = await self.interval()
-        await self._adguard.request(
+        await self.adguard.request(
             "querylog_config",
             method="POST",
             json_data={"enabled": enabled, "interval": interval},
@@ -43,7 +39,7 @@ class AdGuardHomeQueryLog:
         Returns:
             The current state of the AdGuard Home query log.
         """
-        response = await self._adguard.request("querylog_info")
+        response = await self.adguard.request("querylog_info")
         return response["enabled"]
 
     async def enable(self) -> None:
@@ -72,7 +68,7 @@ class AdGuardHomeQueryLog:
             await self._config(interval=interval)
             return interval
 
-        response = await self._adguard.request("querylog_info")
+        response = await self.adguard.request("querylog_info")
         return response["interval"]
 
     async def disable(self) -> None:
