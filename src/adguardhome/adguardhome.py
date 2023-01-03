@@ -82,7 +82,7 @@ class AdGuardHome:
         self.safesearch = AdGuardHomeSafeSearch(self)
         self.stats = AdGuardHomeStats(self)
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments, too-many-locals
     async def request(
         self,
         uri: str,
