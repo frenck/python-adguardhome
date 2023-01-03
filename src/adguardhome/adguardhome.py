@@ -82,7 +82,7 @@ class AdGuardHome:
         self.safesearch = AdGuardHomeSafeSearch(self)
         self.stats = AdGuardHomeStats(self)
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments, too-many-locals
     async def request(
         self,
         uri: str,
@@ -132,6 +132,9 @@ class AdGuardHome:
             self._close_session = True
 
         try:
+            skip_auto_headers = None
+            if data is None:
+                skip_auto_headers = {"Content-Type"}
             async with async_timeout.timeout(self.request_timeout):
                 response = await self._session.request(
                     method,
@@ -142,6 +145,7 @@ class AdGuardHome:
                     params=params,
                     headers=headers,
                     ssl=self.verify_ssl,
+                    skip_auto_headers=skip_auto_headers,
                 )
         except asyncio.TimeoutError as exception:
             raise AdGuardHomeConnectionError(
