@@ -131,10 +131,11 @@ class AdGuardHome:
             self._session = aiohttp.ClientSession()
             self._close_session = True
 
+        skip_auto_headers = None
+        if data is None and json_data is None:
+            skip_auto_headers = {"Content-Type"}
+
         try:
-            skip_auto_headers = None
-            if data is None:
-                skip_auto_headers = {"Content-Type"}
             async with async_timeout.timeout(self.request_timeout):
                 response = await self._session.request(
                     method,
