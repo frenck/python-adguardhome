@@ -1,0 +1,133 @@
+"""Tests for `adguardhome.client`"""
+import functools
+import json
+
+import aiohttp
+import pytest
+from icecream import ic
+
+from adguardhome import AdGuardHome
+from adguardhome.client import AutoClient, Client, WhoisInfo
+from adguardhome.exceptions import AdGuardHomeError
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "method", ["get_auto_clients", "get_clients", "get_supported_tags"]
+)
+async def test_empty_list(aresponses, method):
+    """Test listing clients"""
+    aresponses.add(
+        "example.com:3000",
+        "/control/clients",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text=json.dumps({"auto_clients": [], "clients": [], "supported_tags": []}),
+        ),
+    )
+
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
+        call = getattr(adguard.clients, method)
+        assert await call() == []
+
+
+@pytest.mark.asyncio
+async def test_get_auto_clients(aresponses):
+    aresponses.add(
+        "example.com:3000",
+        "/control/clients",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text=json.dumps(
+                {
+                    "auto_clients": [
+                        {"ip": "4.3.2.1", "name": "otto", "source": "test"},
+                        {
+                            "ip": "4.3.2.2",
+                            "name": "otto",
+                            "source": "test",
+                            "whois_info": {"type": "who knows?"},
+                        },
+                    ],
+                    "clients": [],
+                    "supported_tags": [],
+                }
+            ),
+        ),
+    )
+
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
+        output = await adguard.clients.get_auto_clients()
+        assert (
+            AutoClient(ip="4.3.2.1", name="otto", source="test", whois_info=None)
+            in output
+        )
+        assert (
+            AutoClient(
+                ip="4.3.2.2",
+                name="otto",
+                source="test",
+                whois_info=WhoisInfo(type="who knows?"),
+            )
+            in output
+        )
+
+
+@pytest.mark.asyncio
+async def test_get_clients(aresponses):
+    aresponses.add(
+        "example.com:3000",
+        "/control/clients",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text=json.dumps(
+                {
+                    "auto_clients": [],
+                    "clients": [
+                        {
+                            "blocked_services": None,
+                            "filtering_enabled": False,
+                            "ids": ["4.3.2.1", "1.2.3.4"],
+                            "name": "test",
+                            "parental_enabled": True,
+                            "safebrowsing_enabled": True,
+                            "safesearch_enabled": True,
+                            "tags": ["some tag"],
+                            "upstreams": ["some upstream"],
+                            "use_global_blocked_services": False,
+                            "use_global_settings": False,
+                        },
+                    ],
+                    "supported_tags": [],
+                }
+            ),
+        ),
+    )
+
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
+        output = ic(await adguard.clients.get_clients())
+        assert (
+            Client(
+                name="test",
+                ids=["4.3.2.1", "1.2.3.4"],
+                filtering_enabled=False,
+                parental_enabled=True,
+                safebrowsing_enabled=True,
+                safesearch_enabled=True,
+                use_global_blocked_services=False,
+                use_global_settings=False,
+                blocked_services=None,
+                tags=["some tag"],
+                upstreams=["some upstream"],
+            )
+            in output
+        )

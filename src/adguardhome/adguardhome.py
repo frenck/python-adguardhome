@@ -11,6 +11,7 @@ import aiohttp
 import async_timeout
 from yarl import URL
 
+from .client import Clients
 from .exceptions import AdGuardHomeConnectionError, AdGuardHomeError
 from .filtering import AdGuardHomeFiltering
 from .parental import AdGuardHomeParental
@@ -218,6 +219,11 @@ class AdGuardHome:
             raise AdGuardHomeError(
                 "Failed disabling AdGuard Home protection"
             ) from exception
+
+    @property
+    def clients(self):
+        """Get a facade for interacting with the Client resources"""
+        return Clients(self)
 
     async def version(self) -> str:
         """Return the current version of the AdGuard Home instance.
