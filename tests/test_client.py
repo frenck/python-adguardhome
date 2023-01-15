@@ -44,9 +44,9 @@ async def test_get_auto_clients(aresponses):
             text=json.dumps(
                 {
                     "auto_clients": [
-                        {"ip": "4.3.2.1", "name": "otto", "source": "test"},
+                        {"ip": "192.0.2.1", "name": "otto", "source": "test"},
                         {
-                            "ip": "4.3.2.2",
+                            "ip": "192.0.2.3",
                             "name": "otto",
                             "source": "test",
                             "whois_info": {"type": "who knows?"},
@@ -63,12 +63,12 @@ async def test_get_auto_clients(aresponses):
         adguard = AdGuardHome("example.com", session=session)
         output = await adguard.clients.get_auto_clients()
         assert (
-            AutoClient(ip="4.3.2.1", name="otto", source="test", whois_info=None)
+            AutoClient(ip="192.0.2.1", name="otto", source="test", whois_info=None)
             in output
         )
         assert (
             AutoClient(
-                ip="4.3.2.2",
+                ip="192.0.2.3",
                 name="otto",
                 source="test",
                 whois_info=WhoisInfo(type="who knows?"),
@@ -93,7 +93,7 @@ async def test_get_clients(aresponses):
                         {
                             "blocked_services": None,
                             "filtering_enabled": False,
-                            "ids": ["4.3.2.1", "1.2.3.4"],
+                            "ids": ["192.0.2.1", "192.0.2.2"],
                             "name": "test",
                             "parental_enabled": True,
                             "safebrowsing_enabled": True,
@@ -116,7 +116,7 @@ async def test_get_clients(aresponses):
         assert (
             Client(
                 name="test",
-                ids=["4.3.2.1", "1.2.3.4"],
+                ids=["192.0.2.1", "192.0.2.2"],
                 filtering_enabled=False,
                 parental_enabled=True,
                 safebrowsing_enabled=True,
