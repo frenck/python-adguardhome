@@ -1,5 +1,4 @@
 """Tests for `adguardhome.client`"""
-import functools
 import json
 
 import aiohttp
@@ -8,7 +7,6 @@ from icecream import ic
 
 from adguardhome import AdGuardHome
 from adguardhome.client import AutoClient, Client, WhoisInfo
-from adguardhome.exceptions import AdGuardHomeError
 
 
 @pytest.mark.asyncio
