@@ -1219,14 +1219,14 @@ files = [
 
 [[package]]
 name = "pylint"
-version = "2.16.0"
+version = "2.16.1"
 description = "python code static checker"
 category = "dev"
 optional = false
 python-versions = ">=3.7.2"
 files = [
-    {file = "pylint-2.16.0-py3-none-any.whl", hash = "sha256:55e5cf00601c4cfe2e9404355c743a14e63be85df7409da7e482ebde5f9f14a1"},
-    {file = "pylint-2.16.0.tar.gz", hash = "sha256:43ee36c9b690507ef9429ce1802bdc4dcde49454c3d665e39c23791567019c0a"},
+    {file = "pylint-2.16.1-py3-none-any.whl", hash = "sha256:bad9d7c36037f6043a1e848a43004dfd5ea5ceb05815d713ba56ca4503a9fe37"},
+    {file = "pylint-2.16.1.tar.gz", hash = "sha256:ffe7fa536bb38ba35006a7c8a6d2efbfdd3d95bbf21199cad31f76b1c50aaf30"},
 ]
 
 [package.dependencies]
@@ -1849,4 +1849,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "7afb44f9ad26912839c810329462a7b7aa791058d5bed185e5d2065a73bec852"
+content-hash = "384cacef1a23671fac98102d3b585a0ac37fc176fbbfb0eeb8c660e8e454dc3a"
