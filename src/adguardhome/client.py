@@ -1,8 +1,8 @@
-"""Interacting with AdGuardHome clients"""
+"""Interacting with AdGuardHome clients."""
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Dict, List, Mapping
+from typing import TYPE_CHECKING, Any, Mapping
 
 if TYPE_CHECKING:
     from adguardhome.adguardhome import AdGuardHome
@@ -12,21 +12,21 @@ if TYPE_CHECKING:
 class WhoisInfo:
     """Not described in the OpenAPI docs."""
 
-    type: str
+    type: str  # noqa: A003
 
 
 @dataclass
 class AutoClient:
     """Automatically discovered AdGuardHome client."""
 
-    ip: str
+    ip: str  # # pylint: disable=C0103
     name: str
     source: str
     whois_info: WhoisInfo | None
 
 
 @dataclass
-class Client:
+class Client:  # # pylint: disable=R0902
     """Administratively managed AdGuardHome client."""
 
     name: str
@@ -43,12 +43,17 @@ class Client:
 
 
 class Clients:
-    """A resource facade for the /clients API on AdGuardHome"""
+    """A resource facade for the /clients API on AdGuardHome."""
 
     def __init__(self, adguard: AdGuardHome):
+        """Perfunctory docstring.
+
+        Args:
+            adguard: The adguard instance for this client.
+        """
         self.adguard = adguard
 
-    async def request(
+    async def request(  # # pylint: disable=R0913
         self,
         uri: str,
         method: str = "GET",
@@ -56,6 +61,20 @@ class Clients:
         json_data: dict | None = None,
         params: Mapping[str, str] | None = None,
     ) -> dict[str, Any]:
+        """Send a request to the clients URI.
+
+        Args:
+            uri: The request URI on the AdGuard Home API to call.
+            method: HTTP method to use for the request; e.g., GET, POST.
+            data: RAW HTTP request data to send with the request.
+            json_data: Dictionary of data to send as JSON with the request.
+            params: Mapping of request parameters to send with the request.
+
+        Returns:
+            The response from the API. In case the response is a JSON response,
+            the method will return a decoded JSON response as a Python
+            dictionary. In other cases, it will return the RAW text response.
+        """
         return await self.adguard.request(
             f"clients{uri}",
             method=method,
@@ -73,13 +92,16 @@ class Clients:
         """
 
         def _make_auto_client(raw: dict[str, Any]) -> AutoClient:
-            wi = (
+            whois_info = (
                 WhoisInfo(type=raw["whois_info"]["type"])
                 if "whois_info" in raw and raw["whois_info"]
                 else None
             )
             return AutoClient(
-                ip=raw["ip"], name=raw["name"], source=raw["source"], whois_info=wi
+                ip=raw["ip"],
+                name=raw["name"],
+                source=raw["source"],
+                whois_info=whois_info,
             )
 
         raw_auto_clients = (await self.request("", method="GET"))["auto_clients"]
@@ -115,5 +137,9 @@ class Clients:
         ]
 
     async def get_supported_tags(self) -> list[Any]:
-        """List supported tags for Clients"""
+        """List supported tags for Clients.
+
+        Returns:
+            The supported tags for clients.
+        """
         return (await self.request("", method="GET"))["supported_tags"]

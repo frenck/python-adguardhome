@@ -222,7 +222,11 @@ class AdGuardHome:
 
     @property
     def clients(self):
-        """Get a facade for interacting with the Client resources"""
+        """Get a facade for interacting with the Client resources.
+
+        Returns:
+            A facade containing the client resources on the remote.
+        """
         return Clients(self)
 
     async def version(self) -> str:
