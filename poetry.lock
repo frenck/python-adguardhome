@@ -1319,13 +1319,13 @@ testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtuale
 
 [[package]]
 name = "pyupgrade"
-version = "3.7.0"
+version = "3.8.0"
 description = "A tool to automatically upgrade syntax for newer versions."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pyupgrade-3.7.0-py2.py3-none-any.whl", hash = "sha256:696c1e6ebec6697297d3e45ae511ecedb5b17d31e5212a20bc892ba51b1c0b6d"},
-    {file = "pyupgrade-3.7.0.tar.gz", hash = "sha256:94841f8550547349aec108ad03fcdb19b64e4ef68fd21f5d0038826eb6dbe5f3"},
+    {file = "pyupgrade-3.8.0-py2.py3-none-any.whl", hash = "sha256:08d0e6129f5e9da7e7a581bdbea689e0d49c3c93eeaf156a07ae2fd794f52660"},
+    {file = "pyupgrade-3.8.0.tar.gz", hash = "sha256:1facb0b8407cca468dfcc1d13717e3a85aa37b9e6e7338664ad5bfe5ef50c867"},
 ]
 
 [package.dependencies]
@@ -1845,4 +1845,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "efe175516d068dc37ce2791175ad923b95f99c52e3df0e7fbc92ec28d4fb9864"
+content-hash = "f229a4ab66ad8e513fd9e5c00e697d46c652282d75f06972317dd83a9ccc65d0"
