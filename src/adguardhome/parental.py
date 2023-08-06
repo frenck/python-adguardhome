@@ -33,7 +33,7 @@ class AdGuardHomeParental:
         """
         try:
             await self.adguard.request(
-                "parental/enable", method="POST", data="sensitivity=TEEN"
+                "parental/enable", method="POST"
             )
         except AdGuardHomeError as exception:
             raise AdGuardHomeError(
