@@ -16,7 +16,7 @@ jobs:
         python: ["3.8", "3.9", "3.10", "3.11"]
     steps:
       - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 🏗 Set up Python ${{ matrix.python }}
         id: python
         uses: actions/setup-python@v4
@@ -59,7 +59,7 @@ jobs:
         python: [3.8, 3.9]
     steps:
       - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 🏗 Set up Python ${{ matrix.python }}
         id: python
         uses: actions/setup-python@v4
