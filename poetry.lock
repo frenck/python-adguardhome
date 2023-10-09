@@ -421,20 +421,6 @@ files = [
 
 [[package]]
 name = "dill"
-version = "0.3.6"
-description = "serialize all of python"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "dill-0.3.6-py3-none-any.whl", hash = "sha256:a07ffd2351b8c678dfc4a856a3005f8067aea51d6ba6c700796a4d9e280f39f0"},
-    {file = "dill-0.3.6.tar.gz", hash = "sha256:e5db55f3687856d8fbdab002ed78544e1c4559a130302693d839dfe8f93f2373"},
-]
-
-[package.extras]
-graph = ["objgraph (>=1.7.2)"]
-
-[[package]]
-name = "dill"
 version = "0.3.7"
 description = "serialize all of Python"
 optional = false
@@ -1626,13 +1612,13 @@ testing = ["coverage (>=6.2)", "coverage-enable-subprocess (>=1)", "flaky (>=3.7
 
 [[package]]
 name = "vulture"
-version = "2.9.1"
+version = "2.10"
 description = "Find dead code"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "vulture-2.9.1-py2.py3-none-any.whl", hash = "sha256:a46857014619bd4b785a506b9ddb738cd4621043558309b03a879d18f86e2d72"},
-    {file = "vulture-2.9.1.tar.gz", hash = "sha256:b6a2aa632b6fd51488a8eeac650ab4a509bb1a032e81943817a8a2e6a63a30b3"},
+    {file = "vulture-2.10-py2.py3-none-any.whl", hash = "sha256:568a4176db7468d0157817ae3bb1847a19f1ddc629849af487f9d3b279bff77d"},
+    {file = "vulture-2.10.tar.gz", hash = "sha256:2a5c3160bffba77595b6e6dfcc412016bd2a09cd4b66cdf7fbba913684899f6f"},
 ]
 
 [package.dependencies]
@@ -1746,4 +1732,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "cc86455d6ca0ae3b58dc1d46e923b6bf2a288e4513ff13e889d285d46b214c36"
+content-hash = "c63c5e8be1edf0b3a04b164a262a94f08b99a5b4610ed0ea0329fc01842eadcb"
