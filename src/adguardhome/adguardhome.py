@@ -24,7 +24,7 @@ from .stats import AdGuardHomeStats
 class AdGuardHome:
     """Main class for handling connections with AdGuard Home."""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         host: str,
         *,
