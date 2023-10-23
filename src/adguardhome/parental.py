@@ -32,9 +32,7 @@ class AdGuardHomeParental:
             AdGuardHomeError: If enabling parental control failed.
         """
         try:
-            await self.adguard.request(
-                "parental/enable", method="POST", data="sensitivity=TEEN"
-            )
+            await self.adguard.request("parental/enable", method="POST")
         except AdGuardHomeError as exception:
             raise AdGuardHomeError(
                 "Enabling AdGuard Home parental control failed"
