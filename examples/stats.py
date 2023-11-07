@@ -6,7 +6,7 @@ import asyncio
 from adguardhome import AdGuardHome
 
 
-async def main():
+async def main() -> None:
     """Show example on stats from your AdGuard Home instance."""
     async with AdGuardHome("192.168.1.2") as adguard:
         version = await adguard.version()
@@ -41,5 +41,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    asyncio.run(main())

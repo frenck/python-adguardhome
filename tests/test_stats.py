@@ -1,13 +1,13 @@
 """Tests for `adguardhome.stats`."""
 import aiohttp
 import pytest
+from aresponses import ResponsesMockServer
 
 from adguardhome import AdGuardHome
 from adguardhome.exceptions import AdGuardHomeError
 
 
-@pytest.mark.asyncio
-async def test_dns_queries(aresponses):
+async def test_dns_queries(aresponses: ResponsesMockServer) -> None:
     """Test requesting AdGuard Home number of DNS query stats."""
     aresponses.add(
         "example.com:3000",
@@ -25,8 +25,7 @@ async def test_dns_queries(aresponses):
         assert result == 666
 
 
-@pytest.mark.asyncio
-async def test_blocked_filtering(aresponses):
+async def test_blocked_filtering(aresponses: ResponsesMockServer) -> None:
     """Test requesting AdGuard Home filtering stats."""
     aresponses.add(
         "example.com:3000",
@@ -44,8 +43,7 @@ async def test_blocked_filtering(aresponses):
         assert result == 1337
 
 
-@pytest.mark.asyncio
-async def test_blocked_percentage(aresponses):
+async def test_blocked_percentage(aresponses: ResponsesMockServer) -> None:
     """Test requesting AdGuard Home filtering stats."""
     aresponses.add(
         "example.com:3000",
@@ -87,8 +85,7 @@ async def test_blocked_percentage(aresponses):
         assert result == 0.0
 
 
-@pytest.mark.asyncio
-async def test_replaced_safebrowsing(aresponses):
+async def test_replaced_safebrowsing(aresponses: ResponsesMockServer) -> None:
     """Test requesting AdGuard Home safebrowsing stats."""
     aresponses.add(
         "example.com:3000",
@@ -106,8 +103,7 @@ async def test_replaced_safebrowsing(aresponses):
         assert result == 42
 
 
-@pytest.mark.asyncio
-async def test_replaced_parental(aresponses):
+async def test_replaced_parental(aresponses: ResponsesMockServer) -> None:
     """Test requesting AdGuard Home parental control stats."""
     aresponses.add(
         "example.com:3000",
@@ -125,8 +121,7 @@ async def test_replaced_parental(aresponses):
         assert result == 13
 
 
-@pytest.mark.asyncio
-async def test_replaced_safesearch(aresponses):
+async def test_replaced_safesearch(aresponses: ResponsesMockServer) -> None:
     """Test requesting AdGuard Home safe search enforcement stats."""
     aresponses.add(
         "example.com:3000",
@@ -144,8 +139,7 @@ async def test_replaced_safesearch(aresponses):
         assert result == 18
 
 
-@pytest.mark.asyncio
-async def test_avg_processing_time(aresponses):
+async def test_avg_processing_time(aresponses: ResponsesMockServer) -> None:
     """Test requesting AdGuard Home DNS average processing time stats."""
     aresponses.add(
         "example.com:3000",
@@ -163,8 +157,7 @@ async def test_avg_processing_time(aresponses):
         assert result == 31.41
 
 
-@pytest.mark.asyncio
-async def test_period(aresponses):
+async def test_period(aresponses: ResponsesMockServer) -> None:
     """Test requesting AdGuard Home stats period."""
     aresponses.add(
         "example.com:3000",
@@ -183,8 +176,7 @@ async def test_period(aresponses):
         assert result == 7
 
 
-@pytest.mark.asyncio
-async def test_reset(aresponses):
+async def test_reset(aresponses: ResponsesMockServer) -> None:
     """Test resetting all AdGuard Home stats."""
     aresponses.add(
         "example.com:3000",

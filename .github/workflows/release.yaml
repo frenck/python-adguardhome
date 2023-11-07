@@ -7,42 +7,34 @@ on:
     types:
       - published
 
+env:
+  DEFAULT_PYTHON: "3.11"
+
 jobs:
   release:
     name: Releasing to PyPi
     runs-on: ubuntu-latest
+    environment:
+      name: release
+      url: https://pypi.org/p/adguardhome
+    permissions:
+      contents: write
+      id-token: write
     steps:
       - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v4
-      - name: 🏗 Set up Python 3.8
+        uses: actions/checkout@v4.1.1
+      - name: 🏗 Set up Poetry
+        run: pipx install poetry
+      - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v4.7.1
         with:
-          python-version: 3.8
-      - name: 🏗 Get pip cache dir
-        id: pip-cache
-        run: |
-          echo "::set-output name=dir::$(pip cache dir)"
-      - name: ⤵️ Restore cached Python PIP packages
-        uses: actions/cache@v3
-        with:
-          path: ${{ steps.pip-cache.outputs.dir }}
-          key: pip-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ hashFiles('.github/workflows/requirements.txt') }}
-          restore-keys: |
-            pip-${{ runner.os }}-${{ steps.python.outputs.python-version }}-
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          cache: "poetry"
       - name: 🏗 Install workflow dependencies
         run: |
-          pip install -r .github/workflows/requirements.txt
           poetry config virtualenvs.create true
           poetry config virtualenvs.in-project true
-      - name: ⤵️ Restore cached Python virtual environment
-        id: cached-poetry-dependencies
-        uses: actions/cache@v3
-        with:
-          path: .venv
-          key: >-
-            venv-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ hashFiles('poetry.lock') }}
-            venv-${{ runner.os }}-${{ steps.python.outputs.python-version }}-
       - name: 🏗 Install dependencies
         run: poetry install --no-interaction
       - name: 🏗 Set package version
@@ -54,8 +46,12 @@ jobs:
       - name: 🏗 Build package
         run: poetry build --no-interaction
       - name: 🚀 Publish to PyPi
-        env:
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-        run: |
-          poetry config pypi-token.pypi "${PYPI_TOKEN}"
-          poetry publish --no-interaction
+        uses: pypa/gh-action-pypi-publish@v1.8.10
+        with:
+          verbose: true
+          print-hash: true
+      - name: ✍️ Sign published artifacts
+        uses: sigstore/gh-action-sigstore-python@v2.1.0
+        with:
+          inputs: ./dist/*.tar.gz ./dist/*.whl
+          release-signing-artifacts: true

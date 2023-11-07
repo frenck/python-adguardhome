@@ -19,7 +19,8 @@ class AdGuardHomeParental:
     async def enabled(self) -> bool:
         """Return if AdGuard Home parental control is enabled or not.
 
-        Returns:
+        Returns
+        -------
             The current state of the AdGuard Home parental control.
         """
         response = await self.adguard.request("parental/status")
@@ -28,25 +29,25 @@ class AdGuardHomeParental:
     async def enable(self) -> None:
         """Enable AdGuard Home parental control.
 
-        Raises:
+        Raises
+        ------
             AdGuardHomeError: If enabling parental control failed.
         """
         try:
             await self.adguard.request("parental/enable", method="POST")
         except AdGuardHomeError as exception:
-            raise AdGuardHomeError(
-                "Enabling AdGuard Home parental control failed"
-            ) from exception
+            msg = "Enabling AdGuard Home parental control failed"
+            raise AdGuardHomeError(msg) from exception
 
     async def disable(self) -> None:
         """Disable AdGuard Home parental control.
 
-        Raises:
+        Raises
+        ------
             AdGuardHomeError: If disabling parental control failed.
         """
         try:
             await self.adguard.request("parental/disable", method="POST")
         except AdGuardHomeError as exception:
-            raise AdGuardHomeError(
-                "Disabling AdGuard Home parental control failed"
-            ) from exception
+            msg = "Disabling AdGuard Home parental control failed"
+            raise AdGuardHomeError(msg) from exception

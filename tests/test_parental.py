@@ -1,13 +1,13 @@
 """Tests for `adguardhome.parental`."""
 import aiohttp
 import pytest
+from aresponses import ResponsesMockServer
 
 from adguardhome import AdGuardHome
 from adguardhome.exceptions import AdGuardHomeError
 
 
-@pytest.mark.asyncio
-async def test_enabled(aresponses):
+async def test_enabled(aresponses: ResponsesMockServer) -> None:
     """Test request of current AdGuard Home parental control status."""
     aresponses.add(
         "example.com:3000",
@@ -37,8 +37,7 @@ async def test_enabled(aresponses):
         assert not enabled
 
 
-@pytest.mark.asyncio
-async def test_enable(aresponses):
+async def test_enable(aresponses: ResponsesMockServer) -> None:
     """Test enabling AdGuard Home parental control."""
     # Handle to run asserts on request in
     aresponses.add(
@@ -61,8 +60,7 @@ async def test_enable(aresponses):
             await adguard.parental.enable()
 
 
-@pytest.mark.asyncio
-async def test_disable(aresponses):
+async def test_disable(aresponses: ResponsesMockServer) -> None:
     """Test disabling AdGuard Home parental control."""
     aresponses.add(
         "example.com:3000",
