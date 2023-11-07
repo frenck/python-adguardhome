@@ -18,10 +18,11 @@ class AdGuardHomeFiltering:
 
     async def _config(
         self, *, enabled: bool | None = None, interval: int | None = None
-    ):
+    ) -> None:
         """Configure filtering on AdGuard Home.
 
         Args:
+        ----
             enabled: Enable/Disable AdGuard Home filtering.
             interval: Number of days to keep data in the logs.
         """
@@ -39,7 +40,8 @@ class AdGuardHomeFiltering:
     async def enabled(self) -> bool:
         """Return if AdGuard Home filtering is enabled or not.
 
-        Returns:
+        Returns
+        -------
             The current state of the AdGuard Home filtering.
         """
         response = await self.adguard.request("filtering/status")
@@ -48,36 +50,38 @@ class AdGuardHomeFiltering:
     async def enable(self) -> None:
         """Enable AdGuard Home filtering.
 
-        Raises:
+        Raises
+        ------
             AdGuardHomeError: If enabling the filtering didn't succeed.
         """
         try:
             await self._config(enabled=True)
         except AdGuardHomeError as exception:
-            raise AdGuardHomeError(
-                "Enabling AdGuard Home filtering failed"
-            ) from exception
+            msg = "Enabling AdGuard Home filtering failed"
+            raise AdGuardHomeError(msg) from exception
 
     async def disable(self) -> None:
         """Disable AdGuard Home filtering.
 
-        Raises:
+        Raises
+        ------
             AdGuardHomeError: If disabling the filtering didn't succeed.
         """
         try:
             await self._config(enabled=False)
         except AdGuardHomeError as exception:
-            raise AdGuardHomeError(
-                "Disabling AdGuard Home filtering failed"
-            ) from exception
+            msg = "Disabling AdGuard Home filtering failed"
+            raise AdGuardHomeError(msg) from exception
 
     async def interval(self, *, interval: int | None = None) -> int:
         """Return or set the time period to keep query log data.
 
         Args:
+        ----
             interval: Set the time period (in days) to keep query log data.
 
         Returns:
+        -------
             The current set time period to keep query log data.
         """
         if interval:
@@ -91,9 +95,11 @@ class AdGuardHomeFiltering:
         """Return the number of rules loaded.
 
         Args:
+        ----
             allowlist: True to get the allowlists count, False for the blocklists.
 
         Returns:
+        -------
             The number of filtering rules currently loaded in the AdGuard
             Home instance.
         """
@@ -109,11 +115,13 @@ class AdGuardHomeFiltering:
         """Add a new filter subscription to AdGuard Home.
 
         Args:
+        ----
             allowlist: True to add an allowlist, False for a blocklists.
             name: The name of the filter subscription.
             url: The URL of the filter list.
 
         Raises:
+        ------
             AdGuardHomeError: Failed adding the filter subscription.
         """
         try:
@@ -123,18 +131,19 @@ class AdGuardHomeFiltering:
                 json_data={"whitelist": allowlist, "name": name, "url": url},
             )
         except AdGuardHomeError as exception:
-            raise AdGuardHomeError(
-                "Failed adding URL to AdGuard Home filter"
-            ) from exception
+            msg = "Failed adding URL to AdGuard Home filter"
+            raise AdGuardHomeError(msg) from exception
 
     async def remove_url(self, *, allowlist: bool, url: str) -> None:
         """Remove a new filter subscription from AdGuard Home.
 
         Args:
+        ----
             allowlist: True to remove an allowlist, False for a blocklists.
             url: Filter subscription URL to remove from AdGuard Home.
 
         Raises:
+        ------
             AdGuardHomeError: Failed removing the filter subscription.
         """
         try:
@@ -144,18 +153,19 @@ class AdGuardHomeFiltering:
                 json_data={"whitelist": allowlist, "url": url},
             )
         except AdGuardHomeError as exception:
-            raise AdGuardHomeError(
-                "Failed removing URL from AdGuard Home filter"
-            ) from exception
+            msg = "Failed removing URL from AdGuard Home filter"
+            raise AdGuardHomeError(msg) from exception
 
     async def enable_url(self, *, allowlist: bool, url: str) -> None:
         """Enable a filter subscription in AdGuard Home.
 
         Args:
+        ----
             allowlist: True to enable an allowlist, False for a blocklists.
             url: Filter subscription URL to enable on AdGuard Home.
 
         Raises:
+        ------
             AdGuardHomeError: Failed enabling filter subscription.
         """
         response = await self.adguard.request("filtering/status")
@@ -183,18 +193,19 @@ class AdGuardHomeFiltering:
                 },
             )
         except AdGuardHomeError as exception:
-            raise AdGuardHomeError(
-                "Failed enabling URL on AdGuard Home filter"
-            ) from exception
+            msg = "Failed enabling URL on AdGuard Home filter"
+            raise AdGuardHomeError(msg) from exception
 
     async def disable_url(self, *, allowlist: bool, url: str) -> None:
         """Disable a filter subscription in AdGuard Home.
 
         Args:
+        ----
             url: Filter subscription URL to disable on AdGuard Home.
             allowlist: True to update the allowlists, False for the blocklists.
 
         Raises:
+        ------
             AdGuardHomeError: Failed disabling filter subscription.
         """
         response = await self.adguard.request("filtering/status")
@@ -222,18 +233,19 @@ class AdGuardHomeFiltering:
                 },
             )
         except AdGuardHomeError as exception:
-            raise AdGuardHomeError(
-                "Failed disabling URL on AdGuard Home filter"
-            ) from exception
+            msg = "Failed disabling URL on AdGuard Home filter"
+            raise AdGuardHomeError(msg) from exception
 
     async def refresh(self, *, allowlist: bool, force: bool = False) -> None:
         """Reload filtering subscriptions from URLs specified in AdGuard Home.
 
         Args:
+        ----
             force: Force the reload of all filter subscriptions.
             allowlist: True to update the allowlists, False for the blocklists.
 
         Raises:
+        ------
             AdGuardHomeError: Failed to refresh filter subscriptions.
         """
         force_value = "true" if force else "false"
@@ -246,6 +258,5 @@ class AdGuardHomeFiltering:
                 params={"force": force_value},
             )
         except AdGuardHomeError as exception:
-            raise AdGuardHomeError(
-                "Failed refreshing filter URLs in AdGuard Home"
-            ) from exception
+            msg = "Failed refreshing filter URLs in AdGuard Home"
+            raise AdGuardHomeError(msg) from exception

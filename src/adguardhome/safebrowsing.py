@@ -19,7 +19,8 @@ class AdGuardHomeSafeBrowsing:
     async def enabled(self) -> bool:
         """Return if AdGuard Home browsing security is enabled or not.
 
-        Returns:
+        Returns
+        -------
             The current state of the AdGuard safe browsing feature.
         """
         response = await self.adguard.request("safebrowsing/status")
@@ -28,25 +29,25 @@ class AdGuardHomeSafeBrowsing:
     async def enable(self) -> None:
         """Enable AdGuard Home browsing security.
 
-        Raises:
+        Raises
+        ------
             AdGuardHomeError: If enabling the safe browsing didn't succeed.
         """
         try:
             await self.adguard.request("safebrowsing/enable", method="POST")
         except AdGuardHomeError as exception:
-            raise AdGuardHomeError(
-                "Enabling AdGuard Home safe browsing failed"
-            ) from exception
+            msg = "Enabling AdGuard Home safe browsing failed"
+            raise AdGuardHomeError(msg) from exception
 
     async def disable(self) -> None:
         """Disable AdGuard Home browsing security.
 
-        Raises:
+        Raises
+        ------
             AdGuardHomeError: If disabling the safe browsing didn't succeed.
         """
         try:
             await self.adguard.request("safebrowsing/disable", method="POST")
         except AdGuardHomeError as exception:
-            raise AdGuardHomeError(
-                "Disabling AdGuard Home safe browsing failed"
-            ) from exception
+            msg = "Disabling AdGuard Home safe browsing failed"
+            raise AdGuardHomeError(msg) from exception
