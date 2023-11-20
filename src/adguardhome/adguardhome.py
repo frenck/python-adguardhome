@@ -8,7 +8,6 @@ from importlib import metadata
 from typing import Any, Mapping, Self
 
 import aiohttp
-import async_timeout
 from yarl import URL
 
 from .exceptions import AdGuardHomeConnectionError, AdGuardHomeError
@@ -141,7 +140,7 @@ class AdGuardHome:
             skip_auto_headers = {"Content-Type"}
 
         try:
-            async with async_timeout.timeout(self.request_timeout):
+            async with asyncio.timeout(self.request_timeout):
                 response = await self._session.request(
                     method,
                     url,
