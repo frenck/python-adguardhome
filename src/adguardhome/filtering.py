@@ -25,6 +25,7 @@ class AdGuardHomeFiltering:
         ----
             enabled: Enable/Disable AdGuard Home filtering.
             interval: Number of days to keep data in the logs.
+
         """
         if enabled is None:
             enabled = await self.enabled()
@@ -43,6 +44,7 @@ class AdGuardHomeFiltering:
         Returns
         -------
             The current state of the AdGuard Home filtering.
+
         """
         response = await self.adguard.request("filtering/status")
         return response["enabled"]
@@ -53,6 +55,7 @@ class AdGuardHomeFiltering:
         Raises
         ------
             AdGuardHomeError: If enabling the filtering didn't succeed.
+
         """
         try:
             await self._config(enabled=True)
@@ -66,6 +69,7 @@ class AdGuardHomeFiltering:
         Raises
         ------
             AdGuardHomeError: If disabling the filtering didn't succeed.
+
         """
         try:
             await self._config(enabled=False)
@@ -83,6 +87,7 @@ class AdGuardHomeFiltering:
         Returns:
         -------
             The current set time period to keep query log data.
+
         """
         if interval:
             await self._config(interval=interval)
@@ -102,6 +107,7 @@ class AdGuardHomeFiltering:
         -------
             The number of filtering rules currently loaded in the AdGuard
             Home instance.
+
         """
         response = await self.adguard.request("filtering/status")
 
@@ -123,6 +129,7 @@ class AdGuardHomeFiltering:
         Raises:
         ------
             AdGuardHomeError: Failed adding the filter subscription.
+
         """
         try:
             await self.adguard.request(
@@ -145,6 +152,7 @@ class AdGuardHomeFiltering:
         Raises:
         ------
             AdGuardHomeError: Failed removing the filter subscription.
+
         """
         try:
             await self.adguard.request(
@@ -167,6 +175,7 @@ class AdGuardHomeFiltering:
         Raises:
         ------
             AdGuardHomeError: Failed enabling filter subscription.
+
         """
         response = await self.adguard.request("filtering/status")
         filter_type = "whitelist_filters" if allowlist else "filters"
@@ -207,6 +216,7 @@ class AdGuardHomeFiltering:
         Raises:
         ------
             AdGuardHomeError: Failed disabling filter subscription.
+
         """
         response = await self.adguard.request("filtering/status")
         filter_type = "whitelist_filters" if allowlist else "filters"
@@ -247,6 +257,7 @@ class AdGuardHomeFiltering:
         Raises:
         ------
             AdGuardHomeError: Failed to refresh filter subscriptions.
+
         """
         force_value = "true" if force else "false"
 

@@ -55,6 +55,7 @@ class AdGuardHome:
             user_agent: Defaults to PythonAdGuardHome/<version>.
             username: Username for HTTP auth, if enabled.
             verify_ssl: Can be set to false, when TLS with self-signed cert is used.
+
         """
         self._session = session
         self._close_session = False
@@ -116,6 +117,7 @@ class AdGuardHome:
                 with the AdGuard Home instance (connection issues).
             AdGuardHomeError: An error occurred while processing the
                 response from the AdGuard Home instance (invalid data).
+
         """
         scheme = "https" if self.tls else "http"
         url = URL.build(
@@ -184,6 +186,7 @@ class AdGuardHome:
         Returns
         -------
             The status of the protection of the AdGuard Home instance.
+
         """
         response = await self.request("status")
         return response["protection_enabled"]
@@ -194,6 +197,7 @@ class AdGuardHome:
         Raises
         ------
             AdGuardHomeError: Failed enabling AdGuard Home protection.
+
         """
         try:
             await self.request(
@@ -211,6 +215,7 @@ class AdGuardHome:
         Raises
         ------
             AdGuardHomeError: Failed disabling the AdGuard Home protection.
+
         """
         try:
             await self.request(
@@ -228,6 +233,7 @@ class AdGuardHome:
         Returns
         -------
             The version number of the connected AdGuard Home instance.
+
         """
         response = await self.request("status")
         return response["version"]
@@ -243,6 +249,7 @@ class AdGuardHome:
         Returns
         -------
             The AdGuard Home object.
+
         """
         return self
 
@@ -252,5 +259,6 @@ class AdGuardHome:
         Args:
         ----
             _exc_info: Exec type.
+
         """
         await self.close()

@@ -128,7 +128,7 @@ max-line-length=88
 addopts = "--cov"
 asyncio_mode = "auto"
 
-[tool.ruff]
+[tool.ruff.lint]
 select = ["ALL"]
 ignore = [
   "ANN101", # Self... explanatory
@@ -144,11 +144,11 @@ ignore = [
   "ISC001",
 ]
 
-[tool.ruff.flake8-pytest-style]
+[tool.ruff.lint.flake8-pytest-style]
 mark-parentheses = false
 fixture-parentheses = false
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["adguardhome"]
 
 [tool.ruff.lint.flake8-type-checking]
@@ -156,7 +156,7 @@ runtime-evaluated-base-classes = [
   "mashumaro.mixins.orjson.DataClassORJSONMixin",
 ]
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 25
 
 [build-system]

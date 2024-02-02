@@ -25,6 +25,7 @@ class AdGuardHomeQueryLog:
         ----
             enabled: Enable/disable AdGuard Home query log.
             interval: Number of day to keep data in the logs.
+
         """
         if enabled is None:
             enabled = await self.enabled()
@@ -42,6 +43,7 @@ class AdGuardHomeQueryLog:
         Returns
         -------
             The current state of the AdGuard Home query log.
+
         """
         response = await self.adguard.request("querylog_info")
         return response["enabled"]
@@ -52,6 +54,7 @@ class AdGuardHomeQueryLog:
         Raises
         ------
             AdGuardHomeError: If enabling the query log didn't succeed.
+
         """
         try:
             await self._config(enabled=True)
@@ -69,6 +72,7 @@ class AdGuardHomeQueryLog:
         Returns:
         -------
             The current set time period to keep query log data.
+
         """
         if interval:
             await self._config(interval=interval)
@@ -83,6 +87,7 @@ class AdGuardHomeQueryLog:
         Raises
         ------
             AdGuardHomeError: If disabling the query filter log didn't succeed.
+
         """
         try:
             await self._config(enabled=False)

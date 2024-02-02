@@ -22,6 +22,7 @@ class AdGuardHomeParental:
         Returns
         -------
             The current state of the AdGuard Home parental control.
+
         """
         response = await self.adguard.request("parental/status")
         return response["enabled"]
@@ -32,6 +33,7 @@ class AdGuardHomeParental:
         Raises
         ------
             AdGuardHomeError: If enabling parental control failed.
+
         """
         try:
             await self.adguard.request("parental/enable", method="POST")
@@ -45,6 +47,7 @@ class AdGuardHomeParental:
         Raises
         ------
             AdGuardHomeError: If disabling parental control failed.
+
         """
         try:
             await self.adguard.request("parental/disable", method="POST")

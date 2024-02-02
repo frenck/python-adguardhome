@@ -22,6 +22,7 @@ class AdGuardHomeStats:
         Returns
         -------
             The number of DNS queries performed by the AdGuard Home instance.
+
         """
         response = await self.adguard.request("stats")
         return response["num_dns_queries"]
@@ -32,6 +33,7 @@ class AdGuardHomeStats:
         Returns
         -------
             The number of DNS queries blocked by the AdGuard Home instance.
+
         """
         response = await self.adguard.request("stats")
         return response["num_blocked_filtering"]
@@ -43,6 +45,7 @@ class AdGuardHomeStats:
         -------
             The percentage ratio of blocked DNS queries by the AdGuard Home
             instance.
+
         """
         response = await self.adguard.request("stats")
         if not response["num_dns_queries"]:
@@ -56,6 +59,7 @@ class AdGuardHomeStats:
         -------
             The number of times a page was blocked by the safe
             browsing feature of the AdGuard Home instance.
+
         """
         response = await self.adguard.request("stats")
         return response["num_replaced_safebrowsing"]
@@ -67,6 +71,7 @@ class AdGuardHomeStats:
         -------
             The number of times a page was blocked by the parental control
             feature of the AdGuard Home instance.
+
         """
         response = await self.adguard.request("stats")
         return response["num_replaced_parental"]
@@ -78,6 +83,7 @@ class AdGuardHomeStats:
         -------
             The number of times a safe search was enforced by the
             AdGuard Home instance.
+
         """
         response = await self.adguard.request("stats")
         return response["num_replaced_safesearch"]
@@ -89,6 +95,7 @@ class AdGuardHomeStats:
         -------
             The averages processing time (in milliseconds) of DNS queries
             as performed by the AdGuard Home instance.
+
         """
         response = await self.adguard.request("stats")
         return round(response["avg_processing_time"] * 1000, 2)
@@ -99,6 +106,7 @@ class AdGuardHomeStats:
         Returns
         -------
             The time period of data this AdGuard Home instance keeps.
+
         """
         response = await self.adguard.request("stats_info")
         return response["interval"]
@@ -109,6 +117,7 @@ class AdGuardHomeStats:
         Raises
         ------
             AdGuardHomeError: Restting the AdGuard Home stats did not succeed.
+
         """
         try:
             await self.adguard.request("stats_reset", method="POST")
