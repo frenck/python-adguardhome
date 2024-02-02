@@ -22,6 +22,7 @@ class AdGuardHomeSafeBrowsing:
         Returns
         -------
             The current state of the AdGuard safe browsing feature.
+
         """
         response = await self.adguard.request("safebrowsing/status")
         return response["enabled"]
@@ -32,6 +33,7 @@ class AdGuardHomeSafeBrowsing:
         Raises
         ------
             AdGuardHomeError: If enabling the safe browsing didn't succeed.
+
         """
         try:
             await self.adguard.request("safebrowsing/enable", method="POST")
@@ -45,6 +47,7 @@ class AdGuardHomeSafeBrowsing:
         Raises
         ------
             AdGuardHomeError: If disabling the safe browsing didn't succeed.
+
         """
         try:
             await self.adguard.request("safebrowsing/disable", method="POST")

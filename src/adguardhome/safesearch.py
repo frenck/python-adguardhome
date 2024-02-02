@@ -22,6 +22,7 @@ class AdGuardHomeSafeSearch:
         Returns
         -------
             The current state of the AdGuard Home safe search.
+
         """
         response = await self.adguard.request("safesearch/status")
         return response["enabled"]
@@ -32,6 +33,7 @@ class AdGuardHomeSafeSearch:
         Raises
         ------
             AdGuardHomeError: If enabling the safe search didn't succeed.
+
         """
         try:
             await self.adguard.request("safesearch/enable", method="POST")
@@ -45,6 +47,7 @@ class AdGuardHomeSafeSearch:
         Raises
         ------
             AdGuardHomeError: If disabling the safe search didn't succeed.
+
         """
         try:
             await self.adguard.request("safesearch/disable", method="POST")
