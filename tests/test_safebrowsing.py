@@ -1,4 +1,5 @@
 """Tests for `adguardhome.safebrowsing`."""
+
 import aiohttp
 import pytest
 from aresponses import ResponsesMockServer
