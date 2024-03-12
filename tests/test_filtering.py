@@ -1,4 +1,5 @@
 """Tests for `adguardhome.filtering`."""
+
 import aiohttp
 import pytest
 from aresponses import Response, ResponsesMockServer

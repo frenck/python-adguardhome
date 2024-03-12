@@ -1,4 +1,5 @@
 """Asynchronous Python client for the AdGuard Home API."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

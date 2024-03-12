@@ -1,4 +1,5 @@
 """Tests for `adguardhome.parental`."""
+
 import aiohttp
 import pytest
 from aresponses import ResponsesMockServer

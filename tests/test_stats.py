@@ -1,4 +1,5 @@
 """Tests for `adguardhome.stats`."""
+
 import aiohttp
 import pytest
 from aresponses import ResponsesMockServer
