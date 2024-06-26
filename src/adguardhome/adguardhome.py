@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import json
 import socket
-from importlib import metadata
 from typing import Any, Mapping, Self
 
 import aiohttp
@@ -35,7 +34,6 @@ class AdGuardHome:
         request_timeout: int = 10,
         session: aiohttp.client.ClientSession | None = None,
         tls: bool = False,
-        user_agent: str | None = None,
         username: str | None = None,
         verify_ssl: bool = True,
     ) -> None:
@@ -53,7 +51,6 @@ class AdGuardHome:
             request_timeout: Max timeout to wait for a response from the API.
             session: Optional, shared, aiohttp client session.
             tls: True, when TLS/SSL should be used.
-            user_agent: Defaults to PythonAdGuardHome/<version>.
             username: Username for HTTP auth, if enabled.
             verify_ssl: Can be set to false, when TLS with self-signed cert is used.
 
@@ -69,11 +66,6 @@ class AdGuardHome:
         self.tls = tls
         self.username = username
         self.verify_ssl = verify_ssl
-        self.user_agent = user_agent
-
-        if user_agent is None:
-            version = metadata.version(__package__)
-            self.user_agent = f"PythonAdGuardHome/{version}"
 
         if self.base_path[-1] != "/":
             self.base_path += "/"
@@ -130,7 +122,6 @@ class AdGuardHome:
             auth = aiohttp.BasicAuth(self.username, self.password)
 
         headers = {
-            "User-Agent": self.user_agent,
             "Accept": "application/json, text/plain, */*",
         }
 
