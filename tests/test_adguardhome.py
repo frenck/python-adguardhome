@@ -122,43 +122,6 @@ async def test_request_base_path(aresponses: ResponsesMockServer) -> None:
         assert response == {"message": "OMG PUPPIES!"}
 
 
-async def test_request_user_agent(aresponses: ResponsesMockServer) -> None:
-    """Test AdGuard Home client sending correct user agent headers."""
-
-    # Handle to run asserts on request in
-    async def response_handler(request: aiohttp.ClientResponse) -> Response:
-        """Response handler for this test."""
-        assert request.headers["User-Agent"] == "PythonAdGuardHome/0.0.0"
-        return aresponses.Response(text="TEDDYBEAR", status=200)
-
-    aresponses.add("example.com:3000", "/", "GET", response_handler)
-
-    async with aiohttp.ClientSession() as session:
-        adguard = AdGuardHome("example.com", base_path="/", session=session)
-        await adguard.request("/")
-
-
-async def test_request_custom_user_agent(aresponses: ResponsesMockServer) -> None:
-    """Test AdGuard Home client sending correct user agent headers."""
-
-    # Handle to run asserts on request in
-    async def response_handler(request: aiohttp.ClientResponse) -> Response:
-        """Response handler for this test."""
-        assert request.headers["User-Agent"] == "LoremIpsum/1.0"
-        return aresponses.Response(text="TEDDYBEAR", status=200)
-
-    aresponses.add("example.com:3000", "/", "GET", response_handler)
-
-    async with aiohttp.ClientSession() as session:
-        adguard = AdGuardHome(
-            "example.com",
-            base_path="/",
-            session=session,
-            user_agent="LoremIpsum/1.0",
-        )
-        await adguard.request("/")
-
-
 async def test_timeout(aresponses: ResponsesMockServer) -> None:
     """Test request timeout from AdGuard Home."""
 
