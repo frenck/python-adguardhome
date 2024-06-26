@@ -228,6 +228,20 @@ class AdGuardHome:
             msg = "Failed disabling AdGuard Home protection"
             raise AdGuardHomeError(msg) from exception
 
+    async def cache_clear(self) -> None:
+        """Clear the cache of the AdGuard Home instance.
+
+        Raises
+        ------
+            AdGuardHomeError: Failed clearing the cache of the AdGuard Home instance.
+
+        """
+        try:
+            await self.request("cache_clear", method="POST")
+        except AdGuardHomeError as exception:
+            msg = "Failed clearing the cache of the AdGuard Home instance"
+            raise AdGuardHomeError(msg) from exception
+
     async def version(self) -> str:
         """Return the current version of the AdGuard Home instance.
 

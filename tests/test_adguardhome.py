@@ -311,3 +311,25 @@ async def test_verion(aresponses: ResponsesMockServer) -> None:
         adguard = AdGuardHome("example.com", session=session)
         version = await adguard.version()
         assert version == "1.1"
+
+
+async def test_clear_cache(aresponses: ResponsesMockServer) -> None:
+    """Test clearing the cache of AdGuard Home instance."""
+    aresponses.add(
+        "example.com:3000",
+        "/control/cache_clear",
+        "POST",
+        aresponses.Response(status=200),
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/cache_clear",
+        "POST",
+        aresponses.Response(status=404),
+    )
+
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
+        await adguard.cache_clear()
+        with pytest.raises(AdGuardHomeError):
+            await adguard.cache_clear()
