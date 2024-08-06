@@ -218,13 +218,13 @@ async def test_enable_protection(aresponses: ResponsesMockServer) -> None:
     """Test enabling AdGuard Home protection."""
     aresponses.add(
         "example.com:3000",
-        "/control/dns_config",
+        "/control/protection",
         "POST",
         aresponses.Response(status=200),
     )
     aresponses.add(
         "example.com:3000",
-        "/control/dns_config",
+        "/control/protection",
         "POST",
         aresponses.Response(status=400),
     )
@@ -240,13 +240,13 @@ async def test_disable_protection(aresponses: ResponsesMockServer) -> None:
     """Test disabling AdGuard Home protection."""
     aresponses.add(
         "example.com:3000",
-        "/control/dns_config",
+        "/control/protection",
         "POST",
         aresponses.Response(status=200),
     )
     aresponses.add(
         "example.com:3000",
-        "/control/dns_config",
+        "/control/protection",
         "POST",
         aresponses.Response(status=500),
     )
@@ -258,7 +258,7 @@ async def test_disable_protection(aresponses: ResponsesMockServer) -> None:
             await adguard.disable_protection()
 
 
-async def test_verion(aresponses: ResponsesMockServer) -> None:
+async def test_version(aresponses: ResponsesMockServer) -> None:
     """Test requesting AdGuard Home instance version."""
     aresponses.add(
         "example.com:3000",
