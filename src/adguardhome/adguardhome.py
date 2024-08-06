@@ -78,7 +78,7 @@ class AdGuardHome:
         self.stats = AdGuardHomeStats(self)
 
     # pylint: disable-next=too-many-arguments, too-many-locals
-    async def request(  # noqa: PLR0913
+    async def request(
         self,
         uri: str,
         method: str = "GET",
