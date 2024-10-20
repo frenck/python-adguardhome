@@ -258,6 +258,31 @@ async def test_disable_protection(aresponses: ResponsesMockServer) -> None:
             await adguard.disable_protection()
 
 
+async def test_pause_protection(aresponses: ResponsesMockServer) -> None:
+    """Test pausing protection in AdGuard Home."""
+
+    # Handler to run asserts
+    async def response_handler(request: aiohttp.ClientResponse) -> Response:
+        """Response handler for this test."""
+        data = await request.json()
+        assert data == {"enabled": False, "duration": 12000}
+        return aresponses.Response(text="OK", status=200)
+
+    aresponses.add("example.com:3000", "/control/protection", "POST", response_handler)
+    aresponses.add(
+        "example.com:3000",
+        "/control/protection",
+        "POST",
+        aresponses.Response(status=500),
+    )
+
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
+        await adguard.pause_protection(duration=12000)
+        with pytest.raises(AdGuardHomeError):
+            await adguard.pause_protection(duration=12000)
+
+
 async def test_verion(aresponses: ResponsesMockServer) -> None:
     """Test requesting AdGuard Home instance version."""
     aresponses.add(

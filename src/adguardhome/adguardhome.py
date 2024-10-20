@@ -219,6 +219,28 @@ class AdGuardHome:
             msg = "Failed disabling AdGuard Home protection"
             raise AdGuardHomeError(msg) from exception
 
+    async def pause_protection(self, duration: int) -> None:
+        """Disable AdGuard Home protection for a defined amount of time.
+
+        Args:
+        ----
+            duration: Set the duration (in milliseconds) to pause protection.
+
+        Raises:
+        ------
+            AdGuardHomeError: Failed pausing the AdGuard Home protection.
+
+        """
+        try:
+            await self.request(
+                "protection",
+                method="POST",
+                json_data={"enabled": False, "duration": duration},
+            )
+        except AdGuardHomeError as exception:
+            msg = "Failed pausing AdGuard Home protection"
+            raise AdGuardHomeError(msg) from exception
+
     async def version(self) -> str:
         """Return the current version of the AdGuard Home instance.
 
