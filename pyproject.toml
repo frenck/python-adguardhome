@@ -46,7 +46,7 @@ pytest = "8.3.3"
 pytest-asyncio = "0.24.0"
 pytest-cov = "6.0.0"
 ruff = "0.7.3"
-safety = "3.2.10"
+safety = "3.2.11"
 syrupy = "4.7.2"
 yamllint = "1.35.1"
 
