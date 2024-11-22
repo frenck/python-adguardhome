@@ -144,9 +144,10 @@ async def test_client_error() -> None:
     # Faking a timeout by sleeping
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        with patch.object(
-            session, "request", side_effect=aiohttp.ClientError
-        ), pytest.raises(AdGuardHomeConnectionError):
+        with (
+            patch.object(session, "request", side_effect=aiohttp.ClientError),
+            pytest.raises(AdGuardHomeConnectionError),
+        ):
             assert await adguard.request("/")
 
 
