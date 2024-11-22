@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import socket
-from typing import Any, Mapping, Self
+from typing import TYPE_CHECKING, Any, Self
 
 import aiohttp
 from yarl import URL
@@ -17,6 +17,9 @@ from .querylog import AdGuardHomeQueryLog
 from .safebrowsing import AdGuardHomeSafeBrowsing
 from .safesearch import AdGuardHomeSafeSearch
 from .stats import AdGuardHomeStats
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 # pylint: disable=too-many-instance-attributes
