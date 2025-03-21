@@ -17,6 +17,7 @@ from .querylog import AdGuardHomeQueryLog
 from .safebrowsing import AdGuardHomeSafeBrowsing
 from .safesearch import AdGuardHomeSafeSearch
 from .stats import AdGuardHomeStats
+from .update import AdGuardHomeUpdate
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -79,6 +80,7 @@ class AdGuardHome:
         self.safebrowsing = AdGuardHomeSafeBrowsing(self)
         self.safesearch = AdGuardHomeSafeSearch(self)
         self.stats = AdGuardHomeStats(self)
+        self.update = AdGuardHomeUpdate(self)
 
     # pylint: disable-next=too-many-arguments, too-many-locals, too-many-positional-arguments
     async def request(
