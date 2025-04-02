@@ -69,6 +69,7 @@ class AdGuardHome:
         self.tls = tls
         self.username = username
         self.verify_ssl = verify_ssl
+        self._auth_token: str | None = None
 
         if self.base_path[-1] != "/":
             self.base_path += "/"
@@ -79,6 +80,44 @@ class AdGuardHome:
         self.safebrowsing = AdGuardHomeSafeBrowsing(self)
         self.safesearch = AdGuardHomeSafeSearch(self)
         self.stats = AdGuardHomeStats(self)
+
+    async def authenticate(self) -> str:
+        """Authenticate and get a session token.
+
+        Returns
+        -------
+            The authentication token for future requests.
+
+        Raises
+        ------
+            AdGuardHomeError: If authentication fails.
+        """
+        if not self.username or not self.password:
+            return ""
+
+        try:
+            response = await self.request(
+                "login",  # Changed from 'login/check' to 'login'
+                method="POST",
+                json_data={
+                    "name": self.username,  # Changed back to 'name' from 'username'
+                    "password": self.password,
+                },
+            )
+
+            # Extract token from response cookie header
+            if (cookies := response.get("cookies")) and isinstance(cookies, dict):
+                if token := cookies.get("agh_session"):
+                    self._auth_token = token
+                    return token
+
+            raise AdGuardHomeError("No auth token in response")
+
+        except AdGuardHomeError as err:
+            # Changed error handling since AdGuardHomeError doesn't have status
+            if "Invalid credentials" in str(err):
+                raise AdGuardHomeError("Invalid credentials")
+            raise
 
     # pylint: disable-next=too-many-arguments, too-many-locals, too-many-positional-arguments
     async def request(
@@ -120,13 +159,18 @@ class AdGuardHome:
             scheme=scheme, host=self.host, port=self.port, path=self.base_path
         ).join(URL(uri))
 
-        auth = None
-        if self.username and self.password:
-            auth = aiohttp.BasicAuth(self.username, self.password)
-
         headers = {
             "Accept": "application/json, text/plain, */*",
         }
+
+        # Add auth token if available
+        if self._auth_token:
+            headers["Cookie"] = f"agh_session={self._auth_token}"
+
+        # Only use basic auth for initial authentication
+        auth = None
+        if self.username and self.password and not self._auth_token:
+            auth = aiohttp.BasicAuth(self.username, self.password)
 
         if self._session is None:
             self._session = aiohttp.ClientSession()
@@ -149,6 +193,14 @@ class AdGuardHome:
                     ssl=self.verify_ssl,
                     skip_auto_headers=skip_auto_headers,
                 )
+
+                # Extract cookies from response if present
+                cookies = {}
+                if "set-cookie" in response.headers:
+                    for cookie in response.cookies.values():
+                        if cookie.key == "agh_session":
+                            cookies["agh_session"] = cookie.value
+
         except asyncio.TimeoutError as exception:
             msg = "Timeout occurred while connecting to AdGuard Home instance."
             raise AdGuardHomeConnectionError(msg) from exception
@@ -170,10 +222,17 @@ class AdGuardHome:
             )
 
         if "application/json" in content_type:
-            return await response.json()
+            result = await response.json()
+            # Include cookies in response if present
+            if cookies:
+                result["cookies"] = cookies
+            return result
 
         text = await response.text()
-        return {"message": text}
+        result = {"message": text}
+        if cookies:
+            result["cookies"] = cookies
+        return result
 
     async def protection_enabled(self) -> bool:
         """Return if AdGuard Home protection is enabled or not.
@@ -257,3 +316,4 @@ class AdGuardHome:
 
         """
         await self.close()
+
