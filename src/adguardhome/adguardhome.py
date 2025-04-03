@@ -167,7 +167,7 @@ class AdGuardHome:
         if self._auth_token:
             headers["Cookie"] = f"agh_session={self._auth_token}"
 
-        # Only use basic auth for initial authentication
+        # Use basic auth if no token acquired using AdGuardHome.authenticate()
         auth = None
         if self.username and self.password and not self._auth_token:
             auth = aiohttp.BasicAuth(self.username, self.password)
