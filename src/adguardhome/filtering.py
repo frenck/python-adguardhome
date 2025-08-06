@@ -247,6 +247,21 @@ class AdGuardHomeFiltering:
             msg = "Failed disabling URL on AdGuard Home filter"
             raise AdGuardHomeError(msg) from exception
 
+    async def url_enabled(self, *, allowlist: bool, url: str) -> bool:
+        """Check if a filter subscription is enabled in AdGuard Home.
+
+        Args:
+        ----
+            allowlist: True to check an allowlist, False for a blocklists.
+            url: Filter subscription URL to check on AdGuard Home.
+
+        """
+        response = await self.adguard.request("filtering/status")
+        filter_type = "whitelist_filters" if allowlist else "filters"
+        filters = response.get(filter_type) or []
+
+        return any(fil["url"].lower() == url.lower() for fil in filters)
+
     async def refresh(self, *, allowlist: bool, force: bool = False) -> None:
         """Reload filtering subscriptions from URLs specified in AdGuard Home.
 
