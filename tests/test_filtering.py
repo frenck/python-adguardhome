@@ -437,7 +437,7 @@ async def test_url_enabled(aresponses: ResponsesMockServer) -> None:
         aresponses.Response(
             status=200,
             headers={"Content-Type": "application/json"},
-            text='{"filters": [{"url": "https://EXAMPLE.com/1.txt", "name": "test"}]}',
+            text='{"filters": [{"url": "https://EXAMPLE.com/1.txt", "enabled": true}]}',
         ),
     )
     aresponses.add(
@@ -447,7 +447,9 @@ async def test_url_enabled(aresponses: ResponsesMockServer) -> None:
         aresponses.Response(
             status=200,
             headers={"Content-Type": "application/json"},
-            text='{"whitelist_filters": [{"url": "http://ex.co/1.txt", "name": "ex"}]}',
+            text=(
+                '{"filters": [{"url": "https://EXAMPLE.com/1.txt", "enabled": false}]}'
+            ),
         ),
     )
     aresponses.add(
@@ -457,7 +459,20 @@ async def test_url_enabled(aresponses: ResponsesMockServer) -> None:
         aresponses.Response(
             status=200,
             headers={"Content-Type": "application/json"},
-            text='{"filters": [{"url": "https://EXAMPLE.com/1.txt", "name": "test"}]}',
+            text='{"filters": [{"url": "https://EXAMPLE.com/1.txt", "enabled": true}]}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text=(
+                '{"whitelist_filters": '
+                '[{"url": "https://EXAMPLE.com/1.txt", "enabled": true}]}'
+            ),
         ),
     )
 
@@ -468,13 +483,17 @@ async def test_url_enabled(aresponses: ResponsesMockServer) -> None:
         )
         assert enabled
         enabled = await adguard.filtering.url_enabled(
-            allowlist=True, url="http://EX.co/1.txt"
+            allowlist=False, url="https://example.com/1.txt"
         )
-        assert enabled
+        assert not enabled
         enabled = await adguard.filtering.url_enabled(
             allowlist=True, url="https://example.com/1.txt"
         )
         assert not enabled
+        enabled = await adguard.filtering.url_enabled(
+            allowlist=True, url="https://example.com/1.txt"
+        )
+        assert enabled
 
 
 async def test_refresh(aresponses: ResponsesMockServer) -> None:

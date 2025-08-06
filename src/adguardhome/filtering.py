@@ -260,7 +260,10 @@ class AdGuardHomeFiltering:
         filter_type = "whitelist_filters" if allowlist else "filters"
         filters = response.get(filter_type) or []
 
-        return any(fil["url"].lower() == url.lower() for fil in filters)
+        return next(
+            (fil["enabled"] for fil in filters if fil["url"].lower() == url.lower()),
+            False,
+        )
 
     async def refresh(self, *, allowlist: bool, force: bool = False) -> None:
         """Reload filtering subscriptions from URLs specified in AdGuard Home.
