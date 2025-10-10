@@ -428,6 +428,74 @@ async def test_disable_url(aresponses: ResponsesMockServer) -> None:
             )
 
 
+async def test_url_enabled(aresponses: ResponsesMockServer) -> None:
+    """Test checking if filter subscription is enabled in AdGuard Home filtering."""
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"filters": [{"url": "https://EXAMPLE.com/1.txt", "enabled": true}]}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text=(
+                '{"filters": [{"url": "https://EXAMPLE.com/1.txt", "enabled": false}]}'
+            ),
+        ),
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"filters": [{"url": "https://EXAMPLE.com/1.txt", "enabled": true}]}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text=(
+                '{"whitelist_filters": '
+                '[{"url": "https://EXAMPLE.com/1.txt", "enabled": true}]}'
+            ),
+        ),
+    )
+
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
+        enabled = await adguard.filtering.url_enabled(
+            allowlist=False, url="https://example.com/1.txt"
+        )
+        assert enabled
+        enabled = await adguard.filtering.url_enabled(
+            allowlist=False, url="https://example.com/1.txt"
+        )
+        assert not enabled
+        enabled = await adguard.filtering.url_enabled(
+            allowlist=True, url="https://example.com/1.txt"
+        )
+        assert not enabled
+        enabled = await adguard.filtering.url_enabled(
+            allowlist=True, url="https://example.com/1.txt"
+        )
+        assert enabled
+
+
 async def test_refresh(aresponses: ResponsesMockServer) -> None:
     """Test enabling filter subscription in AdGuard Home filtering."""
 
