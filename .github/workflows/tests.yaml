@@ -10,6 +10,9 @@ on:
 env:
   DEFAULT_PYTHON: "3.11"
 
+permissions:
+  contents: read
+
 jobs:
   pytest:
     name: Python ${{ matrix.python }}
@@ -20,6 +23,8 @@ jobs:
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
       - name: 🏗 Set up Poetry
         run: pipx install poetry
       - name: 🏗 Set up Python ${{ matrix.python }}
@@ -51,6 +56,7 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: ⬇️ Download coverage data
         uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
       - name: 🏗 Set up Poetry

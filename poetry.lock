@@ -2719,7 +2719,28 @@ idna = ">=2.0"
 multidict = ">=4.0"
 propcache = ">=0.2.1"
 
+[[package]]
+name = "zizmor"
+version = "1.16.3"
+description = "Static analysis for GitHub Actions"
+optional = false
+python-versions = ">=3.9"
+groups = ["dev"]
+files = [
+    {file = "zizmor-1.16.3-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:a8e2a5e995e691e9b971f777a3f12c2b740f07bfd49a88c4f8815236584dfa61"},
+    {file = "zizmor-1.16.3-py3-none-macosx_11_0_arm64.whl", hash = "sha256:46ec88eafa3b5a8b40de1d35735d50295aab76e3ac6711ce3f5d10cd6f2910bc"},
+    {file = "zizmor-1.16.3-py3-none-manylinux_2_24_aarch64.whl", hash = "sha256:8ba4082abde1e107f0c84c09f4539a50c05fd7808ea4b46f46dd071156a149ea"},
+    {file = "zizmor-1.16.3-py3-none-manylinux_2_28_armv7l.whl", hash = "sha256:3d7c43136c31b7feb389efa8af451698d9961c0a9cf5c32776ca4cc4d94b0688"},
+    {file = "zizmor-1.16.3-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:3b0cf0dc59fcef6a043b2ec0a196d29c8ad6c463cc5037f77d27c35a6759c4d6"},
+    {file = "zizmor-1.16.3-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:bdf45b2ce32eeac01fc99fdbd1bc612a8316d1221fc9b7a63440f6de8d46c5ce"},
+    {file = "zizmor-1.16.3-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:ebb0f58f2fa6eee3f975c5db1885f6517cdf674fe2f432614d6d7e473de4e720"},
+    {file = "zizmor-1.16.3-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:f79fb2a34b95b92c677f3a6535d663bc42f470582380f08de69e5e150f801d96"},
+    {file = "zizmor-1.16.3-py3-none-win32.whl", hash = "sha256:0cb9cdad23e783b744748b4818753240f12903f691780a8c2e6aee4964e60a05"},
+    {file = "zizmor-1.16.3-py3-none-win_amd64.whl", hash = "sha256:6075ce75fc9eb6a134c8a7bf947606888c828439854411fdde158e0762a612f7"},
+    {file = "zizmor-1.16.3.tar.gz", hash = "sha256:1cf501d14059a0e56100a991b2b7a8636a44d7fd4cd4f25f63e908b1e78c0021"},
+]
+
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11"
-content-hash = "e5de36ef0efce4430f2b9bf541dd7a9a64676ad52b3145a2e19b14ca65220083"
+content-hash = "942e08835b6674bf0194943cf9aa81f70c500f534c34a2e61853008d500a87d9"
