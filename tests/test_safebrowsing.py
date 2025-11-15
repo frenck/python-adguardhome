@@ -1,13 +1,14 @@
 """Tests for `adguardhome.safebrowsing`."""
+
 import aiohttp
 import pytest
+from aresponses import ResponsesMockServer
 
 from adguardhome import AdGuardHome
 from adguardhome.exceptions import AdGuardHomeError
 
 
-@pytest.mark.asyncio
-async def test_enabled(aresponses):
+async def test_enabled(aresponses: ResponsesMockServer) -> None:
     """Test request of current AdGuard Home browsing security status."""
     aresponses.add(
         "example.com:3000",
@@ -37,8 +38,7 @@ async def test_enabled(aresponses):
         assert not enabled
 
 
-@pytest.mark.asyncio
-async def test_enable(aresponses):
+async def test_enable(aresponses: ResponsesMockServer) -> None:
     """Test enabling AdGuard Home browsing security."""
     aresponses.add(
         "example.com:3000",
@@ -60,8 +60,7 @@ async def test_enable(aresponses):
             await adguard.safebrowsing.enable()
 
 
-@pytest.mark.asyncio
-async def test_disable(aresponses):
+async def test_disable(aresponses: ResponsesMockServer) -> None:
     """Test disabling AdGuard Home browsing security."""
     aresponses.add(
         "example.com:3000",

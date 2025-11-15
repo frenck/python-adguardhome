@@ -1,16 +1,17 @@
 """Tests for `adguardhome.adguardhome`."""
+
 import asyncio
 from unittest.mock import patch
 
 import aiohttp
 import pytest
+from aresponses import Response, ResponsesMockServer
 
 from adguardhome import AdGuardHome
 from adguardhome.exceptions import AdGuardHomeConnectionError, AdGuardHomeError
 
 
-@pytest.mark.asyncio
-async def test_json_request(aresponses):
+async def test_json_request(aresponses: ResponsesMockServer) -> None:
     """Test JSON response is handled correctly."""
     aresponses.add(
         "example.com:3000",
@@ -29,8 +30,7 @@ async def test_json_request(aresponses):
         await adguard.close()
 
 
-@pytest.mark.asyncio
-async def test_authenticated_request(aresponses):
+async def test_authenticated_request(aresponses: ResponsesMockServer) -> None:
     """Test JSON response is handled correctly."""
     aresponses.add(
         "example.com:3000",
@@ -43,18 +43,17 @@ async def test_authenticated_request(aresponses):
         ),
     )
     async with aiohttp.ClientSession() as session:
-        adguard = AdGuardHome(  # noqa: S106
+        adguard = AdGuardHome(
             "example.com",
             username="frenck",
-            password="zerocool",
+            password="zerocool",  # noqa: S106
             session=session,
         )
         response = await adguard.request("/")
         assert response["status"] == "ok"
 
 
-@pytest.mark.asyncio
-async def test_text_request(aresponses):
+async def test_text_request(aresponses: ResponsesMockServer) -> None:
     """Test non JSON response is handled correctly."""
     aresponses.add(
         "example.com:3000", "/", "GET", aresponses.Response(status=200, text="OK")
@@ -65,8 +64,7 @@ async def test_text_request(aresponses):
         assert response == {"message": "OK"}
 
 
-@pytest.mark.asyncio
-async def test_internal_session(aresponses):
+async def test_internal_session(aresponses: ResponsesMockServer) -> None:
     """Test JSON response is handled correctly."""
     aresponses.add(
         "example.com:3000",
@@ -83,8 +81,7 @@ async def test_internal_session(aresponses):
         assert response["status"] == "ok"
 
 
-@pytest.mark.asyncio
-async def test_post_request(aresponses):
+async def test_post_request(aresponses: ResponsesMockServer) -> None:
     """Test POST requests are handled correctly."""
     aresponses.add(
         "example.com:3000", "/", "POST", aresponses.Response(status=200, text="OK")
@@ -95,8 +92,7 @@ async def test_post_request(aresponses):
         assert response == {"message": "OK"}
 
 
-@pytest.mark.asyncio
-async def test_request_port(aresponses):
+async def test_request_port(aresponses: ResponsesMockServer) -> None:
     """Test AdGuard Home running on non-standard port."""
     aresponses.add(
         "example.com:3333",
@@ -111,8 +107,7 @@ async def test_request_port(aresponses):
         assert response == {"message": "OMG PUPPIES!"}
 
 
-@pytest.mark.asyncio
-async def test_request_base_path(aresponses):
+async def test_request_base_path(aresponses: ResponsesMockServer) -> None:
     """Test AdGuard Home running on different base path."""
     aresponses.add(
         "example.com:3000",
@@ -127,48 +122,11 @@ async def test_request_base_path(aresponses):
         assert response == {"message": "OMG PUPPIES!"}
 
 
-@pytest.mark.asyncio
-async def test_request_user_agent(aresponses):
-    """Test AdGuard Home client sending correct user agent headers."""
-    # Handle to run asserts on request in
-    async def response_handler(request):
-        """Response handler for this test."""
-        assert request.headers["User-Agent"] == "PythonAdGuardHome/0.0.0"
-        return aresponses.Response(text="TEDDYBEAR", status=200)
-
-    aresponses.add("example.com:3000", "/", "GET", response_handler)
-
-    async with aiohttp.ClientSession() as session:
-        adguard = AdGuardHome("example.com", base_path="/", session=session)
-        await adguard.request("/")
-
-
-@pytest.mark.asyncio
-async def test_request_custom_user_agent(aresponses):
-    """Test AdGuard Home client sending correct user agent headers."""
-    # Handle to run asserts on request in
-    async def response_handler(request):
-        """Response handler for this test."""
-        assert request.headers["User-Agent"] == "LoremIpsum/1.0"
-        return aresponses.Response(text="TEDDYBEAR", status=200)
-
-    aresponses.add("example.com:3000", "/", "GET", response_handler)
-
-    async with aiohttp.ClientSession() as session:
-        adguard = AdGuardHome(
-            "example.com",
-            base_path="/",
-            session=session,
-            user_agent="LoremIpsum/1.0",
-        )
-        await adguard.request("/")
-
-
-@pytest.mark.asyncio
-async def test_timeout(aresponses):
+async def test_timeout(aresponses: ResponsesMockServer) -> None:
     """Test request timeout from AdGuard Home."""
+
     # Faking a timeout by sleeping
-    async def response_handler(_):
+    async def response_handler(_: aiohttp.ClientResponse) -> Response:
         """Response handler for this test."""
         await asyncio.sleep(2)
         return aresponses.Response(body="Goodmorning!")
@@ -181,20 +139,19 @@ async def test_timeout(aresponses):
             assert await adguard.request("/")
 
 
-@pytest.mark.asyncio
-async def test_client_error():
+async def test_client_error() -> None:
     """Test request client error from AdGuard Home."""
     # Faking a timeout by sleeping
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        with patch.object(
-            session, "request", side_effect=aiohttp.ClientError
-        ), pytest.raises(AdGuardHomeConnectionError):
+        with (
+            patch.object(session, "request", side_effect=aiohttp.ClientError),
+            pytest.raises(AdGuardHomeConnectionError),
+        ):
             assert await adguard.request("/")
 
 
-@pytest.mark.asyncio
-async def test_http_error400(aresponses):
+async def test_http_error400(aresponses: ResponsesMockServer) -> None:
     """Test HTTP 404 response handling."""
     aresponses.add(
         "example.com:3000",
@@ -209,8 +166,7 @@ async def test_http_error400(aresponses):
             assert await adguard.request("/")
 
 
-@pytest.mark.asyncio
-async def test_http_error500(aresponses):
+async def test_http_error500(aresponses: ResponsesMockServer) -> None:
     """Test HTTP 500 response handling."""
     aresponses.add(
         "example.com:3000",
@@ -229,8 +185,7 @@ async def test_http_error500(aresponses):
             assert await adguard.request("/")
 
 
-@pytest.mark.asyncio
-async def test_protection_enabled(aresponses):
+async def test_protection_enabled(aresponses: ResponsesMockServer) -> None:
     """Test request of current AdGuard Home protection status."""
     aresponses.add(
         "example.com:3000",
@@ -260,8 +215,7 @@ async def test_protection_enabled(aresponses):
         assert not enabled
 
 
-@pytest.mark.asyncio
-async def test_enable_protection(aresponses):
+async def test_enable_protection(aresponses: ResponsesMockServer) -> None:
     """Test enabling AdGuard Home protection."""
     aresponses.add(
         "example.com:3000",
@@ -283,8 +237,7 @@ async def test_enable_protection(aresponses):
             await adguard.enable_protection()
 
 
-@pytest.mark.asyncio
-async def test_disable_protection(aresponses):
+async def test_disable_protection(aresponses: ResponsesMockServer) -> None:
     """Test disabling AdGuard Home protection."""
     aresponses.add(
         "example.com:3000",
@@ -306,8 +259,7 @@ async def test_disable_protection(aresponses):
             await adguard.disable_protection()
 
 
-@pytest.mark.asyncio
-async def test_verion(aresponses):
+async def test_verion(aresponses: ResponsesMockServer) -> None:
     """Test requesting AdGuard Home instance version."""
     aresponses.add(
         "example.com:3000",

@@ -1,4 +1,5 @@
 """Asynchronous Python client for the AdGuard Home API."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -16,12 +17,16 @@ class AdGuardHomeQueryLog:
 
     adguard: AdGuardHome
 
-    async def _config(self, enabled: bool | None = None, interval: int | None = None):
+    async def _config(
+        self, *, enabled: bool | None = None, interval: int | None = None
+    ) -> None:
         """Configure query log on AdGuard Home.
 
         Args:
+        ----
             enabled: Enable/disable AdGuard Home query log.
             interval: Number of day to keep data in the logs.
+
         """
         if enabled is None:
             enabled = await self.enabled()
@@ -36,8 +41,10 @@ class AdGuardHomeQueryLog:
     async def enabled(self) -> bool:
         """Return if AdGuard Home query log is enabled or not.
 
-        Returns:
+        Returns
+        -------
             The current state of the AdGuard Home query log.
+
         """
         response = await self.adguard.request("querylog_info")
         return response["enabled"]
@@ -45,24 +52,28 @@ class AdGuardHomeQueryLog:
     async def enable(self) -> None:
         """Enable AdGuard Home query log.
 
-        Raises:
+        Raises
+        ------
             AdGuardHomeError: If enabling the query log didn't succeed.
+
         """
         try:
             await self._config(enabled=True)
         except AdGuardHomeError as exception:
-            raise AdGuardHomeError(
-                "Enabling AdGuard Home query log failed"
-            ) from exception
+            msg = "Enabling AdGuard Home query log failed"
+            raise AdGuardHomeError(msg) from exception
 
     async def interval(self, interval: int | None = None) -> int:
         """Return or set the time period to keep query log data.
 
         Args:
+        ----
             interval: Set the time period (in days) to keep query log data.
 
         Returns:
+        -------
             The current set time period to keep query log data.
+
         """
         if interval:
             await self._config(interval=interval)
@@ -74,12 +85,13 @@ class AdGuardHomeQueryLog:
     async def disable(self) -> None:
         """Disable AdGuard Home query log.
 
-        Raises:
+        Raises
+        ------
             AdGuardHomeError: If disabling the query filter log didn't succeed.
+
         """
         try:
             await self._config(enabled=False)
         except AdGuardHomeError as exception:
-            raise AdGuardHomeError(
-                "Disabling AdGuard Home query log failed"
-            ) from exception
+            msg = "Disabling AdGuard Home query log failed"
+            raise AdGuardHomeError(msg) from exception

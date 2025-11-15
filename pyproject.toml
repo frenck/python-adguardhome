@@ -15,10 +15,8 @@ classifiers = [
   "Framework :: AsyncIO",
   "Intended Audience :: Developers",
   "Natural Language :: English",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
@@ -27,61 +25,69 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.11"
 aiohttp = ">=3.0.0"
 yarl = ">=1.6.0"
-
-[tool.poetry.dev-dependencies]
-aresponses = "^2.1.6"
-black = "^22.12"
-blacken-docs = "^1.12.1"
-coverage = {version = "^7.0", extras = ["toml"]}
-flake8 = "^4.0.1"
-flake8-docstrings = "^1.6.0"
-isort = "^5.11.4"
-mypy = "^0.991"
-pre-commit = "^2.21.0"
-pre-commit-hooks = "^4.4.0"
-pylint = "^2.15.10"
-pytest = "^7.2.0"
-pytest-asyncio = "^0.20.3"
-pytest-cov = "^4.0.0"
-yamllint = "^1.29.0"
-pyupgrade = "^3.3.1"
-flake8-simplify = "^0.19.3"
-vulture = "^2.7"
-flake8-bandit = "^3.0.0"
-flake8-bugbear = "^22.12.6"
-flake8-builtins = "^2.1.0"
-flake8-comprehensions = "^3.10.1"
-flake8-eradicate = "^1.4.0"
-flake8-markdown = "^0.3.0"
-darglint = "^1.8.1"
-safety = "^2.3.5"
-codespell = "^2.2.2"
-bandit = "^1.7.4"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/frenck/python-adguardhome/issues"
 Changelog = "https://github.com/frenck/python-adguardhome/releases"
 
-[tool.black]
-target-version = ['py37']
+[tool.poetry.group.dev.dependencies]
+aresponses = "3.0.0"
+codespell = "2.4.1"
+covdefaults = "2.3.0"
+coverage = {version = "7.11.3", extras = ["toml"]}
+mypy = "1.18.2"
+pre-commit = "4.4.0"
+pre-commit-hooks = "6.0.0"
+pylint = "4.0.3"
+pytest = "9.0.1"
+pytest-asyncio = "1.3.0"
+pytest-cov = "7.0.0"
+ruff = "0.14.5"
+safety = "3.7.0"
+syrupy = "5.0.0"
+yamllint = "1.37.1"
 
-[tool.coverage.paths]
-source = ["src"]
+[tool.coverage.run]
+plugins = ["covdefaults"]
+source = ["adguardhome"]
 
 [tool.coverage.report]
 show_missing = true
-exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
+fail_under = 10
 
-[tool.coverage.run]
-branch = true
-source = ["adguardhome"]
+[tool.mypy]
+# Specify the target platform details in config, so your developers are
+# free to run mypy on Windows, Linux, or macOS and get consistent
+# results.
+platform = "linux"
+python_version = "3.11"
 
-[tool.isort]
-profile = "black"
-multi_line_output = 3
+# show error messages from unrelated files
+follow_imports = "normal"
+
+# suppress errors about unsatisfied imports
+ignore_missing_imports = true
+
+# be strict
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+no_implicit_reexport = true
+strict_optional = true
+warn_incomplete_stub = true
+warn_no_return = true
+warn_redundant_casts = true
+warn_return_any = false  # Fix this later!
+warn_unused_configs = true
+warn_unused_ignores = true
 
 [tool.pylint.MASTER]
 ignore= [
@@ -102,11 +108,14 @@ good-names = [
     "T",
 ]
 
+[tool.pylint.DESIGN]
+max-attributes = 8
+
 [tool.pylint."MESSAGES CONTROL"]
 disable= [
+    "duplicate-code",
     "format",
     "unsubscriptable-object",
-    "duplicate-code",
 ]
 
 [tool.pylint.SIMILARITIES]
@@ -117,11 +126,36 @@ max-line-length=88
 
 [tool.pytest.ini_options]
 addopts = "--cov"
+asyncio_mode = "auto"
 
-[tool.vulture]
-min_confidence = 80
-paths = ["src", "tests"]
-verbose = true
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "ANN401", # Opinioated warning on disallowing dynamically typed expressions
+  "D203", # Conflicts with other rules
+  "D213", # Conflicts with other rules
+  "D417", # False positives in some occasions
+  "PLR2004", # Just annoying, not really useful
+
+  # Conflicts with the Ruff formatter
+  "COM812",
+  "ISC001",
+]
+
+[tool.ruff.lint.flake8-pytest-style]
+mark-parentheses = false
+fixture-parentheses = false
+
+[tool.ruff.lint.isort]
+known-first-party = ["adguardhome"]
+
+[tool.ruff.lint.flake8-type-checking]
+runtime-evaluated-base-classes = [
+  "mashumaro.mixins.orjson.DataClassORJSONMixin",
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 25
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
