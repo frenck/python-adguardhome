@@ -152,7 +152,7 @@ class AdGuardHome:
                     ssl=self.verify_ssl,
                     skip_auto_headers=skip_auto_headers,
                 )
-        except asyncio.TimeoutError as exception:
+        except TimeoutError as exception:
             msg = "Timeout occurred while connecting to AdGuard Home instance."
             raise AdGuardHomeConnectionError(msg) from exception
         except (aiohttp.ClientError, socket.gaierror) as exception:
