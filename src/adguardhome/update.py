@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 @dataclass
 class AdGuardHomeAvailableUpdate:
-    """Latests available AdGuard Home update."""
+    """Latest available AdGuard Home update."""
 
     new_version: str
     announcement: str
@@ -50,5 +50,5 @@ class AdGuardHomeUpdate:
         try:
             await self.adguard.request("update", method="POST")
         except AdGuardHomeError as exception:
-            msg = "Begin AdGuard Home update failed"
+            msg = "Beginning AdGuard Home update failed"
             raise AdGuardHomeError(msg) from exception
