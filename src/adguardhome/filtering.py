@@ -255,6 +255,9 @@ class AdGuardHomeFiltering:
             allowlist: True to check an allowlist, False for a blocklists.
             url: Filter subscription URL to check on AdGuard Home.
 
+        Returns:
+        -------
+            True if the filter subscription is enabled, False otherwise.
         """
         response = await self.adguard.request("filtering/status")
         filter_type = "whitelist_filters" if allowlist else "filters"
