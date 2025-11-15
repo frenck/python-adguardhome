@@ -32,7 +32,7 @@ jobs:
       - name: 🏗 Install Python dependencies
         run: poetry install --no-interaction
       - name: 🚀 Check code for common misspellings
-        run: poetry run pre-commit run codespell --all-files
+        run: poetry run prek run codespell --all-files
 
   ruff:
     name: Ruff
@@ -59,8 +59,8 @@ jobs:
       - name: 🚀 Run ruff formatter
         run: poetry run ruff format --check .
 
-  pre-commit-hooks:
-    name: pre-commit-hooks
+  prek-hooks:
+    name: prek-hooks
     runs-on: ubuntu-latest
     steps:
       - name: ⤵️ Check out code from GitHub
@@ -80,30 +80,29 @@ jobs:
       - name: 🏗 Install Python dependencies
         run: poetry install --no-interaction
       - name: 🚀 Check Python AST
-        run: poetry run pre-commit run check-ast --all-files
+        run: poetry run prek run check-ast --all-files
       - name: 🚀 Check for case conflicts
-        run: poetry run pre-commit run check-case-conflict --all-files
+        run: poetry run prek run check-case-conflict --all-files
       - name: 🚀 Check docstring is first
-        run: poetry run pre-commit run check-docstring-first --all-files
+        run: poetry run prek run check-docstring-first --all-files
       - name: 🚀 Check that executables have shebangs
-        run: poetry run pre-commit run check-executables-have-shebangs --all-files
+        run: poetry run prek run check-executables-have-shebangs --all-files
       - name: 🚀 Check JSON files
-        run: poetry run pre-commit run check-json --all-files
+        run: poetry run prek run check-json --all-files
       - name: 🚀 Check for merge conflicts
-        run: poetry run pre-commit run check-merge-conflict --all-files
+        run: poetry run prek run check-merge-conflict --all-files
       - name: 🚀 Check for broken symlinks
-        run: poetry run pre-commit run check-symlinks --all-files
+        run: poetry run prek run check-symlinks --all-files
       - name: 🚀 Check TOML files
-        run: poetry run pre-commit run check-toml --all-files
+        run: poetry run prek run check-toml --all-files
       - name: 🚀 Check YAML files
-        run: poetry run pre-commit run check-yaml --all-files
+        run: poetry run prek run check-yaml --all-files
       - name: 🚀 Detect Private Keys
-        run: poetry run pre-commit run detect-private-key --all-files
+        run: poetry run prek run detect-private-key --all-files
       - name: 🚀 Check End of Files
-        run: poetry run pre-commit run end-of-file-fixer --all-files
+        run: poetry run prek run end-of-file-fixer --all-files
       - name: 🚀 Trim Trailing Whitespace
-        run: poetry run pre-commit run trailing-whitespace --all-files
-
+        run: poetry run prek run trailing-whitespace --all-files
   pylint:
     name: pylint
     runs-on: ubuntu-latest
@@ -125,7 +124,7 @@ jobs:
       - name: 🏗 Install Python dependencies
         run: poetry install --no-interaction
       - name: 🚀 Run pylint
-        run: poetry run pre-commit run pylint --all-files
+        run: poetry run prek run pylint --all-files
 
   yamllint:
     name: yamllint
@@ -178,4 +177,4 @@ jobs:
       - name: 🏗 Install NPM dependencies
         run: npm install
       - name: 🚀 Run prettier
-        run: poetry run pre-commit run prettier --all-files
+        run: poetry run prek run prettier --all-files
