@@ -24,6 +24,7 @@ rules:
   comments:
     level: error
     require-starting-space: true
+    min-spaces-before: 1
   comments-indentation:
     level: error
   document-end:
