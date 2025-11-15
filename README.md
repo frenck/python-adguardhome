@@ -8,7 +8,6 @@
 
 [![Build Status][build-shield]][build]
 [![Code Coverage][codecov-shield]][codecov]
-[![Quality Gate Status][sonarcloud-shield]][sonarcloud]
 [![Open in Dev Containers][devcontainer-shield]][devcontainer]
 
 [![Sponsor Frenck via GitHub Sponsors][github-sponsors-shield]][github-sponsors]
@@ -127,7 +126,7 @@ check [the contributor's page][contributors].
 
 MIT License
 
-Copyright (c) 2019-2024 Franck Nijhof
+Copyright (c) 2019-2025 Franck Nijhof
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -159,7 +158,7 @@ SOFTWARE.
 [github-sponsors]: https://github.com/sponsors/frenck
 [keepchangelog]: http://keepachangelog.com/en/1.0.0/
 [license-shield]: https://img.shields.io/github/license/frenck/python-adguardhome.svg
-[maintenance-shield]: https://img.shields.io/maintenance/yes/2024.svg
+[maintenance-shield]: https://img.shields.io/maintenance/yes/2025.svg
 [patreon-shield]: https://frenck.dev/wp-content/uploads/2019/12/patreon.png
 [patreon]: https://www.patreon.com/frenck
 [poetry-install]: https://python-poetry.org/docs/#installation
@@ -171,5 +170,3 @@ SOFTWARE.
 [releases-shield]: https://img.shields.io/github/release/frenck/python-adguardhome.svg
 [releases]: https://github.com/frenck/python-adguardhome/releases
 [semver]: http://semver.org/spec/v2.0.0.html
-[sonarcloud-shield]: https://sonarcloud.io/api/project_badges/measure?project=frenck_python-adguardhome&metric=alert_status
-[sonarcloud]: https://sonarcloud.io/summary/new_code?id=frenck_python-adguardhome
