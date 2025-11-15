@@ -131,3 +131,9 @@ repos:
         language: system
         types: [yaml]
         entry: poetry run yamllint
+      - id: zizmor
+        name: 🌈 Check GitHub Actions workflows with zizmor
+        language: system
+        types: [yaml]
+        files: ^\.github/workflows/
+        entry: poetry run zizmor
