@@ -18,7 +18,7 @@ class AdGuardHomeQueryLog:
     adguard: AdGuardHome
 
     async def _config(
-        self, enabled: bool | None = None, interval: int | None = None
+        self, *, enabled: bool | None = None, interval: int | None = None
     ) -> None:
         """Configure query log on AdGuard Home.
 
