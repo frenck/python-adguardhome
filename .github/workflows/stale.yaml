@@ -7,13 +7,19 @@ on:
     - cron: "0 8 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   stale:
     name: 🧹 Clean up stale issues and PRs
     runs-on: ubuntu-latest
+    permissions:
+      issues: write  # To close stale issues
+      pull-requests: write  # To close stale PRs
     steps:
       - name: 🚀 Run stale
-        uses: actions/stale@v10.1.0
+        uses: actions/stale@5f858e3efba33a5ca4407a664cc011ad407f2008 # v10.1.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 30
