@@ -258,6 +258,7 @@ class AdGuardHomeFiltering:
         Returns:
         -------
             True if the filter subscription is enabled, False otherwise.
+
         """
         response = await self.adguard.request("filtering/status")
         filter_type = "whitelist_filters" if allowlist else "filters"
