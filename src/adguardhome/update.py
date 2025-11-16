@@ -15,11 +15,11 @@ if TYPE_CHECKING:
 class AdGuardHomeAvailableUpdate:
     """Latest available AdGuard Home update."""
 
-    new_version: str
-    announcement: str
-    announcement_url: str
-    can_autoupdate: bool
     disabled: bool
+    new_version: str | None = None
+    announcement: str | None = None
+    announcement_url: str | None = None
+    can_autoupdate: bool | None = None
 
 
 @dataclass

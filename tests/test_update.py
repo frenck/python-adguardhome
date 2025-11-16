@@ -62,3 +62,26 @@ async def test_begin_update(aresponses: ResponsesMockServer) -> None:
         await adguard.update.begin_update()
         with pytest.raises(AdGuardHomeError):
             await adguard.update.begin_update()
+
+
+async def test_update_disabled(aresponses: ResponsesMockServer) -> None:
+    """Test request of current AdGuard Home when auto update is disabled."""
+    aresponses.add(
+        "example.com:3000",
+        "/control/version.json",
+        "POST",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"disabled":true}',
+        ),
+    )
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
+        available_update = await adguard.update.update_available()
+        assert available_update
+        assert available_update.disabled is True
+        assert available_update.announcement is None
+        assert available_update.announcement_url is None
+        assert available_update.can_autoupdate is None
+        assert available_update.new_version is None
