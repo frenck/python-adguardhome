@@ -14,6 +14,7 @@ from .exceptions import AdGuardHomeConnectionError, AdGuardHomeError
 from .filtering import AdGuardHomeFiltering
 from .parental import AdGuardHomeParental
 from .querylog import AdGuardHomeQueryLog
+from .rewrite import AdGuardHomeRewrite
 from .safebrowsing import AdGuardHomeSafeBrowsing
 from .safesearch import AdGuardHomeSafeSearch
 from .stats import AdGuardHomeStats
@@ -77,6 +78,7 @@ class AdGuardHome:
         self.filtering = AdGuardHomeFiltering(self)
         self.parental = AdGuardHomeParental(self)
         self.querylog = AdGuardHomeQueryLog(self)
+        self.rewrite = AdGuardHomeRewrite(self)
         self.safebrowsing = AdGuardHomeSafeBrowsing(self)
         self.safesearch = AdGuardHomeSafeSearch(self)
         self.stats = AdGuardHomeStats(self)
