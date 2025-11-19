@@ -1,12 +1,14 @@
 """Tests for `adguardhome.filtering`."""
+
 import aiohttp
 import pytest
+from aresponses import Response, ResponsesMockServer
+
 from adguardhome import AdGuardHome
 from adguardhome.exceptions import AdGuardHomeError
 
 
-@pytest.mark.asyncio
-async def test_enabled(aresponses):
+async def test_enabled(aresponses: ResponsesMockServer) -> None:
     """Test request of current AdGuard Home filter status."""
     aresponses.add(
         "example.com:3000",
@@ -36,11 +38,11 @@ async def test_enabled(aresponses):
         assert not enabled
 
 
-@pytest.mark.asyncio
-async def test_enable(aresponses):
+async def test_enable(aresponses: ResponsesMockServer) -> None:
     """Test enabling AdGuard Home filtering."""
 
-    async def response_handler(request):
+    async def response_handler(request: aiohttp.ClientResponse) -> Response:
+        """Response handler for this test."""
         data = await request.json()
         assert data == {"enabled": True, "interval": 1}
         return aresponses.Response(status=200)
@@ -82,11 +84,11 @@ async def test_enable(aresponses):
             await adguard.filtering.enable()
 
 
-@pytest.mark.asyncio
-async def test_disable(aresponses):
+async def test_disable(aresponses: ResponsesMockServer) -> None:
     """Test disabling AdGuard Home filtering."""
 
-    async def response_handler(request):
+    async def response_handler(request: aiohttp.ClientResponse) -> Response:
+        """Response handler for this test."""
         data = await request.json()
         assert data == {"enabled": False, "interval": 1}
         return aresponses.Response(status=200)
@@ -128,11 +130,11 @@ async def test_disable(aresponses):
             await adguard.filtering.disable()
 
 
-@pytest.mark.asyncio
-async def test_interval(aresponses):
+async def test_interval(aresponses: ResponsesMockServer) -> None:
     """Test interval settings of the AdGuard Home filtering."""
 
-    async def response_handler(request):
+    async def response_handler(request: aiohttp.ClientResponse) -> Response:
+        """Response handler for this test."""
         data = await request.json()
         assert data == {"enabled": True, "interval": 1}
         return aresponses.Response(status=200)
@@ -187,8 +189,7 @@ async def test_interval(aresponses):
             await adguard.filtering.interval(interval=1)
 
 
-@pytest.mark.asyncio
-async def test_rules_count(aresponses):
+async def test_rules_count(aresponses: ResponsesMockServer) -> None:
     """Test getting rules count of the AdGuard Home filtering."""
     aresponses.add(
         "example.com:3000",
@@ -210,22 +211,51 @@ async def test_rules_count(aresponses):
             text='{"filters": []}',
         ),
     )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"whitelist_filters": [{"rules_count": 98}, {"rules_count": 1}]}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"whitelist_filters": null}',
+        ),
+    )
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        result = await adguard.filtering.rules_count()
+        result = await adguard.filtering.rules_count(allowlist=False)
         assert result == 100
-        result = await adguard.filtering.rules_count()
+        result = await adguard.filtering.rules_count(allowlist=False)
+        assert result == 0
+        result = await adguard.filtering.rules_count(allowlist=True)
+        assert result == 99
+        result = await adguard.filtering.rules_count(allowlist=True)
         assert result == 0
 
 
-@pytest.mark.asyncio
-async def test_add_url(aresponses):
+async def test_add_url(aresponses: ResponsesMockServer) -> None:
     """Test add new filter subscription to AdGuard Home filtering."""
+
     # Handle to run asserts on request in
-    async def response_handler(request):
+    async def response_handler(request: aiohttp.ClientResponse) -> Response:
+        """Response handler for this test."""
         data = await request.json()
-        assert data == {"name": "Example", "url": "https://example.com/1.txt"}
+        assert data == {
+            "name": "Example",
+            "url": "https://example.com/1.txt",
+            "whitelist": False,
+        }
         return aresponses.Response(status=200, text="OK 12345 filters added")
 
     aresponses.add(
@@ -235,23 +265,28 @@ async def test_add_url(aresponses):
         "example.com:3000",
         "/control/filtering/add_url",
         "POST",
-        aresponses.Response(status=200, text="Invalid URL"),
+        aresponses.Response(status=400, text="Invalid URL"),
     )
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        await adguard.filtering.add_url("Example", "https://example.com/1.txt")
+        await adguard.filtering.add_url(
+            name="Example", url="https://example.com/1.txt", allowlist=False
+        )
         with pytest.raises(AdGuardHomeError):
-            await adguard.filtering.add_url("Example", "https://example.com/1.txt")
+            await adguard.filtering.add_url(
+                name="Example", url="https://example.com/1.txt", allowlist=False
+            )
 
 
-@pytest.mark.asyncio
-async def test_remove_url(aresponses):
+async def test_remove_url(aresponses: ResponsesMockServer) -> None:
     """Test remove filter subscription from AdGuard Home filtering."""
+
     # Handle to run asserts on request in
-    async def response_handler(request):
+    async def response_handler(request: aiohttp.ClientResponse) -> Response:
+        """Response handler for this test."""
         data = await request.json()
-        assert data == {"url": "https://example.com/1.txt"}
+        assert data == {"url": "https://example.com/1.txt", "whitelist": False}
         return aresponses.Response(status=200, text="OK")
 
     aresponses.add(
@@ -261,27 +296,60 @@ async def test_remove_url(aresponses):
         "example.com:3000",
         "/control/filtering/remove_url",
         "POST",
-        aresponses.Response(status=200, text="Invalid URL"),
+        aresponses.Response(status=400, text="Invalid URL"),
     )
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        await adguard.filtering.remove_url("https://example.com/1.txt")
+        await adguard.filtering.remove_url(
+            allowlist=False, url="https://example.com/1.txt"
+        )
         with pytest.raises(AdGuardHomeError):
-            await adguard.filtering.remove_url("https://example.com/1.txt")
+            await adguard.filtering.remove_url(
+                allowlist=False, url="https://example.com/1.txt"
+            )
 
 
-@pytest.mark.asyncio
-async def test_enable_url(aresponses):
+async def test_enable_url(aresponses: ResponsesMockServer) -> None:
     """Test enabling filter subscription in AdGuard Home filtering."""
+
     # Handle to run asserts on request in
-    async def response_handler(request):
+    async def response_handler(request: aiohttp.ClientResponse) -> Response:
+        """Response handler for this test."""
         data = await request.json()
-        assert data == {"url": "https://example.com/1.txt", "enabled": True}
+        assert data == {
+            "url": "https://example.com/1.txt",
+            "whitelist": False,
+            "data": {
+                "enabled": True,
+                "url": "https://example.com/1.txt",
+                "name": "test",
+            },
+        }
         return aresponses.Response(status=200, text="OK")
 
     aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"filters": [{"url": "https://EXAMPLE.com/1.txt", "name": "test"}]}',
+        ),
+    )
+    aresponses.add(
         "example.com:3000", "/control/filtering/set_url", "POST", response_handler
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"filters": [{"url": "https://EXAMPLE.com/1.txt", "name": "test"}]}',
+        ),
     )
     aresponses.add(
         "example.com:3000",
@@ -292,22 +360,55 @@ async def test_enable_url(aresponses):
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        await adguard.filtering.enable_url("https://example.com/1.txt")
+        await adguard.filtering.enable_url(
+            allowlist=False, url="https://example.com/1.txt"
+        )
         with pytest.raises(AdGuardHomeError):
-            await adguard.filtering.enable_url("https://example.com/1.txt")
+            await adguard.filtering.enable_url(
+                allowlist=False, url="https://example.com/1.txt"
+            )
 
 
-@pytest.mark.asyncio
-async def test_disable_url(aresponses):
+async def test_disable_url(aresponses: ResponsesMockServer) -> None:
     """Test enabling filter subscription in AdGuard Home filtering."""
+
     # Handle to run asserts on request in
-    async def response_handler(request):
+    async def response_handler(request: aiohttp.ClientResponse) -> Response:
+        """Response handler for this test."""
         data = await request.json()
-        assert data == {"url": "https://example.com/1.txt", "enabled": False}
+        assert data == {
+            "url": "https://example.com/1.txt",
+            "whitelist": False,
+            "data": {
+                "enabled": False,
+                "name": "test",
+                "url": "https://example.com/1.txt",
+            },
+        }
         return aresponses.Response(status=200)
 
     aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"filters": [{"url": "https://EXAMPLE.com/1.txt", "name": "test"}]}',
+        ),
+    )
+    aresponses.add(
         "example.com:3000", "/control/filtering/set_url", "POST", response_handler
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"filters": [{"url": "https://example.com/1.txt", "name": "test"}]}',
+        ),
     )
     aresponses.add(
         "example.com:3000",
@@ -318,19 +419,110 @@ async def test_disable_url(aresponses):
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        await adguard.filtering.disable_url("https://example.com/1.txt")
+        await adguard.filtering.disable_url(
+            allowlist=False, url="https://example.com/1.txt"
+        )
         with pytest.raises(AdGuardHomeError):
-            await adguard.filtering.disable_url("https://example.com/1.txt")
+            await adguard.filtering.disable_url(
+                allowlist=False, url="https://example.com/1.txt"
+            )
 
 
-@pytest.mark.asyncio
-async def test_refresh(aresponses):
+async def test_url_enabled(aresponses: ResponsesMockServer) -> None:
+    """Test checking if filter subscription is enabled in AdGuard Home filtering."""
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"filters": [{"url": "https://EXAMPLE.com/1.txt", "enabled": true}]}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text=(
+                '{"filters": [{"url": "https://EXAMPLE.com/1.txt", "enabled": false}]}'
+            ),
+        ),
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text='{"filters": [{"url": "https://EXAMPLE.com/1.txt", "enabled": true}]}',
+        ),
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/status",
+        "GET",
+        aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            text=(
+                '{"whitelist_filters": '
+                '[{"url": "https://EXAMPLE.com/1.txt", "enabled": true}]}'
+            ),
+        ),
+    )
+
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
+        enabled = await adguard.filtering.url_enabled(
+            allowlist=False, url="https://example.com/1.txt"
+        )
+        assert enabled
+        enabled = await adguard.filtering.url_enabled(
+            allowlist=False, url="https://example.com/1.txt"
+        )
+        assert not enabled
+        enabled = await adguard.filtering.url_enabled(
+            allowlist=True, url="https://example.com/1.txt"
+        )
+        assert not enabled
+        enabled = await adguard.filtering.url_enabled(
+            allowlist=True, url="https://example.com/1.txt"
+        )
+        assert enabled
+
+
+async def test_refresh(aresponses: ResponsesMockServer) -> None:
     """Test enabling filter subscription in AdGuard Home filtering."""
+
+    async def response_handler_whitelist(request: aiohttp.ClientResponse) -> Response:
+        """Response handler for this test."""
+        data = await request.json()
+        assert data == {"whitelist": True}
+        return aresponses.Response(status=200)
+
+    async def response_handler_blocklist(request: aiohttp.ClientResponse) -> Response:
+        """Response handler for this test."""
+        data = await request.json()
+        assert data == {"whitelist": False}
+        return aresponses.Response(status=200)
+
     aresponses.add(
         "example.com:3000",
         "/control/filtering/refresh?force=false",
         "POST",
-        aresponses.Response(status=200, text="OK"),
+        response_handler_blocklist,
+        match_querystring=True,
+    )
+    aresponses.add(
+        "example.com:3000",
+        "/control/filtering/refresh?force=false",
+        "POST",
+        response_handler_whitelist,
         match_querystring=True,
     )
     aresponses.add(
@@ -344,13 +536,14 @@ async def test_refresh(aresponses):
         "example.com:3000",
         "/control/filtering/refresh?force=false",
         "POST",
-        aresponses.Response(status=200, text="Not OK"),
+        aresponses.Response(status=400, text="Not OK"),
         match_querystring=True,
     )
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        await adguard.filtering.refresh(False)
-        await adguard.filtering.refresh(True)
+        await adguard.filtering.refresh(allowlist=False, force=False)
+        await adguard.filtering.refresh(allowlist=True, force=False)
+        await adguard.filtering.refresh(allowlist=False, force=True)
         with pytest.raises(AdGuardHomeError):
-            await adguard.filtering.refresh(False)
+            await adguard.filtering.refresh(allowlist=False, force=False)

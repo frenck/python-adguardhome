@@ -1,0 +1,14 @@
+{
+  "name": "adguardhome",
+  "version": "0.0.0",
+  "private": true,
+  "description": "AdGuard Home API Client",
+  "scripts": {
+    "prettier": "prettier --write **/*.{json,js,md,yml,yaml} *.{json,js,md,yml,yaml}"
+  },
+  "author": "Franck Nijhof <opensource@frenck.dev>",
+  "license": "MIT",
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}

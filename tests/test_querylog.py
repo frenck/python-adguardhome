@@ -1,12 +1,14 @@
 """Tests for `adguardhome.querylog`."""
+
 import aiohttp
 import pytest
+from aresponses import Response, ResponsesMockServer
+
 from adguardhome import AdGuardHome
 from adguardhome.exceptions import AdGuardHomeError
 
 
-@pytest.mark.asyncio
-async def test_enabled(aresponses):
+async def test_enabled(aresponses: ResponsesMockServer) -> None:
     """Test request of current AdGuard Home query log status."""
     aresponses.add(
         "example.com:3000",
@@ -35,11 +37,11 @@ async def test_enabled(aresponses):
         assert not enabled
 
 
-@pytest.mark.asyncio
-async def test_enable(aresponses):
+async def test_enable(aresponses: ResponsesMockServer) -> None:
     """Test enabling AdGuard Home query log."""
 
-    async def response_handler(request):
+    async def response_handler(request: aiohttp.ClientResponse) -> Response:
+        """Response handler for this test."""
         data = await request.json()
         assert data == {"enabled": True, "interval": 1}
         return aresponses.Response(status=200)
@@ -81,11 +83,11 @@ async def test_enable(aresponses):
             await adguard.querylog.enable()
 
 
-@pytest.mark.asyncio
-async def test_disable(aresponses):
+async def test_disable(aresponses: ResponsesMockServer) -> None:
     """Test disabling AdGuard Home query log."""
 
-    async def response_handler(request):
+    async def response_handler(request: aiohttp.ClientResponse) -> Response:
+        """Response handler for this test."""
         data = await request.json()
         assert data == {"enabled": False, "interval": 1}
         return aresponses.Response(status=200)
@@ -127,11 +129,11 @@ async def test_disable(aresponses):
             await adguard.querylog.disable()
 
 
-@pytest.mark.asyncio
-async def test_interval(aresponses):
+async def test_interval(aresponses: ResponsesMockServer) -> None:
     """Test interval settings of the AdGuard Home filtering."""
 
-    async def response_handler(request):
+    async def response_handler(request: aiohttp.ClientResponse) -> Response:
+        """Response handler for this test."""
         data = await request.json()
         assert data == {"enabled": True, "interval": 1}
         return aresponses.Response(status=200)

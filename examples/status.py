@@ -6,33 +6,32 @@ import asyncio
 from adguardhome import AdGuardHome
 
 
-async def main():
+async def main() -> None:
     """Show example how to get status of your AdGuard Home instance."""
-    async with AdGuardHome("192.168.1.2") as adguard:
+    async with AdGuardHome(host="192.168.1.2") as adguard:
         version = await adguard.version()
         print("AdGuard version:", version)
 
         active = await adguard.protection_enabled()
-        active = "Yes" if active else "No"
-        print("Protection enabled?", active)
+        yes_no = "Yes" if active else "No"
+        print("Protection enabled?", yes_no)
 
         active = await adguard.filtering.enabled()
-        active = "Yes" if active else "No"
-        print("Filtering enabled?", active)
+        yes_no = "Yes" if active else "No"
+        print("Filtering enabled?", yes_no)
 
         active = await adguard.parental.enabled()
-        active = "Yes" if active else "No"
-        print("Parental control enabled?", active)
+        yes_no = "Yes" if active else "No"
+        print("Parental control enabled?", yes_no)
 
         active = await adguard.safebrowsing.enabled()
-        active = "Yes" if active else "No"
-        print("Safe browsing enabled?", active)
+        yes_no = "Yes" if active else "No"
+        print("Safe browsing enabled?", yes_no)
 
         active = await adguard.safesearch.enabled()
-        active = "Yes" if active else "No"
-        print("Enforce safe search enabled?", active)
+        yes_no = "Yes" if active else "No"
+        print("Enforce safe search enabled?", yes_no)
 
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    asyncio.run(main())

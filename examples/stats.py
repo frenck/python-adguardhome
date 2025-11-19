@@ -6,7 +6,7 @@ import asyncio
 from adguardhome import AdGuardHome
 
 
-async def main():
+async def main() -> None:
     """Show example on stats from your AdGuard Home instance."""
     async with AdGuardHome("192.168.1.2") as adguard:
         version = await adguard.version()
@@ -16,7 +16,7 @@ async def main():
         print("Stats period:", period)
 
         result = await adguard.stats.avg_processing_time()
-        print("Avarage processing time per query in ms:", result)
+        print("Average processing time per query in ms:", result)
 
         result = await adguard.stats.dns_queries()
         print("DNS queries:", result)
@@ -36,10 +36,9 @@ async def main():
         result = await adguard.stats.replaced_safesearch()
         print("Number of enforced safe searches:", result)
 
-        result = await adguard.filtering.rules_count()
+        result = await adguard.filtering.rules_count(allowlist=False)
         print("Total number of active rules:", result)
 
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    asyncio.run(main())
