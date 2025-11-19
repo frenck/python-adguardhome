@@ -67,7 +67,7 @@ async def test_add(aresponses):
 
 @pytest.mark.asyncio
 async def test_remove(aresponses):
-    """Test add remove DNS rewrite from AdGuard rewrite."""
+    """Test removing DNS rewrite from AdGuard rewrite."""
 
     async def response_handler(request):
         data = await request.json()
