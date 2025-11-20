@@ -18,11 +18,24 @@ class AdGuardHomeRewrite:
     adguard: AdGuardHome
 
     async def list(self) -> list[dict[str, str]]:
-        """Return all defined DNS rewrites."""
+        """Return all defined DNS rewrites.
+
+        Returns:
+            A list of all defined DNS rewrites in the AdGuardHome instance.
+            Each rewrite is represented as a dictionary with 'domain' and 'answer' keys.
+
+        """
         return await self.adguard.request("rewrite/list")
 
     async def add(self, domain: str, answer: str) -> None:
-        """Add a new DNS rewrite rule to AdGuard Home."""
+        """Add a new DNS rewrite rule to AdGuard Home.
+
+        Args:
+        ----
+            domain: The domain name or wildcard for the DNS rewrite rule.
+            answer: The new domain or ip address associated with the DNS rewrite rule.
+
+        """
         try:
             await self.adguard.request(
                 "rewrite/add",
@@ -34,7 +47,15 @@ class AdGuardHomeRewrite:
             raise AdGuardHomeError(msg) from exception
 
     async def delete(self, domain: str, answer: str) -> None:
-        """Delete a DNS rewrite rule from AdGuard Home."""
+        """Delete a DNS rewrite rule from AdGuard Home.
+
+        Args:
+        ----
+            domain: The domain name or wildcard of the DNS rewrite rule to delete.
+            answer: The new domain or ip address associated with the DNS rewrite rule
+                    to delete.
+
+        """
         try:
             await self.adguard.request(
                 "rewrite/delete",
