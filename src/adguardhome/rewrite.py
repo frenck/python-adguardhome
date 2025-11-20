@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from .exceptions import AdGuardHomeError
 
@@ -17,30 +17,30 @@ class AdGuardHomeRewrite:
 
     adguard: AdGuardHome
 
-    async def list(self) -> List[Dict[str, str]]:
+    async def list(self) -> list[dict[str, str]]:
         """Return all defined DNS rewrites."""
-        response = await self.adguard.request("rewrite/list")
-        return response
+        return await self.adguard.request("rewrite/list")
 
     async def add(self, domain: str, answer: str) -> None:
         """Add a new DNS rewrite rule to AdGuard Home."""
-        response = await self.adguard.request(
-            "rewrite/add", method="POST", json_data={"domain": domain, "answer": answer}
-        )
-        if response != "":
-            raise AdGuardHomeError(
-                "Failed to add DNS rewrite rule to AdGuard Home", {"response": response}
+        try:
+            await self.adguard.request(
+                "rewrite/add",
+                method="POST",
+                json_data={"domain": domain, "answer": answer},
             )
+        except AdGuardHomeError as exception:
+            msg = "Failed to add DNS rewrite rule to AdGuard Home"
+            raise AdGuardHomeError(msg) from exception
 
     async def delete(self, domain: str, answer: str) -> None:
         """Delete a DNS rewrite rule from AdGuard Home."""
-        response = await self.adguard.request(
-            "rewrite/delete",
-            method="POST",
-            json_data={"domain": domain, "answer": answer},
-        )
-        if response != "":
-            raise AdGuardHomeError(
-                "Failed to delete DNS rewrite rule from AdGuard Home",
-                {"response": response},
+        try:
+            await self.adguard.request(
+                "rewrite/delete",
+                method="POST",
+                json_data={"domain": domain, "answer": answer},
             )
+        except AdGuardHomeError as exception:
+            msg = "Failed to delete DNS rewrite rule from AdGuard Home"
+            raise AdGuardHomeError(msg) from exception
