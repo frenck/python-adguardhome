@@ -18,8 +18,8 @@ async def test_list(aresponses: ResponsesMockServer) -> None:
         aresponses.Response(
             status=200,
             headers={"Content-Type": "application/json"},
-            text='[{"domain": "*.example.com", "answer": "192.168.1.2"}, \
-             {"domain": "*.example.com", "answer": "192.168.1.2"}]',
+            text='[{"domain": "*.example.com", "answer": "192.168.1.2"},'
+            '{"domain": "*.example.com", "answer": "192.168.1.2"}]',
         ),
     )
 
