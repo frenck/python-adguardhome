@@ -71,7 +71,7 @@ async def test_add(aresponses: ResponsesMockServer) -> None:
 
 
 async def test_remove(aresponses: ResponsesMockServer) -> None:
-    """Test removing DNS rewrite from AdGuard rewrite."""
+    """Test deleting DNS rewrite from AdGuard Home rewrite."""
 
     async def response_handler(request: aiohttp.ClientResponse) -> Response:
         data = await request.json()
