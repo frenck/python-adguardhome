@@ -32,8 +32,12 @@ class AdGuardHomeRewrite:
 
         Args:
         ----
-            domain: The domain name or wildcard for the DNS rewrite rule.
-            answer: The new domain or ip address associated with the DNS rewrite rule.
+            domain: The domain pattern to rewrite (e.g., "*.example.com").
+            answer: The IP address or domain to rewrite to.
+
+        Raises:
+        ------
+            AdGuardHomeError: Failed adding the DNS rewrite rule.
 
         """
         try:
@@ -51,9 +55,12 @@ class AdGuardHomeRewrite:
 
         Args:
         ----
-            domain: The domain name or wildcard of the DNS rewrite rule to delete.
-            answer: The new domain or ip address associated with the DNS rewrite rule
-                    to delete.
+            domain: The domain pattern of the rewrite rule to delete.
+            answer: The IP address or domain of the rewrite rule to delete.
+
+        Raises:
+        ------
+            AdGuardHomeError: Failed to delete DNS rewrite rule.
 
         """
         try:

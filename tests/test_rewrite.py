@@ -2,13 +2,12 @@
 
 import aiohttp
 import pytest
-from aresponses import ResponsesMockServer
+from aresponses import Response, ResponsesMockServer
 
 from adguardhome import AdGuardHome
 from adguardhome.exceptions import AdGuardHomeError
 
 
-@pytest.mark.asyncio
 async def test_list(aresponses: ResponsesMockServer) -> None:
     """Test getting all DNS rewrite rules from AdGuard Home rewrite."""
     aresponses.add(
@@ -43,14 +42,19 @@ async def test_list(aresponses: ResponsesMockServer) -> None:
         assert result == []
 
 
-@pytest.mark.asyncio
 async def test_add(aresponses: ResponsesMockServer) -> None:
     """Test add new DNS rewrite to AdGuard rewrite."""
+
+    async def response_handler(request: aiohttp.ClientResponse) -> Response:
+        data = await request.json()
+        assert data == {"domain": "*.example.com", "answer": "192.168.1.2"}
+        return aresponses.Response(status=200)
+
     aresponses.add(
         "example.com:3000",
         "/control/rewrite/add",
         "POST",
-        aresponses.Response(status=200),
+        response_handler,
     )
     aresponses.add(
         "example.com:3000",
@@ -66,14 +70,19 @@ async def test_add(aresponses: ResponsesMockServer) -> None:
             await adguard.rewrite.add("*.example.com", "192.168.1.2")
 
 
-@pytest.mark.asyncio
 async def test_remove(aresponses: ResponsesMockServer) -> None:
     """Test removing DNS rewrite from AdGuard rewrite."""
+
+    async def response_handler(request: aiohttp.ClientResponse) -> Response:
+        data = await request.json()
+        assert data == {"domain": "*.example.com", "answer": "192.168.1.2"}
+        return aresponses.Response(status=200)
+
     aresponses.add(
         "example.com:3000",
         "/control/rewrite/delete",
         "POST",
-        aresponses.Response(status=200),
+        response_handler,
     )
     aresponses.add(
         "example.com:3000",
