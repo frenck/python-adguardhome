@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, Self
 import aiohttp
 from yarl import URL
 
+from .client import Clients
 from .exceptions import AdGuardHomeConnectionError, AdGuardHomeError
 from .filtering import AdGuardHomeFiltering
 from .parental import AdGuardHomeParental
@@ -223,6 +224,15 @@ class AdGuardHome:
         except AdGuardHomeError as exception:
             msg = "Failed disabling AdGuard Home protection"
             raise AdGuardHomeError(msg) from exception
+
+    @property
+    def clients(self):
+        """Get a facade for interacting with the Client resources.
+
+        Returns:
+            A facade containing the client resources on the remote.
+        """
+        return Clients(self)
 
     async def version(self) -> str:
         """Return the current version of the AdGuard Home instance.
