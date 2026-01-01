@@ -1,20 +1,20 @@
 """Tests for `adguardhome.client`"""
+
 import json
 
 import aiohttp
 import pytest
-from icecream import ic
+from aresponses import ResponsesMockServer
 
 from adguardhome import AdGuardHome
 from adguardhome.client import AutoClient, Client, WhoisInfo
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "method", ["get_auto_clients", "get_clients", "get_supported_tags"]
 )
-async def test_empty_list(aresponses, method):
-    """Test listing clients"""
+async def test_empty_list(aresponses: ResponsesMockServer, method: str) -> None:
+    """Test listing clients."""
     aresponses.add(
         "example.com:3000",
         "/control/clients",
@@ -32,8 +32,8 @@ async def test_empty_list(aresponses, method):
         assert await call() == []
 
 
-@pytest.mark.asyncio
-async def test_get_auto_clients(aresponses):
+async def test_get_auto_clients(aresponses: ResponsesMockServer) -> None:
+    """Test listing auto clients."""
     aresponses.add(
         "example.com:3000",
         "/control/clients",
@@ -77,8 +77,8 @@ async def test_get_auto_clients(aresponses):
         )
 
 
-@pytest.mark.asyncio
-async def test_get_clients(aresponses):
+async def test_get_clients(aresponses: ResponsesMockServer) -> None:
+    """Test getting configured clients from AdGuard Home"""
     aresponses.add(
         "example.com:3000",
         "/control/clients",
@@ -112,7 +112,7 @@ async def test_get_clients(aresponses):
 
     async with aiohttp.ClientSession() as session:
         adguard = AdGuardHome("example.com", session=session)
-        output = ic(await adguard.clients.get_clients())
+        output = await adguard.clients.get_clients()
         assert (
             Client(
                 name="test",
