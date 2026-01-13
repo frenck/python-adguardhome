@@ -1642,31 +1642,29 @@ files = [
 
 [[package]]
 name = "prek"
-version = "0.2.25"
+version = "0.2.28"
 description = "Better `pre-commit`, re-engineered in Rust"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
 files = [
-    {file = "prek-0.2.25-py3-none-linux_armv6l.whl", hash = "sha256:a85edf16c9a8aca13842c365be62911fbca38cd27ea7c9c54b6d3168a5b21703"},
-    {file = "prek-0.2.25-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:c6ca24d8ab728f0d5b116576114df1c679bed59501c1ab71d9f2c78230f6b38c"},
-    {file = "prek-0.2.25-py3-none-macosx_11_0_arm64.whl", hash = "sha256:470373eba87baffe68bbbe18a4c4a85acba2709a8e834adad0c6147977ccdfb3"},
-    {file = "prek-0.2.25-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.musllinux_1_1_aarch64.whl", hash = "sha256:9f50ae59fd33a45a58af0197a91c9a207a7f8f49e18e24ca6ca3f5d5cf88a4ac"},
-    {file = "prek-0.2.25-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:0e74c8ebc4cc07000b588b05df22086e3ef5ce9843c7332b9cf52bdb734378b8"},
-    {file = "prek-0.2.25-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:6da53de6119ec176673c4e3843abe4b6cc7190adc005564ad9e2d8b2924b3934"},
-    {file = "prek-0.2.25-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:442994797aee8a1563f7236b54bb1d99578143b30cc4559011d59a112cdf43f3"},
-    {file = "prek-0.2.25-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:35b3d8543969a03775f5963b8f6e957e9eb23bf191c76d47238557308e7b6bf6"},
-    {file = "prek-0.2.25-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:7809d7f6119be8870a2a76c15d28a122efb1f356909f355461b856619f7456fb"},
-    {file = "prek-0.2.25-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:57db60d6e7882e1b0d6b0a2e6e4b8c240977b9309b4be0793b2d7151021f3767"},
-    {file = "prek-0.2.25-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:2cdedc528e935f01b97a7459b68b4f7584f8efcfc1b69d271a2a1bc3d6a60d36"},
-    {file = "prek-0.2.25-py3-none-manylinux_2_31_riscv64.whl", hash = "sha256:68458ec5d8cadb18667d5126b6a98c0fd2214b624805935c90213d9205378dc8"},
-    {file = "prek-0.2.25-py3-none-musllinux_1_1_armv7l.whl", hash = "sha256:7b8fa764a3665ab38884e2c909f3297e5c29137cafc9c409c1eaab734d7eefcd"},
-    {file = "prek-0.2.25-py3-none-musllinux_1_1_i686.whl", hash = "sha256:4073a368e949a117d77fcdbce13ff14a001b71e797fa35ec921892714bcfb389"},
-    {file = "prek-0.2.25-py3-none-musllinux_1_1_x86_64.whl", hash = "sha256:401d33d1f54f62489b95e7aaacb9cdecac2ab61fe0bd607c8a6c11963e6ad2b9"},
-    {file = "prek-0.2.25-py3-none-win32.whl", hash = "sha256:3d0b9d5fb93cb679ef486f8e6c7ec091723d610d48a5430ef5ece22d649ae686"},
-    {file = "prek-0.2.25-py3-none-win_amd64.whl", hash = "sha256:fbcdeb1d847a0e7ba6a250d4f71be2eb1773d54dd9bb14e35584b69a8d3ffce6"},
-    {file = "prek-0.2.25-py3-none-win_arm64.whl", hash = "sha256:b2692991046cb32f0ef7e02e49842858c87e915cf811aa3c0f473b2c073d9c67"},
-    {file = "prek-0.2.25.tar.gz", hash = "sha256:0ec0d67d1df64b34f071acee7bb1507d062f0231049c0b6587ec60f3bc761ee6"},
+    {file = "prek-0.2.28-py3-none-linux_armv6l.whl", hash = "sha256:1705c0bd035379cb5f1d03c19481821363d72d7923303fe8c84fd8cc7c6c3318"},
+    {file = "prek-0.2.28-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:67677c08767c278335b31ebcbf00c1c73e14eadd99a0d8537dfb43c54482673a"},
+    {file = "prek-0.2.28-py3-none-macosx_11_0_arm64.whl", hash = "sha256:ffac92215058ea6ba954a8e3f978dcd2a5e89922a318fcb7035fb9c0ab4de395"},
+    {file = "prek-0.2.28-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.musllinux_1_1_aarch64.whl", hash = "sha256:413c3da1c9b252b3fd5113f4a04c2dead3c793b0ec56fc55294bb797ba7ca056"},
+    {file = "prek-0.2.28-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:e99639bb68b70704e7b3f7f1a51cb23527c4dbd4b8a01dfccaa70f26f8f6c58b"},
+    {file = "prek-0.2.28-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:33c4a1b2a8a76581476ae327d6d4f1b0af6af42a90d436e21e45c72cb1081b81"},
+    {file = "prek-0.2.28-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:6236dda18152fc56b9f802ce2914fbb2d19f9891595d552228c7894004b3332f"},
+    {file = "prek-0.2.28-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d6506709d9a52ee431d48b249b8b5fb93597a9511eb260ee85d868750425057f"},
+    {file = "prek-0.2.28-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:7cc920c12613440c105a767dc19acf048e8a05342ba38b48450d673bea33bd62"},
+    {file = "prek-0.2.28-py3-none-manylinux_2_31_riscv64.whl", hash = "sha256:322a1922e6d2fcb2a4c487e01b2613856dc3206269bdc317ad28770704159e63"},
+    {file = "prek-0.2.28-py3-none-musllinux_1_1_armv7l.whl", hash = "sha256:a07baefe3562371368135eac3c8b9cdb831bac17b83cb1b6a8f5688050918e6c"},
+    {file = "prek-0.2.28-py3-none-musllinux_1_1_i686.whl", hash = "sha256:17e95cab33067365028ffc1d4ab6c80c6c150f88e352d7c64bdc15e0570778f6"},
+    {file = "prek-0.2.28-py3-none-musllinux_1_1_x86_64.whl", hash = "sha256:bc5272e2e8d81438a3cd2785c3b14b6e73dcb8e61b8a2b7ce6e693d57f7181ac"},
+    {file = "prek-0.2.28-py3-none-win32.whl", hash = "sha256:74657a1663191fb5f09f15873704c2d2640095ce56277d36860bbd08ba7eea94"},
+    {file = "prek-0.2.28-py3-none-win_amd64.whl", hash = "sha256:c350046d623362db65e2be1455ef1c5a96ea476e235445752fa946a705f1c1c9"},
+    {file = "prek-0.2.28-py3-none-win_arm64.whl", hash = "sha256:81db6ba7e5cf1d5ceec7d3b04e01aded32b8db8f1238ad812ac6ebc0bd35f141"},
+    {file = "prek-0.2.28.tar.gz", hash = "sha256:ac54f58cad26e617a5c5459b705ff1cbaaa41640db03d8d35e39645aca1b82cf"},
 ]
 
 [[package]]
@@ -2828,4 +2826,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11"
-content-hash = "726b2a40f4f0c70c64d77669366304e29dc36b679941a7f9315b0db352119e9f"
+content-hash = "80f7d8c3085e4d1dc28502dee8c0c53053b890fe793a999c69c943a36a8ea139"
