@@ -2804,26 +2804,26 @@ propcache = ">=0.2.1"
 
 [[package]]
 name = "zizmor"
-version = "1.21.0"
+version = "1.22.0"
 description = "Static analysis for GitHub Actions"
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "zizmor-1.21.0-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:5aab4ab66d1c8b0867bdd6ff4ed35580e84247fe03bba3c749bb13ce8e7030e5"},
-    {file = "zizmor-1.21.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:57948affe4a5e599fa1cd6266195c65c29ebc4622ae1ff2d8b24e92b5330d3c0"},
-    {file = "zizmor-1.21.0-py3-none-manylinux_2_24_aarch64.whl", hash = "sha256:d63443949c0d582063f1dec8a93b9a8e79ca7d78fba21a4bc941a871c2a24ce7"},
-    {file = "zizmor-1.21.0-py3-none-manylinux_2_28_armv7l.whl", hash = "sha256:0b3d04e9af1edf8998214dabadc556639bf4f8e33f66603b3809f5b226b40d2b"},
-    {file = "zizmor-1.21.0-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:d13310fa090b412cbfe16df16dff9cc7ce01fab581964884845988ba0ad08bba"},
-    {file = "zizmor-1.21.0-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:b9353ae96fef8b85458a81238cc31bb106407325bd6c8f5c6acf6cdca3eb5937"},
-    {file = "zizmor-1.21.0-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:5c9fbfc9a08dc1b7ac6fdd46d4224aeb3dd16c489b5c87cc71558b2968060b92"},
-    {file = "zizmor-1.21.0-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:93729623c3c4be35f972fb767ae4c93ec1570e5467dd200945aa08bbf9ec3c5e"},
-    {file = "zizmor-1.21.0-py3-none-win32.whl", hash = "sha256:b1b3500ab034cf0f5bff1ea457564a1eeceb192bbbe6cb5c8b900e759cc4f131"},
-    {file = "zizmor-1.21.0-py3-none-win_amd64.whl", hash = "sha256:c351d884efb0ea2ceedea69892d65fa1b33aeb641f8394b3b90d948e32c884ba"},
-    {file = "zizmor-1.21.0.tar.gz", hash = "sha256:d06c7c7d22ee77eea2129365295706c74d6bc4c2998e171419b02732103ab222"},
+    {file = "zizmor-1.22.0-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:80c62a9503a4235091dd076c11925f98f8d0e3fcaa8a6e2e1153e784ff3e0062"},
+    {file = "zizmor-1.22.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:05c62d8cc0c16e0c0551e5085ef1f367d3b70e18df6ff1dcb212f6a6355bee4e"},
+    {file = "zizmor-1.22.0-py3-none-manylinux_2_24_aarch64.whl", hash = "sha256:92d90fbebdcbd865ff8d48a8579a23102c788d09e378b60d3452603eb15e69bc"},
+    {file = "zizmor-1.22.0-py3-none-manylinux_2_28_armv7l.whl", hash = "sha256:4f81f527ea5f628537f1a80c63a832f6ee1d529201ecd473f1c06fe28498ecc1"},
+    {file = "zizmor-1.22.0-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:ccc9fe012ca9068add4104fcf75513fb740d41056c238f98dcf97d693feaa743"},
+    {file = "zizmor-1.22.0-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:aad09a0788df8d8e9941d47743029f182434599548a463733240b09983b9870e"},
+    {file = "zizmor-1.22.0-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:a2f3f9d2dc341921543374f75cbd99cad130676809854c3c0fb38fa44fb9ebee"},
+    {file = "zizmor-1.22.0-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:8fbc43d9feec0e6f85dfb324956f41a58e649763fe8b269ca1c2c4d61f27764d"},
+    {file = "zizmor-1.22.0-py3-none-win32.whl", hash = "sha256:05b906d08b7fa70474ad99b95ae6e332e6d527089821df71b739107488aad303"},
+    {file = "zizmor-1.22.0-py3-none-win_amd64.whl", hash = "sha256:2d52bc8367986c046c116134800117bd5ad4816922e890e81b9bd37a7b28c28f"},
+    {file = "zizmor-1.22.0.tar.gz", hash = "sha256:b36a24cf52af902fbf5526d9ed6b6e665cc418b7c76c93dd018225a385691200"},
 ]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11"
-content-hash = "6ef8f65baa0fc70448af92d53dadb9a516e4755fcdde4f053479f5a19544eacf"
+content-hash = "13a848c8e88d03cba3b025e99ecaa294ddda327380bb40f98c4520e5be77b3d1"
