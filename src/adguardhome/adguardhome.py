@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, Self
 import aiohttp
 from yarl import URL
 
+from .client import AdGuardHomeClients
 from .exceptions import AdGuardHomeConnectionError, AdGuardHomeError
 from .filtering import AdGuardHomeFiltering
 from .parental import AdGuardHomeParental
@@ -74,6 +75,7 @@ class AdGuardHome:
         if self.base_path[-1] != "/":
             self.base_path += "/"
 
+        self.clients = AdGuardHomeClients(self)
         self.filtering = AdGuardHomeFiltering(self)
         self.parental = AdGuardHomeParental(self)
         self.querylog = AdGuardHomeQueryLog(self)
