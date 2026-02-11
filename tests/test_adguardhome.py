@@ -219,13 +219,13 @@ async def test_enable_protection(aresponses: ResponsesMockServer) -> None:
     """Test enabling AdGuard Home protection."""
     aresponses.add(
         "example.com:3000",
-        "/control/dns_config",
+        "/control/protection",
         "POST",
         aresponses.Response(status=200),
     )
     aresponses.add(
         "example.com:3000",
-        "/control/dns_config",
+        "/control/protection",
         "POST",
         aresponses.Response(status=400),
     )
@@ -241,13 +241,13 @@ async def test_disable_protection(aresponses: ResponsesMockServer) -> None:
     """Test disabling AdGuard Home protection."""
     aresponses.add(
         "example.com:3000",
-        "/control/dns_config",
+        "/control/protection",
         "POST",
         aresponses.Response(status=200),
     )
     aresponses.add(
         "example.com:3000",
-        "/control/dns_config",
+        "/control/protection",
         "POST",
         aresponses.Response(status=500),
     )
@@ -259,7 +259,30 @@ async def test_disable_protection(aresponses: ResponsesMockServer) -> None:
             await adguard.disable_protection()
 
 
-async def test_verion(aresponses: ResponsesMockServer) -> None:
+async def test_disable_protection_with_duration(
+    aresponses: ResponsesMockServer,
+) -> None:
+    """Test disabling AdGuard Home protection with a pause duration."""
+
+    async def handler(request: aiohttp.web.Request) -> Response:
+        # Validate JSON body contains the expected duration
+        payload = await request.json()
+        assert payload == {"enabled": False, "duration": 15000}
+        return aresponses.Response(status=200)
+
+    aresponses.add(
+        "example.com:3000",
+        "/control/protection",
+        "POST",
+        handler,
+    )
+
+    async with aiohttp.ClientSession() as session:
+        adguard = AdGuardHome("example.com", session=session)
+        await adguard.disable_protection(pause_duration_milliseconds=15000)
+
+
+async def test_version(aresponses: ResponsesMockServer) -> None:
     """Test requesting AdGuard Home instance version."""
     aresponses.add(
         "example.com:3000",
