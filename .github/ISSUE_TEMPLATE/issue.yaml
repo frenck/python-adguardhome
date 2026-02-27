@@ -1,0 +1,35 @@
+---
+name: Issue
+description: Report an issue with the AdGuard Home Python client.
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of what the issue is.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The version of the AdGuard Home Python client.
+      placeholder: e.g., 0.7.0
+    validations:
+      required: true
+  - type: input
+    id: adguard-home-version
+    attributes:
+      label: AdGuard Home version
+      description: The version of your AdGuard Home instance.
+      placeholder: e.g., 0.107.59
+    validations:
+      required: false
+  - type: textarea
+    id: additional-information
+    attributes:
+      label: Additional information
+      description: Any logs, tracebacks, or other context.
+      render: txt
+    validations:
+      required: false
