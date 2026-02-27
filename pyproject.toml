@@ -40,7 +40,7 @@ aresponses = "3.0.0"
 codespell = "2.4.1"
 covdefaults = "2.3.0"
 coverage = { version = "7.13.4", extras = ["toml"] }
-ty = "0.0.1a11"
+ty = "0.0.19"
 pre-commit-hooks = "6.0.0"
 prek = "0.3.3"
 pylint = "4.0.5"
