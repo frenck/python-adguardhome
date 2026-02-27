@@ -48,6 +48,7 @@ rules:
     check-multi-line-strings: false
   key-duplicates:
     level: error
+  line-length: disable
   new-line-at-end-of-file:
     level: error
   new-lines:
