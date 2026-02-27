@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class AdGuardHomeAvailableUpdate:
     """Latest available AdGuard Home update."""
 
-    disabled: bool
+    disabled: bool = False
     new_version: str | None = None
     announcement: str | None = None
     announcement_url: str | None = None

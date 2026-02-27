@@ -32,7 +32,6 @@
         "python.defaultInterpreterPath": ".venv/bin/python",
         "python.formatting.provider": "ruff",
         "python.linting.enabled": true,
-        "python.linting.mypyEnabled": true,
         "python.linting.pylintEnabled": true,
         "python.testing.cwd": "${workspaceFolder}",
         "python.testing.pytestArgs": ["--cov-report=xml"],

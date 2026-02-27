@@ -14,8 +14,8 @@ permissions:
   contents: read
 
 jobs:
-  mypy:
-    name: mypy
+  ty:
+    name: ty
     runs-on: ubuntu-latest
     steps:
       - name: ⤵️ Check out code from GitHub
@@ -36,5 +36,5 @@ jobs:
           poetry config virtualenvs.in-project true
       - name: 🏗 Install dependencies
         run: poetry install --no-interaction
-      - name: 🚀 Run mypy
-        run: poetry run mypy examples src tests
+      - name: 🚀 Run ty
+        run: poetry run ty check examples src tests

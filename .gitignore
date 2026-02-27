@@ -88,8 +88,8 @@ docs/_build/
 venv/
 ENV/
 
-# mypy
-.mypy_cache/
+# ty
+.ty/
 
 # Visual Studio Code
 .vscode
