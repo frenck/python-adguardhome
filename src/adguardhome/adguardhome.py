@@ -36,7 +36,7 @@ class AdGuardHome:
         password: str | None = None,
         port: int = 3000,
         request_timeout: int = 10,
-        session: aiohttp.client.ClientSession | None = None,
+        session: aiohttp.ClientSession | None = None,
         tls: bool = False,
         username: str | None = None,
         verify_ssl: bool = True,

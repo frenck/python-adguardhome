@@ -40,7 +40,7 @@ aresponses = "3.0.0"
 codespell = "2.4.1"
 covdefaults = "2.3.0"
 coverage = { version = "7.13.4", extras = ["toml"] }
-mypy = "1.19.1"
+ty = "0.0.1a11"
 pre-commit-hooks = "6.0.0"
 prek = "0.3.3"
 pylint = "4.0.5"
@@ -61,36 +61,8 @@ source = ["adguardhome"]
 show_missing = true
 fail_under = 10
 
-[tool.mypy]
-# Specify the target platform details in config, so your developers are
-# free to run mypy on Windows, Linux, or macOS and get consistent
-# results.
-platform = "linux"
-python_version = "3.11"
-
-# show error messages from unrelated files
-follow_imports = "normal"
-
-# suppress errors about unsatisfied imports
-ignore_missing_imports = true
-
-# be strict
-check_untyped_defs = true
-disallow_any_generics = true
-disallow_incomplete_defs = true
-disallow_subclassing_any = true
-disallow_untyped_calls = true
-disallow_untyped_defs = true
-disallow_untyped_decorators = true
-no_implicit_optional = true
-no_implicit_reexport = true
-strict_optional = true
-warn_incomplete_stub = true
-warn_no_return = true
-warn_redundant_casts = true
-warn_return_any = false            # Fix this later!
-warn_unused_configs = true
-warn_unused_ignores = true
+[tool.ty.environment]
+python-version = "3.11"
 
 [tool.pylint.MASTER]
 ignore = ["tests"]
