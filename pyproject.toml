@@ -37,7 +37,7 @@ Changelog = "https://github.com/frenck/python-adguardhome/releases"
 
 [tool.poetry.group.dev.dependencies]
 aresponses = "3.0.0"
-codespell = "2.4.1"
+codespell = "2.4.2"
 covdefaults = "2.3.0"
 coverage = { version = "7.13.4", extras = ["toml"] }
 ty = "0.0.20"
