@@ -1,0 +1,12 @@
+[
+  {
+    "domain": "*.example.com",
+    "answer": "192.168.1.2",
+    "enabled": true
+  },
+  {
+    "domain": "ads.tracker.io",
+    "answer": "127.0.0.1",
+    "enabled": false
+  }
+]

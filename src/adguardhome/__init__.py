@@ -3,6 +3,7 @@
 from .adguardhome import AdGuardHome
 from .client import AutoClient, Client
 from .exceptions import AdGuardHomeConnectionError, AdGuardHomeError
+from .rewrite import RewriteRule
 
 __all__ = [
     "AdGuardHome",
@@ -10,4 +11,5 @@ __all__ = [
     "AdGuardHomeError",
     "AutoClient",
     "Client",
+    "RewriteRule",
 ]
