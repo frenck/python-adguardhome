@@ -1,0 +1,7 @@
+# serializer version: 1
+# name: test_list_rules_snapshot
+  list([
+    RewriteRule(domain='*.example.com', answer='192.168.1.2', enabled=True),
+    RewriteRule(domain='ads.tracker.io', answer='127.0.0.1', enabled=False),
+  ])
+# ---

@@ -15,6 +15,7 @@ from .exceptions import AdGuardHomeConnectionError, AdGuardHomeError
 from .filtering import AdGuardHomeFiltering
 from .parental import AdGuardHomeParental
 from .querylog import AdGuardHomeQueryLog
+from .rewrite import AdGuardHomeRewrite
 from .safebrowsing import AdGuardHomeSafeBrowsing
 from .safesearch import AdGuardHomeSafeSearch
 from .stats import AdGuardHomeStats
@@ -79,6 +80,7 @@ class AdGuardHome:
         self.filtering = AdGuardHomeFiltering(self)
         self.parental = AdGuardHomeParental(self)
         self.querylog = AdGuardHomeQueryLog(self)
+        self.rewrite = AdGuardHomeRewrite(self)
         self.safebrowsing = AdGuardHomeSafeBrowsing(self)
         self.safesearch = AdGuardHomeSafeSearch(self)
         self.stats = AdGuardHomeStats(self)
@@ -92,7 +94,7 @@ class AdGuardHome:
         data: Any | None = None,
         json_data: dict[str, Any] | None = None,
         params: Mapping[str, str] | None = None,
-    ) -> dict[str, Any]:
+    ) -> Any:
         """Handle a request to the AdGuard Home instance.
 
         Make a request against the AdGuard Home API and handle the response.
@@ -109,7 +111,8 @@ class AdGuardHome:
         -------
             The response from the API. In case the response is a JSON response,
             the method will return a decoded JSON response as a Python
-            dictionary. In other cases, it will return the RAW text response.
+            dictionary or list. In other cases, it will return the RAW text
+            response.
 
         Raises:
         ------
