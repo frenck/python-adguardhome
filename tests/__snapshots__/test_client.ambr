@@ -1,0 +1,12 @@
+# serializer version: 1
+# name: test_get_auto_clients_snapshot
+  list([
+    AutoClient(ip_address='192.168.1.10', name='phone', source='rdns', whois_info=None),
+    AutoClient(ip_address='192.168.1.20', name='laptop', source='arp', whois_info={'orgname': 'Local Network'}),
+  ])
+# ---
+# name: test_get_clients_snapshot
+  list([
+    Client(name='Kids devices', ids=['192.168.1.30', '192.168.1.31'], use_global_settings=False, filtering_enabled=True, parental_enabled=True, safebrowsing_enabled=True, safesearch_enabled=True, use_global_blocked_services=False, blocked_services=['youtube'], upstreams=[], tags=['device_tablet'], ignore_querylog=False, ignore_statistics=False, upstreams_cache_enabled=False, upstreams_cache_size=0),
+  ])
+# ---

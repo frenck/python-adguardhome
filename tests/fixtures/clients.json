@@ -1,0 +1,48 @@
+{
+  "auto_clients": [
+    {
+      "ip": "192.168.1.10",
+      "name": "phone",
+      "source": "rdns"
+    },
+    {
+      "ip": "192.168.1.20",
+      "name": "laptop",
+      "source": "arp",
+      "whois_info": {
+        "orgname": "Local Network"
+      }
+    }
+  ],
+  "clients": [
+    {
+      "name": "Kids devices",
+      "ids": ["192.168.1.30", "192.168.1.31"],
+      "use_global_settings": false,
+      "filtering_enabled": true,
+      "parental_enabled": true,
+      "safebrowsing_enabled": true,
+      "safesearch_enabled": true,
+      "use_global_blocked_services": false,
+      "blocked_services": ["youtube"],
+      "upstreams": [],
+      "tags": ["device_tablet"],
+      "ignore_querylog": false,
+      "ignore_statistics": false,
+      "upstreams_cache_enabled": false,
+      "upstreams_cache_size": 0
+    }
+  ],
+  "supported_tags": [
+    "device_laptop",
+    "device_phone",
+    "device_tablet",
+    "os_android",
+    "os_ios",
+    "os_linux",
+    "os_macos",
+    "os_windows",
+    "user_admin",
+    "user_child"
+  ]
+}
