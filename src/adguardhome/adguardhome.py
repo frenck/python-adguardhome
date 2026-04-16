@@ -198,27 +198,36 @@ class AdGuardHome:
         """
         try:
             await self.request(
-                "dns_config",
+                "protection",
                 method="POST",
-                json_data={"protection_enabled": True},
+                json_data={"enabled": True},
             )
         except AdGuardHomeError as exception:
             msg = "Failed enabling AdGuard Home protection"
             raise AdGuardHomeError(msg) from exception
 
-    async def disable_protection(self) -> None:
+    async def disable_protection(self, duration: int | None = None) -> None:
         """Disable AdGuard Home protection.
 
-        Raises
+        Args:
+        ----
+            duration: Duration in seconds to disable protection for.
+                When None, protection is disabled indefinitely.
+
+        Raises:
         ------
             AdGuardHomeError: Failed disabling the AdGuard Home protection.
 
         """
+        data: dict[str, bool | int] = {"enabled": False}
+        if duration is not None:
+            data["duration"] = duration * 1000
+
         try:
             await self.request(
-                "dns_config",
+                "protection",
                 method="POST",
-                json_data={"protection_enabled": False},
+                json_data=data,
             )
         except AdGuardHomeError as exception:
             msg = "Failed disabling AdGuard Home protection"
