@@ -18,8 +18,20 @@ async def test_json_request(responses: aioresponses, adguard: AdGuardHome) -> No
     """Test JSON response is handled correctly."""
     responses.get(URL_ROOT, status=200, payload={"status": "ok"})
     assert (await adguard.request("/"))["status"] == "ok"
-    # Closing an externally-supplied session must be a no-op.
+
+
+async def test_close_external_session(
+    responses: aioresponses,
+    adguard: AdGuardHome,
+) -> None:
+    """Test that closing a client with an external session does not close it."""
+    responses.get(URL_ROOT, status=200, payload={"status": "ok"})
+    await adguard.request("/")
+
     await adguard.close()
+
+    assert adguard._session is not None  # noqa: SLF001
+    assert not adguard._session.closed  # noqa: SLF001
 
 
 async def test_authenticated_request(responses: aioresponses) -> None:

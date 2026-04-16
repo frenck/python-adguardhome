@@ -21,7 +21,9 @@ def load_fixture() -> FixtureLoader:
     """Return a helper that loads a JSON fixture by name."""
 
     def _load(name: str) -> Any:
-        return json.loads((FIXTURES_DIR / f"{name}.json").read_text())
+        return json.loads(
+            (FIXTURES_DIR / f"{name}.json").read_text(encoding="utf-8")
+        )
 
     return _load
 
