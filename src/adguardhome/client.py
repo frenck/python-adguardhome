@@ -63,7 +63,7 @@ class AdGuardHomeClients:
                 source=entry["source"],
                 whois_info=entry.get("whois_info"),
             )
-            for entry in response.get("auto_clients", [])
+            for entry in response.get("auto_clients") or []
         ]
 
     async def get_clients(self) -> list[Client]:
@@ -78,7 +78,7 @@ class AdGuardHomeClients:
         known = {f.name for f in fields(Client)}
         return [
             Client(**{k: v for k, v in entry.items() if k in known})
-            for entry in response.get("clients", [])
+            for entry in response.get("clients") or []
         ]
 
     async def get_supported_tags(self) -> list[str]:
@@ -90,4 +90,4 @@ class AdGuardHomeClients:
 
         """
         response = await self.adguard.request("clients")
-        return response.get("supported_tags", [])
+        return response.get("supported_tags") or []

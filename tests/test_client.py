@@ -117,18 +117,40 @@ async def test_get_supported_tags(
 
 
 @pytest.mark.parametrize(
-    "method",
-    ["get_auto_clients", "get_clients", "get_supported_tags"],
+    ("method", "payload"),
+    [
+        (
+            "get_auto_clients",
+            {"auto_clients": [], "clients": [], "supported_tags": []},
+        ),
+        (
+            "get_clients",
+            {"auto_clients": [], "clients": [], "supported_tags": []},
+        ),
+        (
+            "get_supported_tags",
+            {"auto_clients": [], "clients": [], "supported_tags": []},
+        ),
+        (
+            "get_auto_clients",
+            {"auto_clients": None, "clients": None, "supported_tags": None},
+        ),
+        (
+            "get_clients",
+            {"auto_clients": None, "clients": None, "supported_tags": None},
+        ),
+        (
+            "get_supported_tags",
+            {"auto_clients": None, "clients": None, "supported_tags": None},
+        ),
+    ],
 )
 async def test_empty_response(
     responses: aioresponses,
     adguard: AdGuardHome,
     method: str,
+    payload: dict[str, list[object] | None],
 ) -> None:
     """Test all methods return empty lists when no data is present."""
-    responses.get(
-        URL_CLIENTS,
-        status=200,
-        payload={"auto_clients": [], "clients": [], "supported_tags": []},
-    )
+    responses.get(URL_CLIENTS, status=200, payload=payload)
     assert await getattr(adguard.clients, method)() == []
