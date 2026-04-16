@@ -7,7 +7,16 @@ maintainers = [{ name = "Franck Nijhof", email = "opensource@frenck.dev" }]
 license = "MIT"
 requires-python = ">=3.11"
 readme = "README.md"
-keywords = ["adguard home", "adguard", "api", "async", "client"]
+keywords = [
+  "adguard home",
+  "adguard",
+  "ad-blocker",
+  "api",
+  "async",
+  "client",
+  "dns",
+  "home-assistant",
+]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Framework :: AsyncIO",
@@ -36,11 +45,10 @@ documentation = "https://github.com/frenck/python-adguardhome"
 Changelog = "https://github.com/frenck/python-adguardhome/releases"
 
 [tool.poetry.group.dev.dependencies]
-aresponses = "3.0.0"
+aioresponses = "0.7.8"
 codespell = "2.4.2"
 covdefaults = "2.3.0"
 coverage = { version = "7.13.5", extras = ["toml"] }
-ty = "0.0.29"
 pre-commit-hooks = "6.0.0"
 prek = "0.3.9"
 pylint = "4.0.5"
@@ -50,6 +58,7 @@ pytest-cov = "7.1.0"
 ruff = "0.15.10"
 safety = "3.7.0"
 syrupy = "5.1.0"
+ty = "0.0.31"
 yamllint = "1.38.0"
 zizmor = "1.24.1"
 
@@ -59,7 +68,7 @@ source = ["adguardhome"]
 
 [tool.coverage.report]
 show_missing = true
-fail_under = 10
+fail_under = 95
 
 [tool.ty.environment]
 python-version = "3.11"
@@ -98,6 +107,12 @@ ignore = [
   # Conflicts with the Ruff formatter
   "COM812",
   "ISC001",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+  "FBT001", # Boolean positional args are idiomatic in parametrized tests
+  "FBT002", # Boolean defaults are idiomatic in parametrized tests
 ]
 
 [tool.ruff.lint.flake8-pytest-style]

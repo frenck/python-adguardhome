@@ -18,7 +18,7 @@ Even better: You could submit a pull request with a fix / new feature!
 
 ## Pull request process
 
-1. Search our repository for open or closed [pull requests][prs] that relates
+1. Search our repository for open or closed [pull requests][prs] that relate
    to your submission. You don't want to duplicate effort.
 
 1. You may merge the pull request in once you have the sign-off of two other

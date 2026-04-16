@@ -1,83 +1,58 @@
 """Tests for `adguardhome.parental`."""
 
-import aiohttp
 import pytest
-from aresponses import ResponsesMockServer
+from aioresponses import aioresponses
 
 from adguardhome import AdGuardHome
 from adguardhome.exceptions import AdGuardHomeError
 
-
-async def test_enabled(aresponses: ResponsesMockServer) -> None:
-    """Test request of current AdGuard Home parental control status."""
-    aresponses.add(
-        "example.com:3000",
-        "/control/parental/status",
-        "GET",
-        aresponses.Response(
-            status=200,
-            headers={"Content-Type": "application/json"},
-            text='{"enabled": true}',
-        ),
-    )
-    aresponses.add(
-        "example.com:3000",
-        "/control/parental/status",
-        "GET",
-        aresponses.Response(
-            status=200,
-            headers={"Content-Type": "application/json"},
-            text='{"enabled": false}',
-        ),
-    )
-    async with aiohttp.ClientSession() as session:
-        adguard = AdGuardHome("example.com", session=session)
-        enabled = await adguard.parental.enabled()
-        assert enabled
-        enabled = await adguard.parental.enabled()
-        assert not enabled
+URL_STATUS = "http://example.com:3000/control/parental/status"
+URL_ENABLE = "http://example.com:3000/control/parental/enable"
+URL_DISABLE = "http://example.com:3000/control/parental/disable"
 
 
-async def test_enable(aresponses: ResponsesMockServer) -> None:
-    """Test enabling AdGuard Home parental control."""
-    # Handle to run asserts on request in
-    aresponses.add(
-        "example.com:3000",
-        "/control/parental/enable",
-        "POST",
-        aresponses.Response(status=200, text="OK"),
-    )
-    aresponses.add(
-        "example.com:3000",
-        "/control/parental/enable",
-        "POST",
-        aresponses.Response(status=400, text="NOT OK"),
-    )
+@pytest.mark.parametrize("enabled", [True, False])
+async def test_enabled(
+    responses: aioresponses,
+    adguard: AdGuardHome,
+    enabled: bool,
+) -> None:
+    """Test reporting parental control status."""
+    responses.get(URL_STATUS, status=200, payload={"enabled": enabled})
+    assert await adguard.parental.enabled() is enabled
 
-    async with aiohttp.ClientSession() as session:
-        adguard = AdGuardHome("example.com", session=session)
+
+async def test_enable(responses: aioresponses, adguard: AdGuardHome) -> None:
+    """Test enabling parental control."""
+    responses.post(URL_ENABLE, status=200, body="OK", content_type="text/plain")
+    await adguard.parental.enable()
+
+
+@pytest.mark.parametrize("status", [400, 500])
+async def test_enable_error(
+    responses: aioresponses,
+    adguard: AdGuardHome,
+    status: int,
+) -> None:
+    """Test enabling parental control fails on HTTP error."""
+    responses.post(URL_ENABLE, status=status, body="NOT OK", content_type="text/plain")
+    with pytest.raises(AdGuardHomeError):
         await adguard.parental.enable()
-        with pytest.raises(AdGuardHomeError):
-            await adguard.parental.enable()
 
 
-async def test_disable(aresponses: ResponsesMockServer) -> None:
-    """Test disabling AdGuard Home parental control."""
-    aresponses.add(
-        "example.com:3000",
-        "/control/parental/disable",
-        "POST",
-        aresponses.Response(status=200, text="OK"),
-    )
-    aresponses.add(
-        "example.com:3000",
-        "/control/parental/disable",
-        "POST",
-        aresponses.Response(status=400, text="NOT OK"),
-    )
+async def test_disable(responses: aioresponses, adguard: AdGuardHome) -> None:
+    """Test disabling parental control."""
+    responses.post(URL_DISABLE, status=200, body="OK", content_type="text/plain")
+    await adguard.parental.disable()
 
-    async with aiohttp.ClientSession() as session:
-        adguard = AdGuardHome("example.com", session=session)
+
+@pytest.mark.parametrize("status", [400, 500])
+async def test_disable_error(
+    responses: aioresponses,
+    adguard: AdGuardHome,
+    status: int,
+) -> None:
+    """Test disabling parental control fails on HTTP error."""
+    responses.post(URL_DISABLE, status=status, body="NOT OK", content_type="text/plain")
+    with pytest.raises(AdGuardHomeError):
         await adguard.parental.disable()
-        with pytest.raises(AdGuardHomeError):
-            await adguard.parental.disable()
