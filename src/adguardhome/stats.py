@@ -94,7 +94,7 @@ class AdGuardHomeStats:
 
         Returns
         -------
-            The averages processing time (in milliseconds) of DNS queries
+            The average processing time (in milliseconds) of DNS queries
             as performed by the AdGuard Home instance.
 
         """
@@ -117,7 +117,7 @@ class AdGuardHomeStats:
 
         Raises
         ------
-            AdGuardHomeError: Restting the AdGuard Home stats did not succeed.
+            AdGuardHomeError: Resetting the AdGuard Home stats did not succeed.
 
         """
         try:

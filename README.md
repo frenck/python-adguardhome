@@ -8,6 +8,7 @@
 
 [![Build Status][build-shield]][build]
 [![Code Coverage][codecov-shield]][codecov]
+[![OpenSSF Scorecard][scorecard-shield]][scorecard]
 [![Open in Dev Containers][devcontainer-shield]][devcontainer]
 
 [![Sponsor Frenck via GitHub Sponsors][github-sponsors-shield]][github-sponsors]
@@ -23,7 +24,7 @@ programmatically. It is mainly created to allow third-party programs to automate
 the behavior of AdGuard.
 
 An excellent example of this might be Home Assistant, which allows you to write
-automations, to turn on parental controls when the kids get home.
+automations that turn on parental controls when the kids get home.
 
 ## Installation
 
@@ -33,21 +34,23 @@ pip install adguardhome
 
 ## Usage
 
-```python
-from adguardhome import AdGuardHome
+The client is an async context manager; every API call is a coroutine. A
+quick status check looks like this:
 
+```python
 import asyncio
 
+from adguardhome import AdGuardHome
 
-async def main():
+
+async def main() -> None:
     """Show example how to get status of your AdGuard Home instance."""
     async with AdGuardHome("192.168.1.2") as adguard:
         version = await adguard.version()
         print("AdGuard version:", version)
 
         active = await adguard.protection_enabled()
-        active = "Yes" if active else "No"
-        print("Protection enabled?", active)
+        print("Protection enabled?", "Yes" if active else "No")
 
         if not active:
             print("AdGuard Home protection disabled. Enabling...")
@@ -57,6 +60,82 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+
+### Feature areas
+
+Each AdGuard Home feature lives under its own namespace on the client.
+Short examples per namespace:
+
+**Filtering** — manage block and allow list subscriptions:
+
+```python
+async with AdGuardHome("192.168.1.2") as adguard:
+    await adguard.filtering.add_url(
+        name="EasyList",
+        url="https://easylist.to/easylist/easylist.txt",
+        allowlist=False,
+    )
+    await adguard.filtering.refresh(allowlist=False, force=True)
+    print("Rules loaded:", await adguard.filtering.rules_count(allowlist=False))
+```
+
+**Parental control, safe browsing, safe search** — identical API on each
+namespace:
+
+```python
+async with AdGuardHome("192.168.1.2") as adguard:
+    await adguard.parental.enable()
+    await adguard.safebrowsing.enable()
+    await adguard.safesearch.enable()
+    print("Parental active:", await adguard.parental.enabled())
+```
+
+**Query log** — enable, disable, and set retention:
+
+```python
+async with AdGuardHome("192.168.1.2") as adguard:
+    await adguard.querylog.enable()
+    await adguard.querylog.interval(interval=7)  # retain 7 days
+```
+
+**Stats** — total queries, blocked ratio, processing time:
+
+```python
+async with AdGuardHome("192.168.1.2") as adguard:
+    print("Queries:", await adguard.stats.dns_queries())
+    print(f"Blocked: {await adguard.stats.blocked_percentage():.1f}%")
+    print("Avg processing time (ms):", await adguard.stats.avg_processing_time())
+```
+
+**Update check** — see whether a new AdGuard Home release is available and
+trigger the auto-upgrade:
+
+```python
+async with AdGuardHome("192.168.1.2") as adguard:
+    info = await adguard.update.update_available()
+    if info.new_version and info.can_autoupdate:
+        await adguard.update.begin_update()
+```
+
+### Connection options
+
+All constructor arguments are keyword-only (except `host`):
+
+```python
+AdGuardHome(
+    "adguard.local",
+    port=443,
+    tls=True,              # use HTTPS
+    verify_ssl=True,       # set to False to accept self-signed certs
+    username="admin",      # HTTP basic auth (optional)
+    password="secret",     # noqa: S106
+    base_path="/control",  # adjust when running behind a reverse proxy
+    request_timeout=10,    # per-request timeout in seconds
+)
+```
+
+You may also pass your own `aiohttp.ClientSession` via `session=...` to
+share a connection pool across multiple clients.
 
 ## Changelog & Releases
 
@@ -92,7 +171,7 @@ You need at least:
 
 - Python 3.11+
 - [Poetry][poetry-install]
-- NodeJS 20+ (including NPM)
+- NodeJS 24+ (including NPM)
 
 To install all packages, including all development requirements:
 
@@ -169,4 +248,6 @@ SOFTWARE.
 [python-versions-shield]: https://img.shields.io/pypi/pyversions/adguardhome
 [releases-shield]: https://img.shields.io/github/release/frenck/python-adguardhome.svg
 [releases]: https://github.com/frenck/python-adguardhome/releases
+[scorecard]: https://scorecard.dev/viewer/?uri=github.com/frenck/python-adguardhome
+[scorecard-shield]: https://api.scorecard.dev/projects/github.com/frenck/python-adguardhome/badge
 [semver]: http://semver.org/spec/v2.0.0.html

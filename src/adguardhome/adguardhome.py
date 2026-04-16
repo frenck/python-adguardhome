@@ -93,7 +93,7 @@ class AdGuardHome:
     ) -> dict[str, Any]:
         """Handle a request to the AdGuard Home instance.
 
-        Make a request against the AdGuard Home API and handles the response.
+        Make a request against the AdGuard Home API and handle the response.
 
         Args:
         ----
@@ -255,7 +255,7 @@ class AdGuardHome:
 
         Args:
         ----
-            _exc_info: Exec type.
+            _exc_info: Exception type, value, and traceback.
 
         """
         await self.close()

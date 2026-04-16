@@ -102,7 +102,7 @@ class AdGuardHomeFiltering:
 
         Args:
         ----
-            allowlist: True to get the allowlists count, False for the blocklists.
+            allowlist: True to get the allowlist count, False for the blocklist count.
 
         Returns:
         -------
@@ -123,7 +123,7 @@ class AdGuardHomeFiltering:
 
         Args:
         ----
-            allowlist: True to add an allowlist, False for a blocklists.
+            allowlist: True to add an allowlist, False for a blocklist.
             name: The name of the filter subscription.
             url: The URL of the filter list.
 
@@ -143,11 +143,11 @@ class AdGuardHomeFiltering:
             raise AdGuardHomeError(msg) from exception
 
     async def remove_url(self, *, allowlist: bool, url: str) -> None:
-        """Remove a new filter subscription from AdGuard Home.
+        """Remove a filter subscription from AdGuard Home.
 
         Args:
         ----
-            allowlist: True to remove an allowlist, False for a blocklists.
+            allowlist: True to remove an allowlist, False for a blocklist.
             url: Filter subscription URL to remove from AdGuard Home.
 
         Raises:
@@ -170,7 +170,7 @@ class AdGuardHomeFiltering:
 
         Args:
         ----
-            allowlist: True to enable an allowlist, False for a blocklists.
+            allowlist: True to enable an allowlist, False for a blocklist.
             url: Filter subscription URL to enable on AdGuard Home.
 
         Raises:
@@ -252,7 +252,7 @@ class AdGuardHomeFiltering:
 
         Args:
         ----
-            allowlist: True to check an allowlist, False for a blocklists.
+            allowlist: True to check an allowlist, False for a blocklist.
             url: Filter subscription URL to check on AdGuard Home.
 
         Returns:

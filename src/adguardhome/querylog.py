@@ -25,7 +25,7 @@ class AdGuardHomeQueryLog:
         Args:
         ----
             enabled: Enable/disable AdGuard Home query log.
-            interval: Number of day to keep data in the logs.
+            interval: Number of days to keep data in the logs.
 
         """
         if enabled is None:
