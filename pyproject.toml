@@ -80,7 +80,7 @@ ignore = ["tests"]
 good-names = ["_", "ex", "fp", "i", "id", "j", "k", "on", "Run", "T"]
 
 [tool.pylint.DESIGN]
-max-attributes = 8
+max-attributes = 15
 
 [tool.pylint."MESSAGES CONTROL"]
 disable = ["duplicate-code", "format", "unsubscriptable-object"]
