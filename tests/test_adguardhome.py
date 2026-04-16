@@ -30,8 +30,8 @@ async def test_close_external_session(
 
     await adguard.close()
 
-    assert adguard._session is not None  # noqa: SLF001
-    assert not adguard._session.closed  # noqa: SLF001
+    assert adguard._session is not None  # pylint: disable=protected-access
+    assert not adguard._session.closed  # pylint: disable=protected-access
 
 
 async def test_authenticated_request(responses: aioresponses) -> None:
