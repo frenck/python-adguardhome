@@ -4,14 +4,14 @@ from unittest.mock import patch
 
 import aiohttp
 import pytest
-from aioresponses import aioresponses
+from aioresponses import CallbackResult, aioresponses
 
 from adguardhome import AdGuardHome
 from adguardhome.exceptions import AdGuardHomeConnectionError, AdGuardHomeError
 
 URL_ROOT = "http://example.com:3000/"
 URL_STATUS = "http://example.com:3000/control/status"
-URL_DNS_CONFIG = "http://example.com:3000/control/dns_config"
+URL_PROTECTION = "http://example.com:3000/control/protection"
 
 
 async def test_json_request(responses: aioresponses, adguard: AdGuardHome) -> None:
@@ -157,7 +157,12 @@ async def test_enable_protection(
     adguard: AdGuardHome,
 ) -> None:
     """Test enabling AdGuard Home protection."""
-    responses.post(URL_DNS_CONFIG, status=200, content_type="text/plain")
+
+    def callback(_url: str, **kwargs: object) -> CallbackResult:
+        assert kwargs["json"] == {"enabled": True}
+        return CallbackResult(status=200, content_type="text/plain")
+
+    responses.post(URL_PROTECTION, callback=callback)
     await adguard.enable_protection()
 
 
@@ -168,7 +173,7 @@ async def test_enable_protection_error(
     status: int,
 ) -> None:
     """Test enabling protection fails on HTTP error."""
-    responses.post(URL_DNS_CONFIG, status=status, content_type="text/plain")
+    responses.post(URL_PROTECTION, status=status, content_type="text/plain")
     with pytest.raises(AdGuardHomeError):
         await adguard.enable_protection()
 
@@ -177,9 +182,28 @@ async def test_disable_protection(
     responses: aioresponses,
     adguard: AdGuardHome,
 ) -> None:
-    """Test disabling AdGuard Home protection."""
-    responses.post(URL_DNS_CONFIG, status=200, content_type="text/plain")
+    """Test disabling AdGuard Home protection indefinitely."""
+
+    def callback(_url: str, **kwargs: object) -> CallbackResult:
+        assert kwargs["json"] == {"enabled": False}
+        return CallbackResult(status=200, content_type="text/plain")
+
+    responses.post(URL_PROTECTION, callback=callback)
     await adguard.disable_protection()
+
+
+async def test_disable_protection_with_duration(
+    responses: aioresponses,
+    adguard: AdGuardHome,
+) -> None:
+    """Test disabling AdGuard Home protection for a specific duration."""
+
+    def callback(_url: str, **kwargs: object) -> CallbackResult:
+        assert kwargs["json"] == {"enabled": False, "duration": 30000}
+        return CallbackResult(status=200, content_type="text/plain")
+
+    responses.post(URL_PROTECTION, callback=callback)
+    await adguard.disable_protection(duration=30)
 
 
 @pytest.mark.parametrize("status", [400, 500])
@@ -189,7 +213,7 @@ async def test_disable_protection_error(
     status: int,
 ) -> None:
     """Test disabling protection fails on HTTP error."""
-    responses.post(URL_DNS_CONFIG, status=status, content_type="text/plain")
+    responses.post(URL_PROTECTION, status=status, content_type="text/plain")
     with pytest.raises(AdGuardHomeError):
         await adguard.disable_protection()
 
