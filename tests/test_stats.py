@@ -23,8 +23,8 @@ async def test_top_queried_domains(
     """Test requesting the top 5 queried domains."""
     responses.get(URL_STATS, status=200, payload=load_fixture("stats"))
     result = await adguard.stats.top_queried_domains()
-    assert isinstance(result, list)
-    assert len(result) <= 5
+    assert len(result) == 5
+    assert result[1] == {"domain.two": 80}
 
 
 async def test_top_blocked_domains(
@@ -35,8 +35,8 @@ async def test_top_blocked_domains(
     """Test requesting the top 5 blocked domains."""
     responses.get(URL_STATS, status=200, payload=load_fixture("stats"))
     result = await adguard.stats.top_blocked_domains()
-    assert isinstance(result, list)
-    assert len(result) <= 5
+    assert len(result) == 5
+    assert result[2] == {"malware.org": 30}
 
 
 async def test_dns_queries(
