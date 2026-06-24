@@ -4,5 +4,19 @@
   "num_replaced_safebrowsing": 42,
   "num_replaced_parental": 13,
   "num_replaced_safesearch": 18,
-  "avg_processing_time": 0.03141
+  "avg_processing_time": 0.03141,
+  "top_queried_domains": [
+    { "domain.one": 100 },
+    { "domain.two": 80 },
+    { "domain.three": 60 },
+    { "domain.four": 40 },
+    { "domain.five": 20 }
+  ],
+  "top_blocked_domains": [
+    { "bad-tracker.com": 50 },
+    { "ad-server.net": 40 },
+    { "malware.org": 30 },
+    { "analytics.io": 20 },
+    { "spyware.co": 10 }
+  ]
 }
