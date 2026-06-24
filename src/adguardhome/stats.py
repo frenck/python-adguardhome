@@ -17,6 +17,30 @@ class AdGuardHomeStats:
 
     adguard: AdGuardHome
 
+    async def top_queried_domains(self) -> list[dict[str, int]]:
+        """Return top 5 queried domains.
+
+        Returns
+        -------
+            The top 5 queried domains performed by the AdGuard Home Instance.
+
+        """
+        response = await self.adguard.request("stats")
+        top_domains = response.get("top_queried_domains", [])
+        return top_domains[:5]
+
+    async def top_blocked_domains(self) -> list[dict[str, int]]:
+        """Return top 5 blocked domains.
+
+        Returns
+        -------
+            The top 5 blocked domains performed by the AdGuard Home Instance.
+
+        """
+        response = await self.adguard.request("stats")
+        top_blocked = response.get("top_blocked_domains", [])
+        return top_blocked[:5]
+
     async def dns_queries(self) -> int:
         """Return number of DNS queries.
 

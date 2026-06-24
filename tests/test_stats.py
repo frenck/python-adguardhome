@@ -15,6 +15,30 @@ URL_STATS_INFO = "http://example.com:3000/control/stats_info"
 URL_STATS_RESET = "http://example.com:3000/control/stats_reset"
 
 
+async def test_top_queried_domains(
+    responses: aioresponses,
+    adguard: AdGuardHome,
+    load_fixture: FixtureLoader,
+) -> None:
+    """Test requesting the top 5 queried domains."""
+    responses.get(URL_STATS, status=200, payload=load_fixture("stats"))
+    result = await adguard.stats.top_queried_domains()
+    assert isinstance(result, list)
+    assert len(result) <= 5
+
+
+async def test_top_blocked_domains(
+    responses: aioresponses,
+    adguard: AdGuardHome,
+    load_fixture: FixtureLoader,
+) -> None:
+    """Test requesting the top 5 blocked domains."""
+    responses.get(URL_STATS, status=200, payload=load_fixture("stats"))
+    result = await adguard.stats.top_blocked_domains()
+    assert isinstance(result, list)
+    assert len(result) <= 5
+
+
 async def test_dns_queries(
     responses: aioresponses,
     adguard: AdGuardHome,
