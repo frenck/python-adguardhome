@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import json
 import socket
-from base64 import b64encode
 from typing import TYPE_CHECKING, Any, Self
 
 import aiohttp
@@ -133,10 +132,9 @@ class AdGuardHome:
         }
 
         if self.username and self.password:
-            # aiohttp.encode_basic_auth() would do this, but it needs
-            # aiohttp 3.14, which aioresponses does not support yet.
-            credentials = f"{self.username}:{self.password}".encode()
-            headers["Authorization"] = f"Basic {b64encode(credentials).decode()}"
+            headers["Authorization"] = aiohttp.encode_basic_auth(
+                self.username, self.password
+            )
 
         if self._session is None:
             self._session = aiohttp.ClientSession()

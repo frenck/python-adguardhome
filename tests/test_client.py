@@ -1,7 +1,7 @@
 """Tests for `adguardhome.client`."""
 
 import pytest
-from aioresponses import aioresponses
+from aiointercept import aiointercept
 from syrupy.assertion import SnapshotAssertion
 
 from adguardhome import AdGuardHome, AutoClient
@@ -12,7 +12,7 @@ URL_CLIENTS = "http://example.com:3000/control/clients"
 
 
 async def test_get_auto_clients(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
 ) -> None:
@@ -31,7 +31,7 @@ async def test_get_auto_clients(
 
 
 async def test_get_auto_clients_snapshot(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
     snapshot: SnapshotAssertion,
@@ -42,7 +42,7 @@ async def test_get_auto_clients_snapshot(
 
 
 async def test_get_clients(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
 ) -> None:
@@ -63,7 +63,7 @@ async def test_get_clients(
 
 
 async def test_get_clients_snapshot(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
     snapshot: SnapshotAssertion,
@@ -74,7 +74,7 @@ async def test_get_clients_snapshot(
 
 
 async def test_get_clients_ignores_unknown_fields(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
 ) -> None:
     """Test that unknown fields from the API are silently ignored."""
@@ -102,7 +102,7 @@ async def test_get_clients_ignores_unknown_fields(
 
 
 async def test_get_supported_tags(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
 ) -> None:
@@ -146,7 +146,7 @@ async def test_get_supported_tags(
     ],
 )
 async def test_empty_response(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     method: str,
     payload: dict[str, list[object] | None],

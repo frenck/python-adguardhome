@@ -31,7 +31,7 @@ classifiers = [
 ]
 dynamic = ["dependencies"]
 packages = [{ include = "adguardhome", from = "src" }]
-dependencies = ['aiohttp (>=3.0.0)', 'yarl (>=1.6.0)']
+dependencies = ['aiohttp (>=3.14.0)', 'yarl (>=1.6.0)']
 
 [tool.poetry]
 requires-poetry = '>=2.0'
@@ -45,7 +45,7 @@ documentation = "https://github.com/frenck/python-adguardhome"
 Changelog = "https://github.com/frenck/python-adguardhome/releases"
 
 [tool.poetry.group.dev.dependencies]
-aioresponses = "0.7.8"
+aiointercept = "0.1.9"
 codespell = "2.4.2"
 covdefaults = "2.3.0"
 coverage = { version = "7.13.5", extras = ["toml"] }

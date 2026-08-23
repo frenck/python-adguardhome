@@ -3,7 +3,7 @@
 from typing import Any
 
 import pytest
-from aioresponses import CallbackResult, aioresponses
+from aiointercept import CallbackResult, aiointercept
 
 from adguardhome import AdGuardHome
 from adguardhome.exceptions import AdGuardHomeError
@@ -24,7 +24,7 @@ FILTER_LIST_WITH_NAME = {
 
 @pytest.mark.parametrize("enabled", [True, False])
 async def test_enabled(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     enabled: bool,
 ) -> None:
@@ -33,7 +33,7 @@ async def test_enabled(
     assert await adguard.filtering.enabled() is enabled
 
 
-async def test_enable(responses: aioresponses, adguard: AdGuardHome) -> None:
+async def test_enable(responses: aiointercept, adguard: AdGuardHome) -> None:
     """Test enabling filtering."""
 
     def callback(_url: str, **kwargs: object) -> CallbackResult:
@@ -48,7 +48,7 @@ async def test_enable(responses: aioresponses, adguard: AdGuardHome) -> None:
 
 @pytest.mark.parametrize("status", [400, 500])
 async def test_enable_error(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     status: int,
 ) -> None:
@@ -60,7 +60,7 @@ async def test_enable_error(
         await adguard.filtering.enable()
 
 
-async def test_disable(responses: aioresponses, adguard: AdGuardHome) -> None:
+async def test_disable(responses: aiointercept, adguard: AdGuardHome) -> None:
     """Test disabling filtering."""
 
     def callback(_url: str, **kwargs: object) -> CallbackResult:
@@ -75,7 +75,7 @@ async def test_disable(responses: aioresponses, adguard: AdGuardHome) -> None:
 
 @pytest.mark.parametrize("status", [400, 500])
 async def test_disable_error(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     status: int,
 ) -> None:
@@ -88,7 +88,7 @@ async def test_disable_error(
 
 
 async def test_interval_get(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
 ) -> None:
     """Test reading the filtering retention interval."""
@@ -97,7 +97,7 @@ async def test_interval_get(
 
 
 async def test_interval_set(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
 ) -> None:
     """Test setting the filtering retention interval."""
@@ -114,7 +114,7 @@ async def test_interval_set(
 
 @pytest.mark.parametrize("status", [400, 500])
 async def test_interval_set_error(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     status: int,
 ) -> None:
@@ -144,7 +144,7 @@ async def test_interval_set_error(
     ],
 )
 async def test_rules_count(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     payload: dict[str, Any],
     allowlist: bool,
@@ -155,7 +155,7 @@ async def test_rules_count(
     assert await adguard.filtering.rules_count(allowlist=allowlist) == expected
 
 
-async def test_add_url(responses: aioresponses, adguard: AdGuardHome) -> None:
+async def test_add_url(responses: aiointercept, adguard: AdGuardHome) -> None:
     """Test adding a filter subscription."""
 
     def callback(_url: str, **kwargs: object) -> CallbackResult:
@@ -174,7 +174,7 @@ async def test_add_url(responses: aioresponses, adguard: AdGuardHome) -> None:
 
 @pytest.mark.parametrize("status", [400, 500])
 async def test_add_url_error(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     status: int,
 ) -> None:
@@ -188,7 +188,7 @@ async def test_add_url_error(
         )
 
 
-async def test_remove_url(responses: aioresponses, adguard: AdGuardHome) -> None:
+async def test_remove_url(responses: aiointercept, adguard: AdGuardHome) -> None:
     """Test removing a filter subscription."""
 
     def callback(_url: str, **kwargs: object) -> CallbackResult:
@@ -201,7 +201,7 @@ async def test_remove_url(responses: aioresponses, adguard: AdGuardHome) -> None
 
 @pytest.mark.parametrize("status", [400, 500])
 async def test_remove_url_error(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     status: int,
 ) -> None:
@@ -213,7 +213,7 @@ async def test_remove_url_error(
         await adguard.filtering.remove_url(allowlist=False, url=FILTER_TEST)
 
 
-async def test_enable_url(responses: aioresponses, adguard: AdGuardHome) -> None:
+async def test_enable_url(responses: aiointercept, adguard: AdGuardHome) -> None:
     """Test enabling a filter subscription."""
 
     def callback(_url: str, **kwargs: object) -> CallbackResult:
@@ -232,7 +232,7 @@ async def test_enable_url(responses: aioresponses, adguard: AdGuardHome) -> None
 
 @pytest.mark.parametrize("status", [400, 500])
 async def test_enable_url_error(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     status: int,
 ) -> None:
@@ -244,7 +244,7 @@ async def test_enable_url_error(
         await adguard.filtering.enable_url(allowlist=False, url=FILTER_TEST)
 
 
-async def test_disable_url(responses: aioresponses, adguard: AdGuardHome) -> None:
+async def test_disable_url(responses: aiointercept, adguard: AdGuardHome) -> None:
     """Test disabling a filter subscription."""
 
     def callback(_url: str, **kwargs: object) -> CallbackResult:
@@ -263,7 +263,7 @@ async def test_disable_url(responses: aioresponses, adguard: AdGuardHome) -> Non
 
 @pytest.mark.parametrize("status", [400, 500])
 async def test_disable_url_error(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     status: int,
 ) -> None:
@@ -305,7 +305,7 @@ async def test_disable_url_error(
     ],
 )
 async def test_url_enabled(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     payload: dict[str, Any],
     allowlist: bool,
@@ -319,7 +319,7 @@ async def test_url_enabled(
     )
 
 
-async def test_refresh(responses: aioresponses, adguard: AdGuardHome) -> None:
+async def test_refresh(responses: aiointercept, adguard: AdGuardHome) -> None:
     """Test refreshing filter subscriptions."""
 
     def blocklist_callback(_url: str, **kwargs: object) -> CallbackResult:
@@ -341,7 +341,7 @@ async def test_refresh(responses: aioresponses, adguard: AdGuardHome) -> None:
 
 @pytest.mark.parametrize("status", [400, 500])
 async def test_refresh_error(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     status: int,
 ) -> None:

@@ -1,13 +1,13 @@
 """Common fixtures and helpers for AdGuard Home tests."""
 
 import json
-from collections.abc import AsyncGenerator, Callable, Generator
+from collections.abc import AsyncGenerator, Callable
 from pathlib import Path
 from typing import Any
 
 import aiohttp
 import pytest
-from aioresponses import aioresponses
+from aiointercept import aiointercept
 
 from adguardhome import AdGuardHome
 
@@ -27,9 +27,9 @@ def load_fixture() -> FixtureLoader:
 
 
 @pytest.fixture
-def responses() -> Generator[aioresponses, None, None]:
-    """Yield an aioresponses instance that patches aiohttp client sessions."""
-    with aioresponses() as mocker:
+async def responses() -> AsyncGenerator[aiointercept, None]:
+    """Yield an aiointercept instance that intercepts aiohttp client requests."""
+    async with aiointercept(mock_external_urls=True) as mocker:
         yield mocker
 
 
