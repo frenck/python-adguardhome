@@ -3,7 +3,7 @@
 from typing import Any
 
 import pytest
-from aioresponses import aioresponses
+from aiointercept import aiointercept
 
 from adguardhome import AdGuardHome
 from adguardhome.exceptions import AdGuardHomeError
@@ -16,7 +16,7 @@ URL_STATS_RESET = "http://example.com:3000/control/stats_reset"
 
 
 async def test_dns_queries(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
 ) -> None:
@@ -26,7 +26,7 @@ async def test_dns_queries(
 
 
 async def test_blocked_filtering(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
 ) -> None:
@@ -44,7 +44,7 @@ async def test_blocked_filtering(
     ],
 )
 async def test_blocked_percentage(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     payload: dict[str, Any],
     expected: float,
@@ -55,7 +55,7 @@ async def test_blocked_percentage(
 
 
 async def test_replaced_safebrowsing(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
 ) -> None:
@@ -65,7 +65,7 @@ async def test_replaced_safebrowsing(
 
 
 async def test_replaced_parental(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
 ) -> None:
@@ -75,7 +75,7 @@ async def test_replaced_parental(
 
 
 async def test_replaced_safesearch(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
 ) -> None:
@@ -85,7 +85,7 @@ async def test_replaced_safesearch(
 
 
 async def test_avg_processing_time(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
 ) -> None:
@@ -94,13 +94,13 @@ async def test_avg_processing_time(
     assert await adguard.stats.avg_processing_time() == 31.41
 
 
-async def test_period(responses: aioresponses, adguard: AdGuardHome) -> None:
+async def test_period(responses: aiointercept, adguard: AdGuardHome) -> None:
     """Test requesting the stats retention period."""
     responses.get(URL_STATS_INFO, status=200, payload={"interval": 7})
     assert await adguard.stats.period() == 7
 
 
-async def test_reset(responses: aioresponses, adguard: AdGuardHome) -> None:
+async def test_reset(responses: aiointercept, adguard: AdGuardHome) -> None:
     """Test resetting all stats."""
     responses.post(URL_STATS_RESET, status=200, body="OK", content_type="text/plain")
     await adguard.stats.reset()
@@ -108,7 +108,7 @@ async def test_reset(responses: aioresponses, adguard: AdGuardHome) -> None:
 
 @pytest.mark.parametrize("status", [400, 500])
 async def test_reset_error(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     status: int,
 ) -> None:

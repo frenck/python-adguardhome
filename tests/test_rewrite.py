@@ -1,7 +1,7 @@
 """Tests for `adguardhome.rewrite`."""
 
 import pytest
-from aioresponses import CallbackResult, aioresponses
+from aiointercept import CallbackResult, aiointercept
 from syrupy.assertion import SnapshotAssertion
 
 from adguardhome import AdGuardHome, RewriteRule
@@ -15,7 +15,7 @@ URL_DELETE = "http://example.com:3000/control/rewrite/delete"
 
 
 async def test_list_rules(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
 ) -> None:
@@ -32,7 +32,7 @@ async def test_list_rules(
 
 
 async def test_list_rules_snapshot(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
     snapshot: SnapshotAssertion,
@@ -43,7 +43,7 @@ async def test_list_rules_snapshot(
 
 
 async def test_list_rules_empty(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
 ) -> None:
     """Test listing rules returns empty list when none exist."""
@@ -52,7 +52,7 @@ async def test_list_rules_empty(
 
 
 async def test_add(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
 ) -> None:
     """Test adding a DNS rewrite rule."""
@@ -70,7 +70,7 @@ async def test_add(
 
 @pytest.mark.parametrize("status", [400, 500])
 async def test_add_error(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     status: int,
 ) -> None:
@@ -81,7 +81,7 @@ async def test_add_error(
 
 
 async def test_delete(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
 ) -> None:
     """Test deleting a DNS rewrite rule."""
@@ -99,7 +99,7 @@ async def test_delete(
 
 @pytest.mark.parametrize("status", [400, 500])
 async def test_delete_error(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     status: int,
 ) -> None:

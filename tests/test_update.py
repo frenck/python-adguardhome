@@ -1,7 +1,7 @@
 """Tests for `adguardhome.update`."""
 
 import pytest
-from aioresponses import aioresponses
+from aiointercept import aiointercept
 from syrupy.assertion import SnapshotAssertion
 
 from adguardhome import AdGuardHome
@@ -14,7 +14,7 @@ URL_UPDATE = "http://example.com:3000/control/update"
 
 
 async def test_update_available(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
 ) -> None:
@@ -35,7 +35,7 @@ async def test_update_available(
 
 
 async def test_update_available_snapshot(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
     snapshot: SnapshotAssertion,
@@ -46,7 +46,7 @@ async def test_update_available_snapshot(
 
 
 async def test_update_disabled(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
 ) -> None:
@@ -63,7 +63,7 @@ async def test_update_disabled(
     assert available_update.new_version is None
 
 
-async def test_begin_update(responses: aioresponses, adguard: AdGuardHome) -> None:
+async def test_begin_update(responses: aiointercept, adguard: AdGuardHome) -> None:
     """Test beginning the AdGuard Home auto-upgrade."""
     responses.post(URL_UPDATE, status=200, body="OK", content_type="text/plain")
     await adguard.update.begin_update()
@@ -71,7 +71,7 @@ async def test_begin_update(responses: aioresponses, adguard: AdGuardHome) -> No
 
 @pytest.mark.parametrize("status", [400, 500])
 async def test_begin_update_error(
-    responses: aioresponses,
+    responses: aiointercept,
     adguard: AdGuardHome,
     status: int,
 ) -> None:

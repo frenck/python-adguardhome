@@ -127,13 +127,14 @@ class AdGuardHome:
             scheme=scheme, host=self.host, port=self.port, path=self.base_path
         ).join(URL(uri))
 
-        auth = None
-        if self.username and self.password:
-            auth = aiohttp.BasicAuth(self.username, self.password)
-
         headers = {
             "Accept": "application/json, text/plain, */*",
         }
+
+        if self.username and self.password:
+            headers["Authorization"] = aiohttp.encode_basic_auth(
+                self.username, self.password
+            )
 
         if self._session is None:
             self._session = aiohttp.ClientSession()
@@ -148,7 +149,6 @@ class AdGuardHome:
                 response = await self._session.request(
                     method,
                     url,
-                    auth=auth,
                     data=data,
                     json=json_data,
                     params=params,
