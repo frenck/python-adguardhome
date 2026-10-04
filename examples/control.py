@@ -8,22 +8,22 @@ from adguardhome import AdGuardHome
 
 async def main() -> None:
     """Show example on controlling your AdGuard Home instance."""
-    async with AdGuardHome("192.168.1.2") as adguard:
-        version = await adguard.version()
-        print("AdGuard version:", version)
+    async with AdGuardHome("http://192.168.1.2:3000") as adguard:
+        status = await adguard.status()
+        print("AdGuard version:", status.version)
 
         print("Turning off protection...")
         await adguard.disable_protection()
 
-        active = await adguard.protection_enabled()
-        yes_no = "Yes" if active else "No"
+        status = await adguard.status()
+        yes_no = "Yes" if status.protection_enabled else "No"
         print("Protection enabled?", yes_no)
 
         print("Turning on protection")
         await adguard.enable_protection()
 
-        active = await adguard.protection_enabled()
-        yes_no = "Yes" if active else "No"
+        status = await adguard.status()
+        yes_no = "Yes" if status.protection_enabled else "No"
         print("Protection enabled?", yes_no)
 
 

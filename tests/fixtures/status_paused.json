@@ -1,0 +1,11 @@
+{
+  "dhcp_available": false,
+  "dns_addresses": ["127.0.0.1"],
+  "dns_port": 53,
+  "http_port": 80,
+  "language": "nl",
+  "protection_disabled_duration": 29500,
+  "protection_enabled": false,
+  "running": true,
+  "version": "v0.107.58"
+}

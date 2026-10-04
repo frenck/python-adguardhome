@@ -37,4 +37,4 @@ async def responses() -> AsyncGenerator[aiointercept, None]:
 async def adguard() -> AsyncGenerator[AdGuardHome, None]:
     """Yield an AdGuardHome client wired to example.com with default settings."""
     async with aiohttp.ClientSession() as session:
-        yield AdGuardHome("example.com", session=session)
+        yield AdGuardHome("http://example.com:3000", session=session)

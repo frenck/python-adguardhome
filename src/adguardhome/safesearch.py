@@ -1,57 +1,58 @@
-"""Asynchronous Python client for the AdGuard Home API."""
+"""Safe search enforcement of AdGuard Home."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from dataclasses import dataclass, replace
 
-from .exceptions import AdGuardHomeError
-
-if TYPE_CHECKING:
-    from . import AdGuardHome
+from ._area import Area
+from ._model import AdGuardHomeModel
 
 
-@dataclass
-class AdGuardHomeSafeSearch:
-    """Controls AdGuard Home safe search enforcing."""
+@dataclass(frozen=True, kw_only=True)
+class SafeSearchConfig(AdGuardHomeModel):
+    """Configuration of safe search, overall and per service."""
 
-    adguard: AdGuardHome
+    enabled: bool
+    bing: bool = False
+    duckduckgo: bool = False
+    google: bool = False
+    pixabay: bool = False
+    yandex: bool = False
+    youtube: bool = False
 
-    async def enabled(self) -> bool:
-        """Return if AdGuard Home safe search enforcing is enabled or not.
+    # Added in AdGuard Home v0.107.53, older versions leave it out.
+    ecosia: bool | None = None
+
+
+class AdGuardHomeSafeSearch(Area):
+    """Safe search enforcement of AdGuard Home."""
+
+    __slots__ = ()
+
+    async def config(self) -> SafeSearchConfig:
+        """Return the configuration of safe search.
 
         Returns
         -------
-            The current state of the AdGuard Home safe search.
+            Whether safe search is enabled, overall and per service.
 
         """
-        response = await self.adguard.request("safesearch/status")
-        return response["enabled"]
+        return SafeSearchConfig.from_api(await self._request("safesearch/status"))
+
+    async def set_config(self, config: SafeSearchConfig) -> None:
+        """Replace the configuration of safe search.
+
+        Args:
+        ----
+            config: The new configuration of safe search.
+
+        """
+        await self._request("safesearch/settings", method="PUT", json=config.to_dict())
 
     async def enable(self) -> None:
-        """Enable AdGuard Home safe search enforcing.
-
-        Raises
-        ------
-            AdGuardHomeError: If enabling the safe search didn't succeed.
-
-        """
-        try:
-            await self.adguard.request("safesearch/enable", method="POST")
-        except AdGuardHomeError as exception:
-            msg = "Enabling AdGuard Home safe search failed"
-            raise AdGuardHomeError(msg) from exception
+        """Enable safe search, for the services it is configured for."""
+        await self.set_config(replace(await self.config(), enabled=True))
 
     async def disable(self) -> None:
-        """Disable AdGuard Home safe search enforcing.
-
-        Raises
-        ------
-            AdGuardHomeError: If disabling the safe search didn't succeed.
-
-        """
-        try:
-            await self.adguard.request("safesearch/disable", method="POST")
-        except AdGuardHomeError as exception:
-            msg = "Disabling AdGuard Home safe search failed"
-            raise AdGuardHomeError(msg) from exception
+        """Disable safe search."""
+        await self.set_config(replace(await self.config(), enabled=False))

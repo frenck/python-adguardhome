@@ -1,97 +1,72 @@
-"""Asynchronous Python client for the AdGuard Home API."""
+"""Query log of AdGuard Home."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from dataclasses import dataclass, field, replace
+from datetime import timedelta
 
-from .exceptions import AdGuardHomeError
+from mashumaro import field_options
 
-if TYPE_CHECKING:
-    from . import AdGuardHome
+from ._area import Area
+from ._model import AdGuardHomeModel, MillisecondsStrategy
 
 
-@dataclass
-class AdGuardHomeQueryLog:
-    """Controls AdGuard Home query log."""
+@dataclass(frozen=True, kw_only=True)
+class QueryLogConfig(AdGuardHomeModel):
+    """Configuration of the AdGuard Home query log."""
 
-    adguard: AdGuardHome
-
-    async def _config(
-        self, *, enabled: bool | None = None, interval: int | None = None
-    ) -> None:
-        """Configure query log on AdGuard Home.
-
-        Args:
-        ----
-            enabled: Enable/disable AdGuard Home query log.
-            interval: Number of days to keep data in the logs.
-
-        """
-        if enabled is None:
-            enabled = await self.enabled()
-        if interval is None:
-            interval = await self.interval()
-        await self.adguard.request(
-            "querylog_config",
-            method="POST",
-            json_data={"enabled": enabled, "interval": interval},
+    enabled: bool
+    retention: timedelta = field(
+        metadata=field_options(
+            alias="interval", serialization_strategy=MillisecondsStrategy()
         )
+    )
+    anonymize_client_ip: bool
+    ignored: tuple[str, ...] = ()
 
-    async def enabled(self) -> bool:
-        """Return if AdGuard Home query log is enabled or not.
+    # Added in AdGuard Home v0.107.72. Older versions leave it out, and
+    # AdGuard Home treats it as enabled when the ignored list is not empty.
+    ignored_enabled: bool | None = None
+
+
+class AdGuardHomeQueryLog(Area):
+    """Query log of AdGuard Home."""
+
+    __slots__ = ()
+
+    async def config(self) -> QueryLogConfig:
+        """Return the configuration of the query log.
 
         Returns
         -------
-            The current state of the AdGuard Home query log.
+            The current configuration of the query log.
 
         """
-        response = await self.adguard.request("querylog_info")
-        return response["enabled"]
+        return QueryLogConfig.from_api(await self._request("querylog/config"))
 
-    async def enable(self) -> None:
-        """Enable AdGuard Home query log.
+    async def set_config(self, config: QueryLogConfig) -> None:
+        """Replace the configuration of the query log.
 
-        Raises
-        ------
-            AdGuardHomeError: If enabling the query log didn't succeed.
-
-        """
-        try:
-            await self._config(enabled=True)
-        except AdGuardHomeError as exception:
-            msg = "Enabling AdGuard Home query log failed"
-            raise AdGuardHomeError(msg) from exception
-
-    async def interval(self, interval: int | None = None) -> int:
-        """Return or set the time period to keep query log data.
+        Use `dataclasses.replace` on the result of `config()` to change
+        only part of it.
 
         Args:
         ----
-            interval: Set the time period (in days) to keep query log data.
-
-        Returns:
-        -------
-            The current set time period to keep query log data.
+            config: The new configuration of the query log.
 
         """
-        if interval:
-            await self._config(interval=interval)
-            return interval
+        await self._request(
+            "querylog/config/update", method="PUT", json=config.to_dict()
+        )
 
-        response = await self.adguard.request("querylog_info")
-        return response["interval"]
+    async def enable(self) -> None:
+        """Enable the query log."""
+        await self.set_config(replace(await self.config(), enabled=True))
 
     async def disable(self) -> None:
-        """Disable AdGuard Home query log.
+        """Disable the query log."""
+        await self.set_config(replace(await self.config(), enabled=False))
 
-        Raises
-        ------
-            AdGuardHomeError: If disabling the query filter log didn't succeed.
-
-        """
-        try:
-            await self._config(enabled=False)
-        except AdGuardHomeError as exception:
-            msg = "Disabling AdGuard Home query log failed"
-            raise AdGuardHomeError(msg) from exception
+    async def clear(self) -> None:
+        """Remove all entries from the query log."""
+        await self._request("querylog_clear", method="POST")

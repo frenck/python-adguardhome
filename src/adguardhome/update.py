@@ -1,54 +1,57 @@
-"""Asynchronous Python client for the AdGuard Home API."""
+"""Updates of AdGuard Home itself."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
-from .exceptions import AdGuardHomeError
+from awesomeversion import AwesomeVersion
 
-if TYPE_CHECKING:
-    from . import AdGuardHome
+from ._area import Area
+from ._model import AdGuardHomeModel
 
 
-@dataclass
-class AdGuardHomeAvailableUpdate:
-    """Latest available AdGuard Home update."""
+@dataclass(frozen=True, kw_only=True)
+class AvailableUpdate(AdGuardHomeModel):
+    """The latest version of AdGuard Home that is available.
 
-    disabled: bool = False
-    new_version: str | None = None
+    When `disabled` is true, AdGuard Home does not check for updates, and
+    all other fields are empty.
+    """
+
+    disabled: bool
+    new_version: AwesomeVersion | None = None
     announcement: str | None = None
     announcement_url: str | None = None
-    can_autoupdate: bool | None = None
+    can_autoupdate: bool = False
 
 
-@dataclass
-class AdGuardHomeUpdate:
-    """Controls AdGuard Home version update."""
+class AdGuardHomeUpdate(Area):
+    """Updates of AdGuard Home itself."""
 
-    adguard: AdGuardHome
+    __slots__ = ()
 
-    async def update_available(self) -> AdGuardHomeAvailableUpdate:
-        """Return AdGuard Home latest available update.
+    async def get(self, *, recheck: bool = False) -> AvailableUpdate:
+        """Return the latest version of AdGuard Home that is available.
 
-        Returns
+        Args:
+        ----
+            recheck: Check for a new version right now. Otherwise, AdGuard
+                Home answers from what it checked in the last few hours.
+
+        Returns:
         -------
-            An AdGuardHomeAvailableUpdate object with all data about the latest update.
+            The latest available version, and whether it can update itself.
 
         """
-        response = await self.adguard.request("version.json", method="POST")
-        return AdGuardHomeAvailableUpdate(**response)
+        response = await self._request(
+            "version.json", method="POST", json={"recheck_now": recheck}
+        )
+        return AvailableUpdate.from_api(response)
 
-    async def begin_update(self) -> None:
-        """Begin AdGuard Home auto-upgrade procedure.
+    async def install(self) -> None:
+        """Update AdGuard Home to the latest version.
 
-        Raises
-        ------
-            AdGuardHomeError: If beginning the auto-upgrade failed.
-
+        AdGuard Home restarts itself to finish the update, so expect it to
+        be unreachable for a moment afterwards.
         """
-        try:
-            await self.adguard.request("update", method="POST")
-        except AdGuardHomeError as exception:
-            msg = "Beginning AdGuard Home update failed"
-            raise AdGuardHomeError(msg) from exception
+        await self._request("update", method="POST")

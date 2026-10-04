@@ -1,0 +1,12 @@
+{
+  "dhcp_available": true,
+  "dns_addresses": ["127.0.0.1", "192.168.1.2", "fe80::1"],
+  "dns_port": 53,
+  "http_port": 3000,
+  "language": "en",
+  "protection_disabled_duration": 0,
+  "protection_enabled": true,
+  "running": true,
+  "start_time": 1759500000123.4,
+  "version": "v0.107.62"
+}

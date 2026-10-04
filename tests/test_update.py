@@ -1,11 +1,14 @@
 """Tests for `adguardhome.update`."""
 
-import pytest
-from aiointercept import aiointercept
-from syrupy.assertion import SnapshotAssertion
+from typing import Any
 
-from adguardhome import AdGuardHome
-from adguardhome.exceptions import AdGuardHomeError
+import pytest
+from aiointercept import CallbackResult, aiointercept
+from awesomeversion import AwesomeVersion
+from syrupy.assertion import SnapshotAssertion
+from yarl import URL
+
+from adguardhome import AdGuardHome, AvailableUpdate
 
 from .conftest import FixtureLoader
 
@@ -13,69 +16,46 @@ URL_VERSION = "http://example.com:3000/control/version.json"
 URL_UPDATE = "http://example.com:3000/control/update"
 
 
-async def test_update_available(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    load_fixture: FixtureLoader,
-) -> None:
-    """Test requesting the latest available update."""
-    responses.post(URL_VERSION, status=200, payload=load_fixture("update_available"))
-
-    available_update = await adguard.update.update_available()
-
-    assert available_update
-    assert available_update.announcement == "AdGuard Home v0.107.59 is now available!"
-    assert (
-        available_update.announcement_url
-        == "https://github.com/AdguardTeam/AdGuardHome/releases/tag/v0.107.59"
-    )
-    assert available_update.can_autoupdate
-    assert available_update.disabled is False
-    assert available_update.new_version == "v0.107.59"
-
-
-async def test_update_available_snapshot(
+@pytest.mark.parametrize("recheck", [False, True])
+async def test_get(
     responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
     snapshot: SnapshotAssertion,
+    recheck: bool,
 ) -> None:
-    """Test update_available dataclass parsing matches snapshot."""
-    responses.post(URL_VERSION, status=200, payload=load_fixture("update_available"))
-    assert await adguard.update.update_available() == snapshot
+    """Test the available update is parsed, rechecking only when asked."""
+
+    def callback(_url: URL, **kwargs: Any) -> CallbackResult:
+        assert kwargs["json"] == {"recheck_now": recheck}
+        return CallbackResult(status=200, payload=load_fixture("update_available"))
+
+    responses.post(URL_VERSION, callback=callback)
+
+    update = await adguard.update.get(recheck=recheck)
+
+    assert update == snapshot
+    assert not update.disabled
+    assert update.new_version == AwesomeVersion("v0.107.59")
+    assert update.can_autoupdate
 
 
-async def test_update_disabled(
+async def test_get_disabled(
     responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
 ) -> None:
-    """Test requesting the latest update when auto-update is disabled."""
+    """Test AdGuard Home with update checks disabled only reports that."""
     responses.post(URL_VERSION, status=200, payload=load_fixture("update_disabled"))
 
-    available_update = await adguard.update.update_available()
-
-    assert available_update
-    assert available_update.disabled is True
-    assert available_update.announcement is None
-    assert available_update.announcement_url is None
-    assert available_update.can_autoupdate is None
-    assert available_update.new_version is None
+    assert await adguard.update.get() == AvailableUpdate(disabled=True)
 
 
-async def test_begin_update(responses: aiointercept, adguard: AdGuardHome) -> None:
-    """Test beginning the AdGuard Home auto-upgrade."""
-    responses.post(URL_UPDATE, status=200, body="OK", content_type="text/plain")
-    await adguard.update.begin_update()
+async def test_install(responses: aiointercept, adguard: AdGuardHome) -> None:
+    """Test starting the update of AdGuard Home."""
+    responses.post(URL_UPDATE, status=200, body="OK\n", content_type="text/plain")
 
+    await adguard.update.install()
 
-@pytest.mark.parametrize("status", [400, 500])
-async def test_begin_update_error(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    status: int,
-) -> None:
-    """Test beginning the auto-upgrade fails on HTTP error."""
-    responses.post(URL_UPDATE, status=status, body="NOT OK", content_type="text/plain")
-    with pytest.raises(AdGuardHomeError):
-        await adguard.update.begin_update()
+    assert responses.requests is not None
+    assert ("POST", URL(URL_UPDATE)) in responses.requests

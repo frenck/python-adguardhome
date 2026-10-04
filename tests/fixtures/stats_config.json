@@ -1,0 +1,6 @@
+{
+  "enabled": true,
+  "interval": 86400000,
+  "ignored": ["example.com", "*.lan"],
+  "ignored_enabled": true
+}

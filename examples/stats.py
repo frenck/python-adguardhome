@@ -8,36 +8,28 @@ from adguardhome import AdGuardHome
 
 async def main() -> None:
     """Show example on stats from your AdGuard Home instance."""
-    async with AdGuardHome("192.168.1.2") as adguard:
-        version = await adguard.version()
-        print("AdGuard version:", version)
+    async with AdGuardHome("http://192.168.1.2:3000") as adguard:
+        status = await adguard.status()
+        print("AdGuard version:", status.version)
 
-        period = await adguard.stats.period()
-        print("Stats period:", period)
+        config = await adguard.stats.config()
+        print("Stats retention:", config.retention)
 
-        result = await adguard.stats.avg_processing_time()
-        print("Average processing time per query in ms:", result)
+        stats = await adguard.stats.get()
+        print("Average processing time:", stats.avg_processing_time)
+        print("DNS queries:", stats.dns_queries)
+        print("Blocked DNS queries:", stats.blocked_filtering)
+        print(f"Blocked DNS queries ratio: {stats.blocked_percentage:.1f}%")
+        print("Pages blocked by safe browsing:", stats.blocked_safebrowsing)
+        print("Pages blocked by parental control:", stats.blocked_parental)
+        print("Number of enforced safe searches:", stats.enforced_safesearch)
+        print("Top queried domains:", list(stats.top_queried_domains)[:3])
 
-        result = await adguard.stats.dns_queries()
-        print("DNS queries:", result)
-
-        result = await adguard.stats.blocked_filtering()
-        print("Blocked DNS queries:", result)
-
-        result = await adguard.stats.blocked_percentage()
-        print("Blocked DNS queries ratio:", result)
-
-        result = await adguard.stats.replaced_safebrowsing()
-        print("Pages blocked by safe browsing:", result)
-
-        result = await adguard.stats.replaced_parental()
-        print("Pages blocked by parental control:", result)
-
-        result = await adguard.stats.replaced_safesearch()
-        print("Number of enforced safe searches:", result)
-
-        result = await adguard.filtering.rules_count(allowlist=False)
-        print("Total number of active rules:", result)
+        blocklists = await adguard.filtering.blocklists.list()
+        rules = sum(
+            blocklist.rules_count for blocklist in blocklists if blocklist.enabled
+        )
+        print("Total number of active blocklist rules:", rules)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
-{
-  "clients": [
-    {
+[
+  {
+    "192.168.1.30": {
       "safe_search": {
         "enabled": true,
         "bing": true,
@@ -36,32 +36,45 @@
       "ignore_querylog": false,
       "ignore_statistics": false,
       "upstreams_cache_size": 0,
-      "upstreams_cache_enabled": false
-    }
-  ],
-  "auto_clients": [
-    {
+      "upstreams_cache_enabled": false,
       "whois_info": {},
-      "ip": "192.168.1.10",
-      "name": "phone.lan",
-      "source": "rDNS"
-    },
-    {
-      "whois_info": {
-        "country": "NL",
-        "orgname": "Example ISP"
-      },
-      "ip": "203.0.113.7",
-      "name": "",
-      "source": "WHOIS"
+      "disallowed": false,
+      "disallowed_rule": ""
     }
-  ],
-  "supported_tags": [
-    "device_laptop",
-    "device_phone",
-    "device_tablet",
-    "os_android",
-    "user_admin",
-    "user_child"
-  ]
-}
+  },
+  {
+    "203.0.113.7": {
+      "safe_search": {
+        "enabled": false,
+        "bing": false,
+        "duckduckgo": false,
+        "ecosia": false,
+        "google": false,
+        "pixabay": false,
+        "yandex": false,
+        "youtube": false
+      },
+      "blocked_services_schedule": null,
+      "name": "",
+      "blocked_services": null,
+      "ids": ["203.0.113.7"],
+      "tags": null,
+      "upstreams": null,
+      "filtering_enabled": false,
+      "parental_enabled": false,
+      "safebrowsing_enabled": false,
+      "safesearch_enabled": false,
+      "use_global_blocked_services": false,
+      "use_global_settings": false,
+      "ignore_querylog": null,
+      "ignore_statistics": null,
+      "upstreams_cache_size": 0,
+      "upstreams_cache_enabled": null,
+      "whois_info": {
+        "country": "NL"
+      },
+      "disallowed": true,
+      "disallowed_rule": "203.0.113.0/24"
+    }
+  }
+]

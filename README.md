@@ -45,14 +45,12 @@ from adguardhome import AdGuardHome
 
 async def main() -> None:
     """Show example how to get status of your AdGuard Home instance."""
-    async with AdGuardHome("192.168.1.2") as adguard:
-        version = await adguard.version()
-        print("AdGuard version:", version)
+    async with AdGuardHome("http://192.168.1.2:3000") as adguard:
+        status = await adguard.status()
+        print("AdGuard version:", status.version)
+        print("Protection enabled?", "Yes" if status.protection_enabled else "No")
 
-        active = await adguard.protection_enabled()
-        print("Protection enabled?", "Yes" if active else "No")
-
-        if not active:
+        if not status.protection_enabled:
             print("AdGuard Home protection disabled. Enabling...")
             await adguard.enable_protection()
 
@@ -66,72 +64,150 @@ if __name__ == "__main__":
 Each AdGuard Home feature lives under its own namespace on the client.
 Short examples per namespace:
 
-**Filtering** — manage block and allow list subscriptions:
+**Filtering**: blocklists and allowlists are separate collections with the
+same methods. A filter list is identified by its URL:
 
 ```python
-async with AdGuardHome("192.168.1.2") as adguard:
-    await adguard.filtering.add_url(
-        name="EasyList",
-        url="https://easylist.to/easylist/easylist.txt",
-        allowlist=False,
+async with AdGuardHome("http://192.168.1.2:3000") as adguard:
+    await adguard.filtering.blocklists.add(
+        "https://easylist.to/easylist/easylist.txt", name="EasyList"
     )
-    await adguard.filtering.refresh(allowlist=False, force=True)
-    print("Rules loaded:", await adguard.filtering.rules_count(allowlist=False))
+    await adguard.filtering.blocklists.disable(
+        "https://easylist.to/easylist/easylist.txt"
+    )
+    print("Lists updated:", await adguard.filtering.blocklists.refresh())
+
+    filtering = await adguard.filtering.get()
+    print("Rules loaded:", sum(f.rules_count for f in filtering.blocklists))
+
+    result = await adguard.filtering.check_host("ads.example.com")
+    print("Filtered?", result.filtered, result.reason)
 ```
 
-**Parental control, safe browsing, safe search** — identical API on each
-namespace:
+**Clients**: configured clients with their own settings, and the clients
+AdGuard Home found by itself:
 
 ```python
-async with AdGuardHome("192.168.1.2") as adguard:
+from dataclasses import replace
+
+from adguardhome import Client
+
+async with AdGuardHome("http://192.168.1.2:3000") as adguard:
+    clients = await adguard.clients.get()
+    for runtime in clients.runtime:
+        print(runtime.ip_address, runtime.name, runtime.source)
+
+    await adguard.clients.add(Client(name="Printer", ids=("192.168.1.50",)))
+
+    kids = next(c for c in clients.configured if c.name == "Kids")
+    await adguard.clients.update(kids.name, replace(kids, parental_enabled=True))
+
+    result = (await adguard.clients.search("192.168.1.30"))["192.168.1.30"]
+    print("Allowed to connect?", not result.disallowed)
+```
+
+**Parental control and safe browsing**: these only turn on and off:
+
+```python
+async with AdGuardHome("http://192.168.1.2:3000") as adguard:
     await adguard.parental.enable()
-    await adguard.safebrowsing.enable()
-    await adguard.safesearch.enable()
-    print("Parental active:", await adguard.parental.enabled())
+    await adguard.safebrowsing.disable()
+    print("Parental control on?", await adguard.parental.enabled())
 ```
 
-**Query log** — enable, disable, and set retention:
+**Safe search**: on and off overall, plus a setting per search engine:
 
 ```python
-async with AdGuardHome("192.168.1.2") as adguard:
+from dataclasses import replace
+
+async with AdGuardHome("http://192.168.1.2:3000") as adguard:
+    config = await adguard.safesearch.config()
+    await adguard.safesearch.set_config(replace(config, enabled=True, youtube=False))
+```
+
+**Query log**: enable, disable, set retention, and clear:
+
+```python
+from dataclasses import replace
+from datetime import timedelta
+
+async with AdGuardHome("http://192.168.1.2:3000") as adguard:
     await adguard.querylog.enable()
-    await adguard.querylog.interval(interval=7)  # retain 7 days
+    config = await adguard.querylog.config()
+    await adguard.querylog.set_config(replace(config, retention=timedelta(days=7)))
+    await adguard.querylog.clear()
 ```
 
-**Stats** — total queries, blocked ratio, processing time:
+**DNS rewrites**: answer a domain with your own IP address or CNAME:
 
 ```python
-async with AdGuardHome("192.168.1.2") as adguard:
-    print("Queries:", await adguard.stats.dns_queries())
-    print(f"Blocked: {await adguard.stats.blocked_percentage():.1f}%")
-    print("Avg processing time (ms):", await adguard.stats.avg_processing_time())
+async with AdGuardHome("http://192.168.1.2:3000") as adguard:
+    await adguard.rewrite.add("nas.lan", "192.168.1.5")
+    for rule in await adguard.rewrite.get():
+        print(rule.domain, "->", rule.answer, "(on)" if rule.enabled else "(off)")
+    await adguard.rewrite.remove("nas.lan", "192.168.1.5")
 ```
 
-**Update check** — see whether a new AdGuard Home release is available and
-trigger the auto-upgrade:
+**Stats**: one request returns totals, top lists, and history:
 
 ```python
-async with AdGuardHome("192.168.1.2") as adguard:
-    info = await adguard.update.update_available()
-    if info.new_version and info.can_autoupdate:
-        await adguard.update.begin_update()
+from dataclasses import replace
+from datetime import timedelta
+
+async with AdGuardHome("http://192.168.1.2:3000") as adguard:
+    stats = await adguard.stats.get()
+    print("Queries:", stats.dns_queries)
+    print(f"Blocked: {stats.blocked_percentage:.1f}%")
+    print("Avg processing time:", stats.avg_processing_time)
+    print("Top client:", next(iter(stats.top_clients), None))
+
+    config = await adguard.stats.config()
+    await adguard.stats.set_config(replace(config, retention=timedelta(days=7)))
+```
+
+**Update check**: see if a new AdGuard Home release is available, and let
+AdGuard Home update itself:
+
+```python
+async with AdGuardHome("http://192.168.1.2:3000") as adguard:
+    update = await adguard.update.get(recheck=True)
+    if update.new_version and update.can_autoupdate:
+        await adguard.update.install()
 ```
 
 ### Connection options
 
-All constructor arguments are keyword-only (except `host`):
+Point the client at the URL of the AdGuard Home web interface, the same one
+you open in your browser. Everything else is keyword-only:
 
 ```python
 AdGuardHome(
-    "adguard.local",
-    port=443,
-    tls=True,              # use HTTPS
-    verify_ssl=True,       # set to False to accept self-signed certs
-    username="admin",      # HTTP basic auth (optional)
-    password="secret",     # noqa: S106
-    base_path="/control",  # adjust when running behind a reverse proxy
-    request_timeout=10,    # per-request timeout in seconds
+    "https://example.com/adguard",  # also works behind a reverse proxy
+    username="admin",               # HTTP basic auth (optional)
+    password="secret",              # noqa: S106
+    verify_ssl=True,                # set to False to accept self-signed certs
+    request_timeout=10,             # per-request timeout in seconds
 )
+```
+
+### Supported versions
+
+This library supports AdGuard Home v0.107.58 and newer. Check
+`status.supported` to see if the server you connect to qualifies. An API the
+server does not know raises `AdGuardHomeUnsupportedError`.
+
+### Protection
+
+Disable protection for good, or pause it for a while. AdGuard Home enables
+it again by itself once the pause is over:
+
+```python
+from datetime import timedelta
+
+async with AdGuardHome("http://192.168.1.2:3000") as adguard:
+    await adguard.disable_protection(timedelta(minutes=10))
+    status = await adguard.status()
+    print("Protection resumes in:", status.protection_resumes_in)
 ```
 
 You may also pass your own `aiohttp.ClientSession` via `session=...` to

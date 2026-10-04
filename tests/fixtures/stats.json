@@ -1,8 +1,66 @@
 {
-  "num_dns_queries": 666,
-  "num_blocked_filtering": 1337,
-  "num_replaced_safebrowsing": 42,
-  "num_replaced_parental": 13,
-  "num_replaced_safesearch": 18,
-  "avg_processing_time": 0.03141
+  "time_units": "hours",
+  "top_queried_domains": [
+    {
+      "connectivity-check.ubuntu.com": 412
+    },
+    {
+      "api.github.com": 233
+    },
+    {
+      "time.cloudflare.com": 96
+    }
+  ],
+  "top_clients": [
+    {
+      "192.168.1.20": 1021
+    },
+    {
+      "192.168.1.33": 419
+    }
+  ],
+  "top_blocked_domains": [
+    {
+      "telemetry.example.com": 188
+    },
+    {
+      "ads.example.net": 77
+    }
+  ],
+  "top_upstreams_responses": [
+    {
+      "https://dns.quad9.net:443/dns-query": 1200
+    },
+    {
+      "tls://1.1.1.1": 240
+    }
+  ],
+  "top_upstreams_avg_time": [
+    {
+      "tls://1.1.1.1": 0.0125
+    },
+    {
+      "https://dns.quad9.net:443/dns-query": 0.031
+    }
+  ],
+  "dns_queries": [
+    50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68,
+    69, 70, 71, 72, 73
+  ],
+  "blocked_filtering": [
+    10, 11, 12, 10, 11, 12, 10, 11, 12, 10, 11, 12, 10, 11, 12, 10, 11, 12, 10,
+    11, 12, 10, 11, 12
+  ],
+  "replaced_safebrowsing": [
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2
+  ],
+  "replaced_parental": [
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+  ],
+  "num_dns_queries": 1440,
+  "num_blocked_filtering": 265,
+  "num_replaced_safebrowsing": 2,
+  "num_replaced_safesearch": 0,
+  "num_replaced_parental": 0,
+  "avg_processing_time": 0.018744
 }

@@ -1,0 +1,9 @@
+{
+  "reason": "Rewrite",
+  "rule": "",
+  "rules": null,
+  "service_name": "",
+  "cname": "nas.lan",
+  "ip_addrs": ["192.168.1.5", "fd00::5"],
+  "filter_id": 0
+}

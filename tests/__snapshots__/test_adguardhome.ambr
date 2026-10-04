@@ -1,0 +1,4 @@
+# serializer version: 1
+# name: test_status
+  Status(version=<AwesomeVersion SemVer '0.107.62'>, running=True, language='en', dns_addresses=('127.0.0.1', '192.168.1.2', 'fe80::1'), dns_port=53, http_port=3000, dhcp_available=True, protection_enabled=True, protection_resumes_in=None, started_at=datetime.datetime(2025, 10, 3, 14, 0, 0, 123400, tzinfo=datetime.timezone.utc))
+# ---

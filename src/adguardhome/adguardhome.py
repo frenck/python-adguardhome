@@ -3,254 +3,245 @@
 from __future__ import annotations
 
 import asyncio
-import json
+import logging
 import socket
 from typing import TYPE_CHECKING, Any, Self
 
 import aiohttp
+import orjson
 from yarl import URL
 
-from .client import AdGuardHomeClients
-from .exceptions import AdGuardHomeConnectionError, AdGuardHomeError
+from ._model import MILLISECOND
+from .clients import AdGuardHomeClients
+from .exceptions import (
+    AdGuardHomeAuthenticationError,
+    AdGuardHomeConnectionError,
+    AdGuardHomeConnectionTimeoutError,
+    AdGuardHomeResponseError,
+    AdGuardHomeUnsupportedError,
+)
 from .filtering import AdGuardHomeFiltering
-from .parental import AdGuardHomeParental
 from .querylog import AdGuardHomeQueryLog
 from .rewrite import AdGuardHomeRewrite
-from .safebrowsing import AdGuardHomeSafeBrowsing
 from .safesearch import AdGuardHomeSafeSearch
 from .stats import AdGuardHomeStats
+from .status import MINIMUM_VERSION, Status
+from .toggle import Toggle
 from .update import AdGuardHomeUpdate
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
+    from datetime import timedelta
+
+_LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=too-many-instance-attributes
+# pylint: disable-next=too-many-instance-attributes
 class AdGuardHome:
-    """Main class for handling connections with AdGuard Home."""
+    """Client for the AdGuard Home API."""
 
     # pylint: disable-next=too-many-arguments
     def __init__(  # noqa: PLR0913
         self,
-        host: str,
+        url: str | URL,
         *,
-        base_path: str = "/control",
-        password: str | None = None,
-        port: int = 3000,
-        request_timeout: int = 10,
-        session: aiohttp.ClientSession | None = None,
-        tls: bool = False,
         username: str | None = None,
+        password: str | None = None,
+        request_timeout: float = 10,
+        session: aiohttp.ClientSession | None = None,
         verify_ssl: bool = True,
     ) -> None:
-        """Initialize connection with AdGuard Home.
-
-        Class constructor for setting up an AdGuard Home object to
-        communicate with an AdGuard Home instance.
+        """Initialize the AdGuard Home client.
 
         Args:
         ----
-            host: Hostname or IP address of the AdGuard Home instance.
-            base_path: Base path of the API, usually `/control`, which is the default.
-            password: Password for HTTP auth, if enabled.
-            port: Port on which the API runs, usually 3000.
-            request_timeout: Max timeout to wait for a response from the API.
+            url: The URL of the AdGuard Home web interface, the same one you
+                open in your browser. For example `http://192.168.1.2:3000`,
+                or `https://example.com/adguard` behind a reverse proxy.
+            username: Username, if AdGuard Home has authentication enabled.
+            password: Password, if AdGuard Home has authentication enabled.
+            request_timeout: Seconds to wait for a response from the API.
             session: Optional, shared, aiohttp client session.
-            tls: True, when TLS/SSL should be used.
-            username: Username for HTTP auth, if enabled.
-            verify_ssl: Can be set to false, when TLS with self-signed cert is used.
-
-        """
-        self._session = session
-        self._close_session = False
-
-        self.base_path = base_path
-        self.host = host
-        self.password = password
-        self.port = port
-        self.request_timeout = request_timeout
-        self.tls = tls
-        self.username = username
-        self.verify_ssl = verify_ssl
-
-        if self.base_path[-1] != "/":
-            self.base_path += "/"
-
-        self.clients = AdGuardHomeClients(self)
-        self.filtering = AdGuardHomeFiltering(self)
-        self.parental = AdGuardHomeParental(self)
-        self.querylog = AdGuardHomeQueryLog(self)
-        self.rewrite = AdGuardHomeRewrite(self)
-        self.safebrowsing = AdGuardHomeSafeBrowsing(self)
-        self.safesearch = AdGuardHomeSafeSearch(self)
-        self.stats = AdGuardHomeStats(self)
-        self.update = AdGuardHomeUpdate(self)
-
-    # pylint: disable-next=too-many-arguments, too-many-locals, too-many-positional-arguments
-    async def request(
-        self,
-        uri: str,
-        method: str = "GET",
-        data: Any | None = None,
-        json_data: dict[str, Any] | None = None,
-        params: Mapping[str, str] | None = None,
-    ) -> Any:
-        """Handle a request to the AdGuard Home instance.
-
-        Make a request against the AdGuard Home API and handle the response.
-
-        Args:
-        ----
-            uri: The request URI on the AdGuard Home API to call.
-            method: HTTP method to use for the request; e.g., GET, POST.
-            data: RAW HTTP request data to send with the request.
-            json_data: Dictionary of data to send as JSON with the request.
-            params: Mapping of request parameters to send with the request.
-
-        Returns:
-        -------
-            The response from the API. In case the response is a JSON response,
-            the method will return a decoded JSON response as a Python
-            dictionary or list. In other cases, it will return the RAW text
-            response.
+            verify_ssl: Set to False when AdGuard Home uses a self-signed
+                certificate.
 
         Raises:
         ------
-            AdGuardHomeConnectionError: An error occurred while communicating
-                with the AdGuard Home instance (connection issues).
-            AdGuardHomeError: An error occurred while processing the
-                response from the AdGuard Home instance (invalid data).
+            ValueError: The URL is not an HTTP or HTTPS URL.
 
         """
-        scheme = "https" if self.tls else "http"
-        url = URL.build(
-            scheme=scheme, host=self.host, port=self.port, path=self.base_path
-        ).join(URL(uri))
+        self.url = URL(url)
+        if self.url.scheme not in ("http", "https") or not self.url.host:
+            msg = f"Invalid AdGuard Home URL: {url}"
+            raise ValueError(msg)
 
-        headers = {
-            "Accept": "application/json, text/plain, */*",
-        }
+        # The API lives under /control, relative to the web interface.
+        self._api_url = self.url.with_query(None).with_fragment(None) / "control"
 
-        if self.username and self.password:
-            headers["Authorization"] = aiohttp.encode_basic_auth(
-                self.username, self.password
+        self._headers = {"Accept": "application/json"}
+        if username:
+            self._headers["Authorization"] = aiohttp.encode_basic_auth(
+                username, password or ""
             )
+
+        self._session = session
+        self._close_session = False
+        self.request_timeout = request_timeout
+        self.verify_ssl = verify_ssl
+
+        self.clients = AdGuardHomeClients(self._request)
+        self.filtering = AdGuardHomeFiltering(self._request)
+        self.parental = Toggle(self._request, "parental")
+        self.querylog = AdGuardHomeQueryLog(self._request)
+        self.rewrite = AdGuardHomeRewrite(self._request)
+        self.safebrowsing = Toggle(self._request, "safebrowsing")
+        self.safesearch = AdGuardHomeSafeSearch(self._request)
+        self.stats = AdGuardHomeStats(self._request)
+        self.update = AdGuardHomeUpdate(self._request)
+
+    async def _request(
+        self,
+        path: str,
+        *,
+        method: str = "GET",
+        json: Any = None,
+        params: Mapping[str, str] | None = None,
+    ) -> Any:
+        """Handle a request to the AdGuard Home API.
+
+        Args:
+        ----
+            path: The API path, relative to `/control`. For example `status`.
+            method: HTTP method to use for the request.
+            json: Data to send as JSON with the request.
+            params: Query parameters to send with the request.
+
+        Returns:
+        -------
+            The decoded JSON response, or None when AdGuard Home responded
+            without JSON. Most actions respond with a plain "OK".
+
+        Raises:
+        ------
+            AdGuardHomeConnectionError: AdGuard Home could not be reached.
+            AdGuardHomeConnectionTimeoutError: AdGuard Home did not respond
+                in time.
+            AdGuardHomeAuthenticationError: The credentials were rejected.
+            AdGuardHomeUnsupportedError: AdGuard Home does not know the
+                endpoint, which means it is too old for this library.
+            AdGuardHomeResponseError: AdGuard Home responded with an error,
+                or with JSON we could not decode.
+
+        """
+        url = self._api_url / path
 
         if self._session is None:
             self._session = aiohttp.ClientSession()
             self._close_session = True
 
-        skip_auto_headers = None
-        if data is None and json_data is None:
-            skip_auto_headers = {"Content-Type"}
+        # Without a body, aiohttp would still add a content type header.
+        # Only send one when there actually is JSON to send.
+        skip_auto_headers = {"Content-Type"} if json is None else None
+
+        _LOGGER.debug("%s %s", method, url)
 
         try:
-            async with asyncio.timeout(self.request_timeout):
-                response = await self._session.request(
+            async with (
+                asyncio.timeout(self.request_timeout),
+                self._session.request(
                     method,
                     url,
-                    data=data,
-                    json=json_data,
+                    headers=self._headers,
+                    json=json,
                     params=params,
-                    headers=headers,
-                    ssl=self.verify_ssl,
                     skip_auto_headers=skip_auto_headers,
-                )
+                    ssl=self.verify_ssl,
+                ) as response,
+            ):
+                status = response.status
+                content_type = response.headers.get("Content-Type", "")
+                body = await response.read()
         except TimeoutError as exception:
-            msg = "Timeout occurred while connecting to AdGuard Home instance."
-            raise AdGuardHomeConnectionError(msg) from exception
+            msg = "Timeout occurred while connecting to AdGuard Home"
+            raise AdGuardHomeConnectionTimeoutError(msg) from exception
         except (aiohttp.ClientError, socket.gaierror) as exception:
-            msg = "Error occurred while communicating with AdGuard Home."
+            msg = "Error occurred while communicating with AdGuard Home"
             raise AdGuardHomeConnectionError(msg) from exception
 
-        content_type = response.headers.get("Content-Type", "")
-        if response.status // 100 in [4, 5]:
-            contents = await response.read()
-            response.close()
+        _LOGGER.debug("%s %s returned %s", method, url, status)
 
-            if content_type == "application/json":
-                raise AdGuardHomeError(
-                    response.status, json.loads(contents.decode("utf8"))
-                )
-            raise AdGuardHomeError(
-                response.status, {"message": contents.decode("utf8")}
+        # AdGuard Home sends its error messages as plain text.
+        text = body.decode(errors="replace").strip()
+
+        if status in (401, 403):
+            msg = "AdGuard Home rejected the credentials"
+            raise AdGuardHomeAuthenticationError(msg)
+
+        if status == 404:
+            msg = (
+                f"AdGuard Home does not support /control/{path}, "
+                f"version {MINIMUM_VERSION} or newer is required"
             )
+            raise AdGuardHomeUnsupportedError(msg, status=status, body=text)
 
-        if "application/json" in content_type:
-            return await response.json()
+        if status >= 400:
+            msg = f"AdGuard Home responded with HTTP {status}: {text}"
+            raise AdGuardHomeResponseError(msg, status=status, body=text)
 
-        text = await response.text()
-        return {"message": text}
+        if "application/json" not in content_type or not body:
+            return None
 
-    async def protection_enabled(self) -> bool:
-        """Return if AdGuard Home protection is enabled or not.
+        try:
+            return orjson.loads(body)  # pylint: disable=no-member
+        except orjson.JSONDecodeError as exception:  # pylint: disable=no-member
+            msg = "AdGuard Home responded with invalid JSON"
+            raise AdGuardHomeResponseError(msg, status=status, body=text) from exception
+
+    async def status(self) -> Status:
+        """Return the status of the AdGuard Home server.
 
         Returns
         -------
-            The status of the protection of the AdGuard Home instance.
+            The server status, including its version and protection state.
+            Use `Status.supported` to check if this library supports the
+            version of the AdGuard Home server.
 
         """
-        response = await self.request("status")
-        return response["protection_enabled"]
+        return Status.from_api(await self._request("status"))
 
     async def enable_protection(self) -> None:
         """Enable AdGuard Home protection.
 
-        Raises
-        ------
-            AdGuardHomeError: Failed enabling AdGuard Home protection.
-
+        This also resumes protection that is paused.
         """
-        try:
-            await self.request(
-                "protection",
-                method="POST",
-                json_data={"enabled": True},
-            )
-        except AdGuardHomeError as exception:
-            msg = "Failed enabling AdGuard Home protection"
-            raise AdGuardHomeError(msg) from exception
+        await self._request("protection", method="POST", json={"enabled": True})
 
-    async def disable_protection(self, duration: int | None = None) -> None:
+    async def disable_protection(self, duration: timedelta | None = None) -> None:
         """Disable AdGuard Home protection.
 
         Args:
         ----
-            duration: Duration in seconds to disable protection for.
-                When None, protection is disabled indefinitely.
+            duration: How long to pause protection for. AdGuard Home enables
+                protection again by itself afterwards. When None, protection
+                stays disabled until it is enabled again.
 
         Raises:
         ------
-            AdGuardHomeError: Failed disabling the AdGuard Home protection.
+            ValueError: The duration is not positive.
 
         """
-        data: dict[str, bool | int] = {"enabled": False}
+        payload: dict[str, bool | int] = {"enabled": False}
+
         if duration is not None:
-            data["duration"] = duration * 1000
+            if duration < MILLISECOND:
+                msg = "The duration to disable protection for must be positive"
+                raise ValueError(msg)
+            payload["duration"] = duration // MILLISECOND
 
-        try:
-            await self.request(
-                "protection",
-                method="POST",
-                json_data=data,
-            )
-        except AdGuardHomeError as exception:
-            msg = "Failed disabling AdGuard Home protection"
-            raise AdGuardHomeError(msg) from exception
-
-    async def version(self) -> str:
-        """Return the current version of the AdGuard Home instance.
-
-        Returns
-        -------
-            The version number of the connected AdGuard Home instance.
-
-        """
-        response = await self.request("status")
-        return response["version"]
+        await self._request("protection", method="POST", json=payload)
 
     async def close(self) -> None:
-        """Close open client session."""
+        """Close the client session, if we opened it."""
         if self._session and self._close_session:
             await self._session.close()
 
@@ -259,7 +250,7 @@ class AdGuardHome:
 
         Returns
         -------
-            The AdGuard Home object.
+            The AdGuard Home client.
 
         """
         return self

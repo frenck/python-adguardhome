@@ -1,353 +1,365 @@
 """Tests for `adguardhome.filtering`."""
 
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
 from aiointercept import CallbackResult, aiointercept
+from syrupy.assertion import SnapshotAssertion
+from yarl import URL
 
-from adguardhome import AdGuardHome
-from adguardhome.exceptions import AdGuardHomeError
+from adguardhome import (
+    AdGuardHome,
+    AdGuardHomeError,
+    FilteringConfig,
+    FilteringReason,
+    FilteringStatus,
+)
 
-URL_STATUS = "http://example.com:3000/control/filtering/status"
-URL_CONFIG = "http://example.com:3000/control/filtering/config"
-URL_ADD = "http://example.com:3000/control/filtering/add_url"
-URL_REMOVE = "http://example.com:3000/control/filtering/remove_url"
-URL_SET = "http://example.com:3000/control/filtering/set_url"
-URL_REFRESH_FALSE = "http://example.com:3000/control/filtering/refresh?force=false"
-URL_REFRESH_TRUE = "http://example.com:3000/control/filtering/refresh?force=true"
+from .conftest import FixtureLoader
 
-FILTER_TEST = "https://example.com/1.txt"
-FILTER_LIST_WITH_NAME = {
-    "filters": [{"url": "https://EXAMPLE.com/1.txt", "name": "test"}],
-}
+URL_BASE = "http://example.com:3000/control/filtering"
+URL_STATUS = f"{URL_BASE}/status"
+URL_CONFIG = f"{URL_BASE}/config"
+URL_ADD = f"{URL_BASE}/add_url"
+URL_REMOVE = f"{URL_BASE}/remove_url"
+URL_SET = f"{URL_BASE}/set_url"
+URL_REFRESH = f"{URL_BASE}/refresh"
+URL_SET_RULES = f"{URL_BASE}/set_rules"
+URL_CHECK_HOST = f"{URL_BASE}/check_host"
 
-
-@pytest.mark.parametrize("enabled", [True, False])
-async def test_enabled(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    enabled: bool,
-) -> None:
-    """Test reporting filtering status."""
-    responses.get(URL_STATUS, status=200, payload={"enabled": enabled})
-    assert await adguard.filtering.enabled() is enabled
+URL_DNS_FILTER = "https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt"
+URL_EXAMPLE_ADS = "https://example.com/Ads.txt"
 
 
-async def test_enable(responses: aiointercept, adguard: AdGuardHome) -> None:
-    """Test enabling filtering."""
-
-    def callback(_url: str, **kwargs: object) -> CallbackResult:
-        assert kwargs["json"] == {"enabled": True, "interval": 1}
-        return CallbackResult(status=200, content_type="text/plain")
-
-    responses.get(URL_STATUS, status=200, payload={"interval": 1})
-    responses.post(URL_CONFIG, callback=callback)
-
-    await adguard.filtering.enable()
+def ok(payload: Any = None) -> CallbackResult:
+    """Return the response AdGuard Home gives on a successful action."""
+    if payload is not None:
+        return CallbackResult(status=200, payload=payload)
+    return CallbackResult(status=200, body="OK\n", content_type="text/plain")
 
 
-@pytest.mark.parametrize("status", [400, 500])
-async def test_enable_error(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    status: int,
-) -> None:
-    """Test enabling filtering fails on HTTP error."""
-    responses.get(URL_STATUS, status=200, payload={"interval": 1})
-    responses.post(URL_CONFIG, status=status, content_type="text/plain")
+def expect_json(expected: Any, payload: Any = None) -> Any:
+    """Return a callback asserting the JSON body of the request."""
 
-    with pytest.raises(AdGuardHomeError):
-        await adguard.filtering.enable()
+    def callback(_url: URL, **kwargs: Any) -> CallbackResult:
+        assert kwargs["json"] == expected
+        return ok(payload)
+
+    return callback
 
 
-async def test_disable(responses: aiointercept, adguard: AdGuardHome) -> None:
-    """Test disabling filtering."""
-
-    def callback(_url: str, **kwargs: object) -> CallbackResult:
-        assert kwargs["json"] == {"enabled": False, "interval": 1}
-        return CallbackResult(status=200, content_type="text/plain")
-
-    responses.get(URL_STATUS, status=200, payload={"interval": 1})
-    responses.post(URL_CONFIG, callback=callback)
-
-    await adguard.filtering.disable()
+@pytest.fixture
+def status(responses: aiointercept, load_fixture: FixtureLoader) -> None:
+    """Mock the filtering status, which most operations read first."""
+    responses.get(
+        URL_STATUS, status=200, payload=load_fixture("filtering_status"), repeat=True
+    )
 
 
-@pytest.mark.parametrize("status", [400, 500])
-async def test_disable_error(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    status: int,
-) -> None:
-    """Test disabling filtering fails on HTTP error."""
-    responses.get(URL_STATUS, status=200, payload={"interval": 1})
-    responses.post(URL_CONFIG, status=status, content_type="text/plain")
+@pytest.mark.usefixtures("status")
+async def test_get(adguard: AdGuardHome, snapshot: SnapshotAssertion) -> None:
+    """Test the filtering status is parsed into a model."""
+    filtering = await adguard.filtering.get()
 
-    with pytest.raises(AdGuardHomeError):
-        await adguard.filtering.disable()
-
-
-async def test_interval_get(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-) -> None:
-    """Test reading the filtering retention interval."""
-    responses.get(URL_STATUS, status=200, payload={"interval": 7})
-    assert await adguard.filtering.interval() == 7
+    assert filtering == snapshot
+    assert filtering.enabled
+    assert filtering.update_interval == timedelta(days=1)
+    assert len(filtering.blocklists) == 2
+    assert filtering.blocklists[0].last_updated == datetime(
+        2025, 10, 3, 12, 0, tzinfo=UTC
+    )
+    assert filtering.blocklists[1].last_updated is None
+    assert filtering.allowlists == ()
+    assert len(filtering.user_rules) == 3
 
 
-async def test_interval_set(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-) -> None:
-    """Test setting the filtering retention interval."""
+def test_status_serializes_to_api_format(load_fixture: FixtureLoader) -> None:
+    """Test the status round-trips, with a null list coming back empty."""
+    data = load_fixture("filtering_status")
+    filtering = FilteringStatus.from_api(data)
 
-    def callback(_url: str, **kwargs: object) -> CallbackResult:
-        assert kwargs["json"] == {"enabled": True, "interval": 1}
-        return CallbackResult(status=200, content_type="text/plain")
-
-    responses.get(URL_STATUS, status=200, payload={"enabled": True})
-    responses.post(URL_CONFIG, callback=callback)
-
-    assert await adguard.filtering.interval(interval=1) == 1
+    assert FilteringStatus.from_api(filtering.to_dict()) == filtering
+    assert filtering.to_dict()["whitelist_filters"] == []
 
 
-@pytest.mark.parametrize("status", [400, 500])
-async def test_interval_set_error(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    status: int,
-) -> None:
-    """Test setting the filtering retention interval fails on HTTP error."""
-    responses.get(URL_STATUS, status=200, payload={"enabled": True})
-    responses.post(URL_CONFIG, status=status, content_type="text/plain")
+@pytest.mark.usefixtures("status")
+async def test_config(adguard: AdGuardHome) -> None:
+    """Test the configuration only holds the configuration."""
+    assert await adguard.filtering.config() == FilteringConfig(
+        enabled=True, update_interval=timedelta(hours=24)
+    )
 
-    with pytest.raises(AdGuardHomeError):
-        await adguard.filtering.interval(interval=1)
+
+async def test_set_config(responses: aiointercept, adguard: AdGuardHome) -> None:
+    """Test the configuration is sent in the format of the API."""
+    responses.post(
+        URL_CONFIG, callback=expect_json({"enabled": False, "interval": 168})
+    )
+
+    await adguard.filtering.set_config(
+        FilteringConfig(enabled=False, update_interval=timedelta(weeks=1))
+    )
 
 
 @pytest.mark.parametrize(
-    ("payload", "allowlist", "expected"),
+    "update_interval",
     [
-        (
-            {"filters": [{"rules_count": 99}, {"rules_count": 1}]},
-            False,
-            100,
-        ),
-        ({"filters": []}, False, 0),
-        (
-            {"whitelist_filters": [{"rules_count": 98}, {"rules_count": 1}]},
-            True,
-            99,
-        ),
-        ({"whitelist_filters": None}, True, 0),
+        timedelta(minutes=59),
+        timedelta(hours=1, seconds=1),
+        timedelta(days=1.5, minutes=1),
     ],
 )
-async def test_rules_count(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    payload: dict[str, Any],
-    allowlist: bool,
-    expected: int,
+def test_config_rejects_partial_hours(update_interval: timedelta) -> None:
+    """Test an update interval with a partial hour is rejected, not rounded."""
+    with pytest.raises(ValueError, match="whole number of hours"):
+        FilteringConfig(enabled=True, update_interval=update_interval)
+
+
+@pytest.mark.usefixtures("status")
+async def test_set_config_from_status(
+    responses: aiointercept, adguard: AdGuardHome
 ) -> None:
-    """Test computing the total rules count across filter lists."""
-    responses.get(URL_STATUS, status=200, payload=payload)
-    assert await adguard.filtering.rules_count(allowlist=allowlist) == expected
+    """Test passing a full status only sends its configuration."""
+    responses.post(URL_CONFIG, callback=expect_json({"enabled": True, "interval": 1}))
 
-
-async def test_add_url(responses: aiointercept, adguard: AdGuardHome) -> None:
-    """Test adding a filter subscription."""
-
-    def callback(_url: str, **kwargs: object) -> CallbackResult:
-        assert kwargs["json"] == {
-            "name": "Example",
-            "url": FILTER_TEST,
-            "whitelist": False,
-        }
-        return CallbackResult(
-            status=200, body="OK 12345 filters added", content_type="text/plain"
+    filtering = await adguard.filtering.get()
+    await adguard.filtering.set_config(
+        FilteringStatus(
+            enabled=filtering.enabled,
+            update_interval=timedelta(hours=1),
+            blocklists=filtering.blocklists,
         )
-
-    responses.post(URL_ADD, callback=callback)
-    await adguard.filtering.add_url(name="Example", url=FILTER_TEST, allowlist=False)
-
-
-@pytest.mark.parametrize("status", [400, 500])
-async def test_add_url_error(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    status: int,
-) -> None:
-    """Test adding a filter subscription fails on HTTP error."""
-    responses.post(
-        URL_ADD, status=status, body="Invalid URL", content_type="text/plain"
     )
-    with pytest.raises(AdGuardHomeError):
-        await adguard.filtering.add_url(
-            name="Example", url=FILTER_TEST, allowlist=False
-        )
 
 
-async def test_remove_url(responses: aiointercept, adguard: AdGuardHome) -> None:
-    """Test removing a filter subscription."""
-
-    def callback(_url: str, **kwargs: object) -> CallbackResult:
-        assert kwargs["json"] == {"url": FILTER_TEST, "whitelist": False}
-        return CallbackResult(status=200, body="OK", content_type="text/plain")
-
-    responses.post(URL_REMOVE, callback=callback)
-    await adguard.filtering.remove_url(allowlist=False, url=FILTER_TEST)
-
-
-@pytest.mark.parametrize("status", [400, 500])
-async def test_remove_url_error(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    status: int,
+@pytest.mark.parametrize(("method", "enabled"), [("enable", True), ("disable", False)])
+@pytest.mark.usefixtures("status")
+async def test_enable_disable(
+    responses: aiointercept, adguard: AdGuardHome, method: str, enabled: bool
 ) -> None:
-    """Test removing a filter subscription fails on HTTP error."""
+    """Test toggling filtering keeps the update interval."""
     responses.post(
-        URL_REMOVE, status=status, body="Invalid URL", content_type="text/plain"
+        URL_CONFIG, callback=expect_json({"enabled": enabled, "interval": 24})
     )
-    with pytest.raises(AdGuardHomeError):
-        await adguard.filtering.remove_url(allowlist=False, url=FILTER_TEST)
 
-
-async def test_enable_url(responses: aiointercept, adguard: AdGuardHome) -> None:
-    """Test enabling a filter subscription."""
-
-    def callback(_url: str, **kwargs: object) -> CallbackResult:
-        assert kwargs["json"] == {
-            "url": FILTER_TEST,
-            "whitelist": False,
-            "data": {"enabled": True, "url": FILTER_TEST, "name": "test"},
-        }
-        return CallbackResult(status=200, body="OK", content_type="text/plain")
-
-    responses.get(URL_STATUS, status=200, payload=FILTER_LIST_WITH_NAME)
-    responses.post(URL_SET, callback=callback)
-
-    await adguard.filtering.enable_url(allowlist=False, url=FILTER_TEST)
-
-
-@pytest.mark.parametrize("status", [400, 500])
-async def test_enable_url_error(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    status: int,
-) -> None:
-    """Test enabling a filter subscription fails on HTTP error."""
-    responses.get(URL_STATUS, status=200, payload=FILTER_LIST_WITH_NAME)
-    responses.post(URL_SET, status=status, content_type="text/plain")
-
-    with pytest.raises(AdGuardHomeError):
-        await adguard.filtering.enable_url(allowlist=False, url=FILTER_TEST)
-
-
-async def test_disable_url(responses: aiointercept, adguard: AdGuardHome) -> None:
-    """Test disabling a filter subscription."""
-
-    def callback(_url: str, **kwargs: object) -> CallbackResult:
-        assert kwargs["json"] == {
-            "url": FILTER_TEST,
-            "whitelist": False,
-            "data": {"enabled": False, "name": "test", "url": FILTER_TEST},
-        }
-        return CallbackResult(status=200, content_type="text/plain")
-
-    responses.get(URL_STATUS, status=200, payload=FILTER_LIST_WITH_NAME)
-    responses.post(URL_SET, callback=callback)
-
-    await adguard.filtering.disable_url(allowlist=False, url=FILTER_TEST)
-
-
-@pytest.mark.parametrize("status", [400, 500])
-async def test_disable_url_error(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    status: int,
-) -> None:
-    """Test disabling a filter subscription fails on HTTP error."""
-    responses.get(URL_STATUS, status=200, payload=FILTER_LIST_WITH_NAME)
-    responses.post(URL_SET, status=status, content_type="text/plain")
-
-    with pytest.raises(AdGuardHomeError):
-        await adguard.filtering.disable_url(allowlist=False, url=FILTER_TEST)
+    await getattr(adguard.filtering, method)()
 
 
 @pytest.mark.parametrize(
-    ("payload", "allowlist", "expected"),
-    [
-        (
-            {"filters": [{"url": "https://EXAMPLE.com/1.txt", "enabled": True}]},
-            False,
-            True,
-        ),
-        (
-            {"filters": [{"url": "https://EXAMPLE.com/1.txt", "enabled": False}]},
-            False,
-            False,
-        ),
-        (
-            {"filters": [{"url": "https://EXAMPLE.com/1.txt", "enabled": True}]},
-            True,
-            False,
-        ),
-        (
+    ("kind", "count", "first_url"),
+    [("blocklists", 2, URL_DNS_FILTER), ("allowlists", 0, None)],
+)
+@pytest.mark.usefixtures("status")
+async def test_list(
+    adguard: AdGuardHome, kind: str, count: int, first_url: str | None
+) -> None:
+    """Test listing the blocklists and the allowlists separately."""
+    filter_lists = await getattr(adguard.filtering, kind).list()
+
+    assert len(filter_lists) == count
+    assert next((f.url for f in filter_lists), None) == first_url
+
+
+@pytest.mark.usefixtures("status")
+async def test_get_filter_list(adguard: AdGuardHome) -> None:
+    """Test finding a filter list by its exact URL."""
+    filter_list = await adguard.filtering.blocklists.get(URL_EXAMPLE_ADS)
+
+    assert filter_list is not None
+    assert filter_list.name == "Example ads"
+    assert not filter_list.enabled
+
+
+@pytest.mark.usefixtures("status")
+async def test_get_filter_list_matches_exactly(adguard: AdGuardHome) -> None:
+    """Test a URL differing in case is a different filter list, like for the API."""
+    assert await adguard.filtering.blocklists.get(URL_EXAMPLE_ADS.lower()) is None
+
+
+@pytest.mark.parametrize(
+    ("kind", "allowlist"), [("blocklists", False), ("allowlists", True)]
+)
+async def test_add(
+    responses: aiointercept, adguard: AdGuardHome, kind: str, allowlist: bool
+) -> None:
+    """Test adding a filter list tells the API which kind it is."""
+    responses.post(
+        URL_ADD,
+        callback=expect_json(
             {
-                "whitelist_filters": [
-                    {"url": "https://EXAMPLE.com/1.txt", "enabled": True},
-                ],
-            },
-            True,
-            True,
+                "name": "Example",
+                "url": "https://example.com/list.txt",
+                "whitelist": allowlist,
+            }
         ),
-    ],
+    )
+
+    await getattr(adguard.filtering, kind).add(
+        "https://example.com/list.txt", name="Example"
+    )
+
+
+@pytest.mark.parametrize(
+    ("kind", "allowlist"), [("blocklists", False), ("allowlists", True)]
 )
-async def test_url_enabled(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    payload: dict[str, Any],
-    allowlist: bool,
-    expected: bool,
+async def test_remove(
+    responses: aiointercept, adguard: AdGuardHome, kind: str, allowlist: bool
 ) -> None:
-    """Test checking whether a filter subscription is enabled."""
-    responses.get(URL_STATUS, status=200, payload=payload)
-    assert (
-        await adguard.filtering.url_enabled(allowlist=allowlist, url=FILTER_TEST)
-        is expected
-    )
-
-
-async def test_refresh(responses: aiointercept, adguard: AdGuardHome) -> None:
-    """Test refreshing filter subscriptions."""
-
-    def blocklist_callback(_url: str, **kwargs: object) -> CallbackResult:
-        assert kwargs["json"] == {"whitelist": False}
-        return CallbackResult(status=200, content_type="text/plain")
-
-    def whitelist_callback(_url: str, **kwargs: object) -> CallbackResult:
-        assert kwargs["json"] == {"whitelist": True}
-        return CallbackResult(status=200, content_type="text/plain")
-
-    responses.post(URL_REFRESH_FALSE, callback=blocklist_callback)
-    responses.post(URL_REFRESH_FALSE, callback=whitelist_callback)
-    responses.post(URL_REFRESH_TRUE, status=200, body="OK", content_type="text/plain")
-
-    await adguard.filtering.refresh(allowlist=False, force=False)
-    await adguard.filtering.refresh(allowlist=True, force=False)
-    await adguard.filtering.refresh(allowlist=False, force=True)
-
-
-@pytest.mark.parametrize("status", [400, 500])
-async def test_refresh_error(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    status: int,
-) -> None:
-    """Test refreshing filter subscriptions fails on HTTP error."""
+    """Test removing a filter list tells the API which kind it is."""
     responses.post(
-        URL_REFRESH_FALSE, status=status, body="Not OK", content_type="text/plain"
+        URL_REMOVE,
+        callback=expect_json(
+            {"url": "https://example.com/list.txt", "whitelist": allowlist}
+        ),
     )
-    with pytest.raises(AdGuardHomeError):
-        await adguard.filtering.refresh(allowlist=False, force=False)
+
+    await getattr(adguard.filtering, kind).remove("https://example.com/list.txt")
+
+
+@pytest.mark.parametrize(("method", "enabled"), [("enable", True), ("disable", False)])
+@pytest.mark.usefixtures("status")
+async def test_enable_disable_filter_list(
+    responses: aiointercept, adguard: AdGuardHome, method: str, enabled: bool
+) -> None:
+    """Test toggling a filter list keeps its name and URL."""
+    responses.post(
+        URL_SET,
+        callback=expect_json(
+            {
+                "url": URL_EXAMPLE_ADS,
+                "whitelist": False,
+                "data": {
+                    "name": "Example ads",
+                    "url": URL_EXAMPLE_ADS,
+                    "enabled": enabled,
+                },
+            }
+        ),
+    )
+
+    await getattr(adguard.filtering.blocklists, method)(URL_EXAMPLE_ADS)
+
+
+@pytest.mark.usefixtures("status")
+async def test_update_filter_list(
+    responses: aiointercept, adguard: AdGuardHome
+) -> None:
+    """Test renaming and moving a filter list keeps its enabled state."""
+    responses.post(
+        URL_SET,
+        callback=expect_json(
+            {
+                "url": URL_DNS_FILTER,
+                "whitelist": False,
+                "data": {
+                    "name": "Renamed",
+                    "url": "https://example.com/moved.txt",
+                    "enabled": True,
+                },
+            }
+        ),
+    )
+
+    await adguard.filtering.blocklists.update(
+        URL_DNS_FILTER, name="Renamed", new_url="https://example.com/moved.txt"
+    )
+
+
+@pytest.mark.usefixtures("status")
+async def test_update_unknown_filter_list(adguard: AdGuardHome) -> None:
+    """Test changing a filter list that does not exist raises an error."""
+    with pytest.raises(AdGuardHomeError, match="no allowlist with URL"):
+        await adguard.filtering.allowlists.enable(URL_DNS_FILTER)
+
+
+@pytest.mark.parametrize(
+    ("kind", "allowlist"), [("blocklists", False), ("allowlists", True)]
+)
+async def test_refresh(
+    responses: aiointercept, adguard: AdGuardHome, kind: str, allowlist: bool
+) -> None:
+    """Test refreshing returns the number of filter lists that changed."""
+    responses.post(
+        URL_REFRESH,
+        callback=expect_json({"whitelist": allowlist}, payload={"updated": 3}),
+    )
+
+    assert await getattr(adguard.filtering, kind).refresh() == 3
+
+
+@pytest.mark.parametrize("payload", [{}, {"updated": "many"}])
+async def test_refresh_unexpected_response(
+    responses: aiointercept, adguard: AdGuardHome, payload: dict[str, Any]
+) -> None:
+    """Test a refresh response without a count raises an error."""
+    responses.post(URL_REFRESH, status=200, payload=payload)
+
+    with pytest.raises(AdGuardHomeError, match="Unexpected refresh response"):
+        await adguard.filtering.blocklists.refresh()
+
+
+@pytest.mark.usefixtures("status")
+async def test_user_rules(adguard: AdGuardHome) -> None:
+    """Test reading the custom filtering rules."""
+    assert await adguard.filtering.user_rules() == (
+        "||telemetry.example.com^",
+        "! comment",
+        "@@||allowed.example.com^",
+    )
+
+
+async def test_set_user_rules(responses: aiointercept, adguard: AdGuardHome) -> None:
+    """Test replacing the custom filtering rules from any iterable."""
+    responses.post(
+        URL_SET_RULES, callback=expect_json({"rules": ["||a.example^", "||b.example^"]})
+    )
+
+    await adguard.filtering.set_user_rules(
+        rule for rule in ("||a.example^", "||b.example^")
+    )
+
+
+async def test_check_host_filtered(
+    responses: aiointercept,
+    adguard: AdGuardHome,
+    load_fixture: FixtureLoader,
+) -> None:
+    """Test checking a host that a rule blocks."""
+    responses.get(
+        f"{URL_CHECK_HOST}?name=telemetry.example.com",
+        status=200,
+        payload=load_fixture("filtering_check_host_blocked"),
+    )
+
+    result = await adguard.filtering.check_host("telemetry.example.com")
+
+    assert result.filtered
+    assert result.reason is FilteringReason.FILTERED_BLOCKLIST
+    assert result.rules[0].text == "||telemetry.example.com^"
+    assert result.service_name is None
+    assert result.cname is None
+    assert result.ip_addresses == ()
+
+
+async def test_check_host_rewrite(
+    responses: aiointercept,
+    adguard: AdGuardHome,
+    load_fixture: FixtureLoader,
+) -> None:
+    """Test checking a host for a client and record type, which is rewritten."""
+    responses.get(
+        f"{URL_CHECK_HOST}?name=nas&client=192.168.1.20&qtype=AAAA",
+        status=200,
+        payload=load_fixture("filtering_check_host_rewrite"),
+    )
+
+    result = await adguard.filtering.check_host(
+        "nas", client="192.168.1.20", qtype="AAAA"
+    )
+
+    assert not result.filtered
+    assert result.reason is FilteringReason.REWRITE
+    assert result.rules == ()
+    assert result.cname == "nas.lan"
+    assert result.ip_addresses == ("192.168.1.5", "fd00::5")
