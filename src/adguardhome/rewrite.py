@@ -1,85 +1,70 @@
-"""Asynchronous Python client for the AdGuard Home API."""
+"""DNS rewrites of AdGuard Home."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
-from .exceptions import AdGuardHomeError
-
-if TYPE_CHECKING:
-    from . import AdGuardHome
+from ._area import Area
+from ._model import AdGuardHomeModel
 
 
-@dataclass
-class RewriteRule:
-    """A DNS rewrite rule in AdGuard Home."""
+@dataclass(frozen=True, kw_only=True)
+class RewriteRule(AdGuardHomeModel):
+    """A DNS rewrite rule of AdGuard Home."""
 
+    # The domain to rewrite, which may be a wildcard like `*.example.com`.
     domain: str
+
+    # What to answer with: an IP address, or a domain name for a CNAME.
     answer: str
+
+    # Added in AdGuard Home v0.107.68. Older versions leave it out, and
+    # always apply every rule.
     enabled: bool = True
 
 
-@dataclass
-class AdGuardHomeRewrite:
-    """Controls AdGuard Home DNS rewrites."""
+class AdGuardHomeRewrite(Area):
+    """DNS rewrites of AdGuard Home."""
 
-    adguard: AdGuardHome
+    __slots__ = ()
 
-    async def list_rules(self) -> list[RewriteRule]:
-        """Return all defined DNS rewrite rules.
+    async def get(self) -> tuple[RewriteRule, ...]:
+        """Return all DNS rewrite rules.
 
         Returns
         -------
-            A list of DNS rewrite rules configured on the
-            AdGuard Home instance.
+            The DNS rewrite rules, in the order AdGuard Home has them.
 
         """
-        response = await self.adguard.request("rewrite/list")
-        return [RewriteRule(**entry) for entry in response or []]
+        response = await self._request("rewrite/list")
+        return tuple(RewriteRule.from_api(entry) for entry in response or [])
 
     async def add(self, domain: str, answer: str) -> None:
-        """Add a new DNS rewrite rule to AdGuard Home.
+        """Add a DNS rewrite rule.
 
         Args:
         ----
-            domain: The domain pattern to rewrite (e.g., "*.example.com").
-            answer: The IP address or domain to rewrite to.
-
-        Raises:
-        ------
-            AdGuardHomeError: Failed adding the DNS rewrite rule.
+            domain: The domain to rewrite, like `*.example.com`.
+            answer: An IP address, or a domain name for a CNAME.
 
         """
-        try:
-            await self.adguard.request(
-                "rewrite/add",
-                method="POST",
-                json_data={"domain": domain, "answer": answer},
-            )
-        except AdGuardHomeError as exception:
-            msg = "Failed to add DNS rewrite rule to AdGuard Home"
-            raise AdGuardHomeError(msg) from exception
+        await self._request(
+            "rewrite/add",
+            method="POST",
+            json={"domain": domain, "answer": answer},
+        )
 
-    async def delete(self, domain: str, answer: str) -> None:
-        """Delete a DNS rewrite rule from AdGuard Home.
+    async def remove(self, domain: str, answer: str) -> None:
+        """Remove a DNS rewrite rule.
 
         Args:
         ----
-            domain: The domain pattern of the rewrite rule to delete.
-            answer: The IP address or domain of the rewrite rule to delete.
-
-        Raises:
-        ------
-            AdGuardHomeError: Failed to delete the DNS rewrite rule.
+            domain: The domain of the rule to remove.
+            answer: The answer of the rule to remove.
 
         """
-        try:
-            await self.adguard.request(
-                "rewrite/delete",
-                method="POST",
-                json_data={"domain": domain, "answer": answer},
-            )
-        except AdGuardHomeError as exception:
-            msg = "Failed to delete DNS rewrite rule from AdGuard Home"
-            raise AdGuardHomeError(msg) from exception
+        await self._request(
+            "rewrite/delete",
+            method="POST",
+            json={"domain": domain, "answer": answer},
+        )

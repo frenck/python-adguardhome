@@ -1,108 +1,81 @@
 """Tests for `adguardhome.querylog`."""
 
+from datetime import timedelta
+from typing import Any
+
 import pytest
 from aiointercept import CallbackResult, aiointercept
+from yarl import URL
 
-from adguardhome import AdGuardHome
-from adguardhome.exceptions import AdGuardHomeError
+from adguardhome import AdGuardHome, QueryLogConfig
 
-URL_INFO = "http://example.com:3000/control/querylog_info"
-URL_CONFIG = "http://example.com:3000/control/querylog_config"
+URL_CONFIG = "http://example.com:3000/control/querylog/config"
+URL_CONFIG_UPDATE = "http://example.com:3000/control/querylog/config/update"
+URL_CLEAR = "http://example.com:3000/control/querylog_clear"
+
+CONFIG: dict[str, Any] = {
+    "enabled": True,
+    "interval": 2_592_000_000,
+    "anonymize_client_ip": False,
+    "ignored": ["*.lan"],
+    "ignored_enabled": True,
+}
 
 
-@pytest.mark.parametrize("enabled", [True, False])
-async def test_enabled(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    enabled: bool,
+async def test_config(responses: aiointercept, adguard: AdGuardHome) -> None:
+    """Test the query log configuration is parsed into a model."""
+    responses.get(URL_CONFIG, status=200, payload=CONFIG)
+
+    config = await adguard.querylog.config()
+
+    assert config == QueryLogConfig(
+        enabled=True,
+        retention=timedelta(days=30),
+        anonymize_client_ip=False,
+        ignored=("*.lan",),
+        ignored_enabled=True,
+    )
+    assert config.to_dict() == CONFIG
+
+
+async def test_config_before_ignored_enabled(
+    responses: aiointercept, adguard: AdGuardHome
 ) -> None:
-    """Test reporting the query log enabled status."""
-    responses.get(URL_INFO, status=200, payload={"enabled": enabled, "interval": 1})
-    assert await adguard.querylog.enabled() is enabled
+    """Test a configuration from before `ignored_enabled` round-trips as is."""
+    data: dict[str, Any] = {
+        key: value for key, value in CONFIG.items() if key != "ignored_enabled"
+    }
+    data["ignored"] = None
+    responses.get(URL_CONFIG, status=200, payload=data)
+
+    config = await adguard.querylog.config()
+
+    assert config.ignored == ()
+    assert config.ignored_enabled is None
+    assert "ignored_enabled" not in config.to_dict()
 
 
-async def test_enable(responses: aiointercept, adguard: AdGuardHome) -> None:
-    """Test enabling the query log."""
-
-    def callback(_url: str, **kwargs: object) -> CallbackResult:
-        assert kwargs["json"] == {"enabled": True, "interval": 1}
-        return CallbackResult(status=200, content_type="text/plain")
-
-    responses.get(URL_INFO, status=200, payload={"interval": 1})
-    responses.post(URL_CONFIG, callback=callback)
-
-    await adguard.querylog.enable()
-
-
-@pytest.mark.parametrize("status", [400, 500])
-async def test_enable_error(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    status: int,
+@pytest.mark.parametrize(("method", "enabled"), [("enable", True), ("disable", False)])
+async def test_enable_disable(
+    responses: aiointercept, adguard: AdGuardHome, method: str, enabled: bool
 ) -> None:
-    """Test enabling the query log fails on HTTP error."""
-    responses.get(URL_INFO, status=200, payload={"interval": 1})
-    responses.post(URL_CONFIG, status=status, content_type="text/plain")
+    """Test toggling the query log only changes `enabled`."""
+    responses.get(URL_CONFIG, status=200, payload=CONFIG)
 
-    with pytest.raises(AdGuardHomeError):
-        await adguard.querylog.enable()
+    def callback(_url: URL, **kwargs: Any) -> CallbackResult:
+        assert kwargs["json"] == CONFIG | {"enabled": enabled}
+        return CallbackResult(status=200, body="OK\n", content_type="text/plain")
 
+    responses.put(URL_CONFIG_UPDATE, callback=callback)
 
-async def test_disable(responses: aiointercept, adguard: AdGuardHome) -> None:
-    """Test disabling the query log."""
-
-    def callback(_url: str, **kwargs: object) -> CallbackResult:
-        assert kwargs["json"] == {"enabled": False, "interval": 1}
-        return CallbackResult(status=200, content_type="text/plain")
-
-    responses.get(URL_INFO, status=200, payload={"interval": 1})
-    responses.post(URL_CONFIG, callback=callback)
-
-    await adguard.querylog.disable()
+    await getattr(adguard.querylog, method)()
 
 
-@pytest.mark.parametrize("status", [400, 500])
-async def test_disable_error(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    status: int,
-) -> None:
-    """Test disabling the query log fails on HTTP error."""
-    responses.get(URL_INFO, status=200, payload={"interval": 1})
-    responses.post(URL_CONFIG, status=status, content_type="text/plain")
+async def test_clear(responses: aiointercept, adguard: AdGuardHome) -> None:
+    """Test clearing the query log."""
+    responses.post(URL_CLEAR, status=200, body="OK\n", content_type="text/plain")
 
-    with pytest.raises(AdGuardHomeError):
-        await adguard.querylog.disable()
+    await adguard.querylog.clear()
 
-
-async def test_interval_get(responses: aiointercept, adguard: AdGuardHome) -> None:
-    """Test reading the current query log retention interval."""
-    responses.get(URL_INFO, status=200, payload={"interval": 7})
-    assert await adguard.querylog.interval() == 7
-
-
-async def test_interval_set(responses: aiointercept, adguard: AdGuardHome) -> None:
-    """Test setting the query log retention interval."""
-
-    def callback(_url: str, **kwargs: object) -> CallbackResult:
-        assert kwargs["json"] == {"enabled": True, "interval": 1}
-        return CallbackResult(status=200, content_type="text/plain")
-
-    responses.get(URL_INFO, status=200, payload={"enabled": True})
-    responses.post(URL_CONFIG, callback=callback)
-
-    assert await adguard.querylog.interval(interval=1) == 1
-
-
-@pytest.mark.parametrize("status", [400, 500])
-async def test_interval_set_error(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    status: int,
-) -> None:
-    """Test setting the query log interval fails on HTTP error."""
-    responses.get(URL_INFO, status=200, payload={"enabled": True})
-    responses.post(URL_CONFIG, status=status, content_type="text/plain")
-
-    with pytest.raises(AdGuardHomeError):
-        await adguard.querylog.interval(interval=1)
+    assert responses.requests is not None
+    assert ("POST", URL(URL_CLEAR)) in responses.requests

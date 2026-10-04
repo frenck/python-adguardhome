@@ -1,58 +1,70 @@
 """Tests for `adguardhome.safesearch`."""
 
-import pytest
-from aiointercept import aiointercept
+from typing import Any
 
-from adguardhome import AdGuardHome
-from adguardhome.exceptions import AdGuardHomeError
+import pytest
+from aiointercept import CallbackResult, aiointercept
+from yarl import URL
+
+from adguardhome import AdGuardHome, SafeSearchConfig
 
 URL_STATUS = "http://example.com:3000/control/safesearch/status"
-URL_ENABLE = "http://example.com:3000/control/safesearch/enable"
-URL_DISABLE = "http://example.com:3000/control/safesearch/disable"
+URL_SETTINGS = "http://example.com:3000/control/safesearch/settings"
+
+CONFIG = {
+    "enabled": True,
+    "bing": True,
+    "duckduckgo": True,
+    "ecosia": True,
+    "google": True,
+    "pixabay": False,
+    "yandex": False,
+    "youtube": True,
+}
 
 
-@pytest.mark.parametrize("enabled", [True, False])
-async def test_enabled(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    enabled: bool,
+async def test_config(responses: aiointercept, adguard: AdGuardHome) -> None:
+    """Test the safe search configuration is parsed into a model."""
+    responses.get(URL_STATUS, status=200, payload=CONFIG)
+
+    config = await adguard.safesearch.config()
+
+    assert config == SafeSearchConfig(
+        enabled=True,
+        bing=True,
+        duckduckgo=True,
+        ecosia=True,
+        google=True,
+        youtube=True,
+    )
+    assert config.to_dict() == CONFIG
+
+
+async def test_config_before_ecosia(
+    responses: aiointercept, adguard: AdGuardHome
 ) -> None:
-    """Test reporting safe search enforcing status."""
-    responses.get(URL_STATUS, status=200, payload={"enabled": enabled})
-    assert await adguard.safesearch.enabled() is enabled
+    """Test a configuration from before Ecosia support does not send it back."""
+    data = CONFIG.copy()
+    del data["ecosia"]
+    responses.get(URL_STATUS, status=200, payload=data)
+
+    config = await adguard.safesearch.config()
+
+    assert config.ecosia is None
+    assert config.to_dict() == data
 
 
-async def test_enable(responses: aiointercept, adguard: AdGuardHome) -> None:
-    """Test enabling safe search enforcing."""
-    responses.post(URL_ENABLE, status=200, body="OK", content_type="text/plain")
-    await adguard.safesearch.enable()
-
-
-@pytest.mark.parametrize("status", [400, 500])
-async def test_enable_error(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    status: int,
+@pytest.mark.parametrize(("method", "enabled"), [("enable", True), ("disable", False)])
+async def test_enable_disable(
+    responses: aiointercept, adguard: AdGuardHome, method: str, enabled: bool
 ) -> None:
-    """Test enabling safe search enforcing fails on HTTP error."""
-    responses.post(URL_ENABLE, status=status, body="NOT OK", content_type="text/plain")
-    with pytest.raises(AdGuardHomeError):
-        await adguard.safesearch.enable()
+    """Test toggling safe search keeps the settings per service."""
+    responses.get(URL_STATUS, status=200, payload=CONFIG)
 
+    def callback(_url: URL, **kwargs: Any) -> CallbackResult:
+        assert kwargs["json"] == CONFIG | {"enabled": enabled}
+        return CallbackResult(status=200, body="OK\n", content_type="text/plain")
 
-async def test_disable(responses: aiointercept, adguard: AdGuardHome) -> None:
-    """Test disabling safe search enforcing."""
-    responses.post(URL_DISABLE, status=200, body="OK", content_type="text/plain")
-    await adguard.safesearch.disable()
+    responses.put(URL_SETTINGS, callback=callback)
 
-
-@pytest.mark.parametrize("status", [400, 500])
-async def test_disable_error(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    status: int,
-) -> None:
-    """Test disabling safe search enforcing fails on HTTP error."""
-    responses.post(URL_DISABLE, status=status, body="NOT OK", content_type="text/plain")
-    with pytest.raises(AdGuardHomeError):
-        await adguard.safesearch.disable()
+    await getattr(adguard.safesearch, method)()

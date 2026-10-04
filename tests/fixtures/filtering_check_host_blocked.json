@@ -1,0 +1,14 @@
+{
+  "reason": "FilteredBlackList",
+  "rule": "||telemetry.example.com^",
+  "rules": [
+    {
+      "text": "||telemetry.example.com^",
+      "filter_list_id": 0
+    }
+  ],
+  "service_name": "",
+  "cname": "",
+  "ip_addrs": null,
+  "filter_id": 0
+}

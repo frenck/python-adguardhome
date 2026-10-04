@@ -1,0 +1,27 @@
+{
+  "filters": [
+    {
+      "url": "https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt",
+      "name": "AdGuard DNS filter",
+      "last_updated": "2025-10-03T14:00:00+02:00",
+      "id": 1,
+      "rules_count": 59321,
+      "enabled": true
+    },
+    {
+      "url": "https://example.com/Ads.txt",
+      "name": "Example ads",
+      "id": 1700000000,
+      "rules_count": 0,
+      "enabled": false
+    }
+  ],
+  "whitelist_filters": null,
+  "user_rules": [
+    "||telemetry.example.com^",
+    "! comment",
+    "@@||allowed.example.com^"
+  ],
+  "interval": 24,
+  "enabled": true
+}

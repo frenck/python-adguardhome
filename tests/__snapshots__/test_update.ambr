@@ -1,4 +1,7 @@
 # serializer version: 1
-# name: test_update_available_snapshot
-  AdGuardHomeAvailableUpdate(disabled=False, new_version='v0.107.59', announcement='AdGuard Home v0.107.59 is now available!', announcement_url='https://github.com/AdguardTeam/AdGuardHome/releases/tag/v0.107.59', can_autoupdate=True)
+# name: test_get[False]
+  AvailableUpdate(disabled=False, new_version=<AwesomeVersion SemVer '0.107.59'>, announcement='AdGuard Home v0.107.59 is now available!', announcement_url='https://github.com/AdguardTeam/AdGuardHome/releases/tag/v0.107.59', can_autoupdate=True)
+# ---
+# name: test_get[True]
+  AvailableUpdate(disabled=False, new_version=<AwesomeVersion SemVer '0.107.59'>, announcement='AdGuard Home v0.107.59 is now available!', announcement_url='https://github.com/AdguardTeam/AdGuardHome/releases/tag/v0.107.59', can_autoupdate=True)
 # ---

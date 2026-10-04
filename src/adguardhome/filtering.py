@@ -1,296 +1,386 @@
-"""Asynchronous Python client for the AdGuard Home API."""
+"""Filtering of AdGuard Home: filter lists, user rules, and host checks."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from dataclasses import dataclass, field, replace
+from datetime import datetime, timedelta
+from enum import StrEnum
+from typing import TYPE_CHECKING, Any
 
+from mashumaro import field_options
+
+from ._area import Area, Requester
+from ._model import AdGuardHomeModel, HoursStrategy
 from .exceptions import AdGuardHomeError
 
 if TYPE_CHECKING:
-    from . import AdGuardHome
+    from collections.abc import Iterable
 
 
-@dataclass
-class AdGuardHomeFiltering:
-    """Controls AdGuard Home filtering. Blocks domains."""
+@dataclass(frozen=True, kw_only=True)
+class FilterList(AdGuardHomeModel):
+    """A filter list subscription, either a blocklist or an allowlist."""
 
-    adguard: AdGuardHome
+    id: int
+    name: str
+    url: str
+    enabled: bool
+    rules_count: int
+    last_updated: datetime | None = None
 
-    async def _config(
-        self, *, enabled: bool | None = None, interval: int | None = None
-    ) -> None:
-        """Configure filtering on AdGuard Home.
+
+@dataclass(frozen=True, kw_only=True)
+class FilteringConfig(AdGuardHomeModel):
+    """Configuration of AdGuard Home filtering."""
+
+    enabled: bool
+
+    # How often AdGuard Home updates the filter lists. AdGuard Home only
+    # accepts 0 (never), 1, 12, 24, 72, or 168 hours.
+    update_interval: timedelta = field(
+        metadata=field_options(alias="interval", serialization_strategy=HoursStrategy())
+    )
+
+
+@dataclass(frozen=True, kw_only=True)
+class FilteringStatus(FilteringConfig):
+    """Configuration and filter lists of AdGuard Home filtering."""
+
+    blocklists: tuple[FilterList, ...] = field(
+        default=(), metadata=field_options(alias="filters")
+    )
+    allowlists: tuple[FilterList, ...] = field(
+        default=(), metadata=field_options(alias="whitelist_filters")
+    )
+    user_rules: tuple[str, ...] = ()
+
+
+class FilteringReason(StrEnum):
+    """Reason AdGuard Home filtered, or did not filter, a host."""
+
+    NOT_FILTERED_NOT_FOUND = "NotFilteredNotFound"
+    NOT_FILTERED_ALLOWLIST = "NotFilteredWhiteList"
+    NOT_FILTERED_ERROR = "NotFilteredError"
+    FILTERED_BLOCKLIST = "FilteredBlackList"
+    FILTERED_SAFEBROWSING = "FilteredSafeBrowsing"
+    FILTERED_PARENTAL = "FilteredParental"
+    FILTERED_INVALID = "FilteredInvalid"
+    FILTERED_SAFESEARCH = "FilteredSafeSearch"
+    FILTERED_BLOCKED_SERVICE = "FilteredBlockedService"
+    REWRITE = "Rewrite"
+    REWRITE_ETC_HOSTS = "RewriteEtcHosts"
+    REWRITE_RULE = "RewriteRule"
+
+
+@dataclass(frozen=True, kw_only=True)
+class AppliedRule(AdGuardHomeModel):
+    """A filtering rule AdGuard Home applied to a host."""
+
+    text: str
+    filter_list_id: int
+
+
+@dataclass(frozen=True, kw_only=True)
+class HostCheck(AdGuardHomeModel):
+    """Result of checking how AdGuard Home filters a host."""
+
+    reason: FilteringReason
+    rules: tuple[AppliedRule, ...] = ()
+    service_name: str | None = None
+    cname: str | None = None
+    ip_addresses: tuple[str, ...] = field(
+        default=(), metadata=field_options(alias="ip_addrs")
+    )
+
+    @classmethod
+    def __pre_deserialize__(cls, d: dict[Any, Any]) -> dict[Any, Any]:
+        """Drop empty strings, which AdGuard Home sends for "not set"."""
+        d = super().__pre_deserialize__(d)
+        return {key: value for key, value in d.items() if value != ""}
+
+    @property
+    def filtered(self) -> bool:
+        """Return if AdGuard Home filters the host."""
+        return self.reason.startswith("Filtered")
+
+
+class FilterLists(Area):
+    """The blocklists or the allowlists of AdGuard Home.
+
+    Both kinds of filter list work the same; the API tells them apart with
+    a `whitelist` flag on every request. A filter list is identified by its
+    URL, which AdGuard Home matches exactly.
+    """
+
+    __slots__ = ("_allowlist",)
+
+    def __init__(self, request: Requester, *, allowlist: bool) -> None:
+        """Initialize the filter lists.
 
         Args:
         ----
-            enabled: Enable/Disable AdGuard Home filtering.
-            interval: Number of days to keep data in the logs.
+            request: The request method of the AdGuard Home client.
+            allowlist: True for the allowlists, False for the blocklists.
 
         """
-        if enabled is None:
-            enabled = await self.enabled()
-        if interval is None:
-            interval = await self.interval()
+        super().__init__(request)
+        self._allowlist = allowlist
 
-        await self.adguard.request(
-            "filtering/config",
-            method="POST",
-            json_data={"enabled": enabled, "interval": interval},
-        )
-
-    async def enabled(self) -> bool:
-        """Return if AdGuard Home filtering is enabled or not.
+    async def list(self) -> tuple[FilterList, ...]:
+        """Return all filter lists of this kind.
 
         Returns
         -------
-            The current state of the AdGuard Home filtering.
+            The filter lists, in the order AdGuard Home has them.
 
         """
-        response = await self.adguard.request("filtering/status")
-        return response["enabled"]
+        status = FilteringStatus.from_api(await self._request("filtering/status"))
+        return status.allowlists if self._allowlist else status.blocklists
 
-    async def enable(self) -> None:
-        """Enable AdGuard Home filtering.
-
-        Raises
-        ------
-            AdGuardHomeError: If enabling the filtering didn't succeed.
-
-        """
-        try:
-            await self._config(enabled=True)
-        except AdGuardHomeError as exception:
-            msg = "Enabling AdGuard Home filtering failed"
-            raise AdGuardHomeError(msg) from exception
-
-    async def disable(self) -> None:
-        """Disable AdGuard Home filtering.
-
-        Raises
-        ------
-            AdGuardHomeError: If disabling the filtering didn't succeed.
-
-        """
-        try:
-            await self._config(enabled=False)
-        except AdGuardHomeError as exception:
-            msg = "Disabling AdGuard Home filtering failed"
-            raise AdGuardHomeError(msg) from exception
-
-    async def interval(self, *, interval: int | None = None) -> int:
-        """Return or set the time period to keep query log data.
+    async def get(self, url: str) -> FilterList | None:
+        """Return the filter list with the given URL.
 
         Args:
         ----
-            interval: Set the time period (in days) to keep query log data.
-
-        Returns:
-        -------
-            The current set time period to keep query log data.
-
-        """
-        if interval:
-            await self._config(interval=interval)
-            return interval
-
-        response = await self.adguard.request("filtering/status")
-        return response["interval"]
-
-    async def rules_count(self, *, allowlist: bool) -> int:
-        """Return the number of rules loaded.
-
-        Args:
-        ----
-            allowlist: True to get the allowlist count, False for the blocklist count.
-
-        Returns:
-        -------
-            The number of filtering rules currently loaded in the AdGuard
-            Home instance.
-
-        """
-        response = await self.adguard.request("filtering/status")
-
-        count = "whitelist_filters" if allowlist else "filters"
-        if not response.get(count):
-            return 0
-
-        return sum(fil["rules_count"] for fil in response[count])
-
-    async def add_url(self, *, allowlist: bool, name: str, url: str) -> None:
-        """Add a new filter subscription to AdGuard Home.
-
-        Args:
-        ----
-            allowlist: True to add an allowlist, False for a blocklist.
-            name: The name of the filter subscription.
             url: The URL of the filter list.
 
-        Raises:
-        ------
-            AdGuardHomeError: Failed adding the filter subscription.
+        Returns:
+        -------
+            The filter list, or None if there is no filter list with this URL.
 
         """
-        try:
-            await self.adguard.request(
-                "filtering/add_url",
-                method="POST",
-                json_data={"whitelist": allowlist, "name": name, "url": url},
-            )
-        except AdGuardHomeError as exception:
-            msg = "Failed adding URL to AdGuard Home filter"
-            raise AdGuardHomeError(msg) from exception
-
-    async def remove_url(self, *, allowlist: bool, url: str) -> None:
-        """Remove a filter subscription from AdGuard Home.
-
-        Args:
-        ----
-            allowlist: True to remove an allowlist, False for a blocklist.
-            url: Filter subscription URL to remove from AdGuard Home.
-
-        Raises:
-        ------
-            AdGuardHomeError: Failed removing the filter subscription.
-
-        """
-        try:
-            await self.adguard.request(
-                "filtering/remove_url",
-                method="POST",
-                json_data={"whitelist": allowlist, "url": url},
-            )
-        except AdGuardHomeError as exception:
-            msg = "Failed removing URL from AdGuard Home filter"
-            raise AdGuardHomeError(msg) from exception
-
-    async def enable_url(self, *, allowlist: bool, url: str) -> None:
-        """Enable a filter subscription in AdGuard Home.
-
-        Args:
-        ----
-            allowlist: True to enable an allowlist, False for a blocklist.
-            url: Filter subscription URL to enable on AdGuard Home.
-
-        Raises:
-        ------
-            AdGuardHomeError: Failed enabling filter subscription.
-
-        """
-        response = await self.adguard.request("filtering/status")
-        filter_type = "whitelist_filters" if allowlist else "filters"
-
-        # Excluded from coverage:
-        # https://github.com/nedbat/coveragepy/issues/515
-        name = next(  # pragma: no cover
+        return next(
             (
-                fil["name"]
-                for fil in response[filter_type]
-                if fil["url"].lower() == url.lower()
+                filter_list
+                for filter_list in await self.list()
+                if filter_list.url == url
             ),
-            "Unknown",
+            None,
+        )
+
+    async def add(self, url: str, *, name: str) -> None:
+        """Add a filter list.
+
+        Args:
+        ----
+            url: The URL of the filter list, or an absolute path to a file
+                on the AdGuard Home server.
+            name: The name to show for the filter list.
+
+        """
+        await self._request(
+            "filtering/add_url",
+            method="POST",
+            json={"name": name, "url": url, "whitelist": self._allowlist},
+        )
+
+    async def remove(self, url: str) -> None:
+        """Remove a filter list.
+
+        Args:
+        ----
+            url: The URL of the filter list to remove.
+
+        """
+        await self._request(
+            "filtering/remove_url",
+            method="POST",
+            json={"url": url, "whitelist": self._allowlist},
+        )
+
+    async def update(
+        self,
+        url: str,
+        *,
+        name: str | None = None,
+        new_url: str | None = None,
+        enabled: bool | None = None,
+    ) -> None:
+        """Change a filter list. Leave out what should stay the same.
+
+        Args:
+        ----
+            url: The current URL of the filter list.
+            name: The new name of the filter list.
+            new_url: The new URL of the filter list.
+            enabled: True to enable the filter list, False to disable it.
+
+        Raises:
+        ------
+            AdGuardHomeError: There is no filter list with this URL.
+
+        """
+        # AdGuard Home replaces the name, URL, and enabled state all at once,
+        # so we need the current filter list to keep what does not change.
+        current = await self.get(url)
+        if current is None:
+            kind = "allowlist" if self._allowlist else "blocklist"
+            msg = f"AdGuard Home has no {kind} with URL {url}"
+            raise AdGuardHomeError(msg)
+
+        await self._request(
+            "filtering/set_url",
+            method="POST",
+            json={
+                "url": url,
+                "whitelist": self._allowlist,
+                "data": {
+                    "name": current.name if name is None else name,
+                    "url": current.url if new_url is None else new_url,
+                    "enabled": current.enabled if enabled is None else enabled,
+                },
+            },
+        )
+
+    async def enable(self, url: str) -> None:
+        """Enable a filter list.
+
+        Args:
+        ----
+            url: The URL of the filter list to enable.
+
+        """
+        await self.update(url, enabled=True)
+
+    async def disable(self, url: str) -> None:
+        """Disable a filter list.
+
+        Args:
+        ----
+            url: The URL of the filter list to disable.
+
+        """
+        await self.update(url, enabled=False)
+
+    async def refresh(self) -> int:
+        """Download the latest version of all filter lists of this kind.
+
+        Returns
+        -------
+            The number of filter lists that changed.
+
+        """
+        response = await self._request(
+            "filtering/refresh",
+            method="POST",
+            json={"whitelist": self._allowlist},
         )
 
         try:
-            await self.adguard.request(
-                "filtering/set_url",
-                method="POST",
-                json_data={
-                    "url": url,
-                    "whitelist": allowlist,
-                    "data": {"enabled": True, "name": name, "url": url},
-                },
-            )
-        except AdGuardHomeError as exception:
-            msg = "Failed enabling URL on AdGuard Home filter"
+            return int(response["updated"])
+        except (KeyError, TypeError, ValueError) as exception:
+            msg = "Unexpected refresh response from AdGuard Home"
             raise AdGuardHomeError(msg) from exception
 
-    async def disable_url(self, *, allowlist: bool, url: str) -> None:
-        """Disable a filter subscription in AdGuard Home.
+
+class AdGuardHomeFiltering(Area):
+    """Filtering of AdGuard Home: filter lists, user rules, and host checks."""
+
+    __slots__ = ("allowlists", "blocklists")
+
+    def __init__(self, request: Requester) -> None:
+        """Initialize filtering.
 
         Args:
         ----
-            url: Filter subscription URL to disable on AdGuard Home.
-            allowlist: True to update the allowlists, False for the blocklists.
-
-        Raises:
-        ------
-            AdGuardHomeError: Failed disabling filter subscription.
+            request: The request method of the AdGuard Home client.
 
         """
-        response = await self.adguard.request("filtering/status")
-        filter_type = "whitelist_filters" if allowlist else "filters"
+        super().__init__(request)
+        self.blocklists = FilterLists(request, allowlist=False)
+        self.allowlists = FilterLists(request, allowlist=True)
 
-        # Excluded from coverage:
-        # https://github.com/nedbat/coveragepy/issues/515
-        name = next(  # pragma: no cover
-            (
-                fil["name"]
-                for fil in response[filter_type]
-                if fil["url"].lower() == url.lower()
-            ),
-            "Unknown",
-        )
+    async def get(self) -> FilteringStatus:
+        """Return the configuration and filter lists of filtering.
 
-        try:
-            await self.adguard.request(
-                "filtering/set_url",
-                method="POST",
-                json_data={
-                    "url": url,
-                    "whitelist": allowlist,
-                    "data": {"enabled": False, "name": name, "url": url},
-                },
-            )
-        except AdGuardHomeError as exception:
-            msg = "Failed disabling URL on AdGuard Home filter"
-            raise AdGuardHomeError(msg) from exception
+        Returns
+        -------
+            The filtering configuration, filter lists, and user rules.
 
-    async def url_enabled(self, *, allowlist: bool, url: str) -> bool:
-        """Check if a filter subscription is enabled in AdGuard Home.
+        """
+        return FilteringStatus.from_api(await self._request("filtering/status"))
+
+    async def config(self) -> FilteringConfig:
+        """Return the configuration of filtering.
+
+        Returns
+        -------
+            The current configuration of filtering.
+
+        """
+        return FilteringConfig.from_api(await self._request("filtering/status"))
+
+    async def set_config(self, config: FilteringConfig) -> None:
+        """Replace the configuration of filtering.
 
         Args:
         ----
-            allowlist: True to check an allowlist, False for a blocklist.
-            url: Filter subscription URL to check on AdGuard Home.
+            config: The new configuration of filtering.
+
+        """
+        # Only send the configuration, also when given a full FilteringStatus.
+        payload = FilteringConfig(
+            enabled=config.enabled, update_interval=config.update_interval
+        )
+        await self._request("filtering/config", method="POST", json=payload.to_dict())
+
+    async def enable(self) -> None:
+        """Enable filtering."""
+        await self.set_config(replace(await self.config(), enabled=True))
+
+    async def disable(self) -> None:
+        """Disable filtering."""
+        await self.set_config(replace(await self.config(), enabled=False))
+
+    async def user_rules(self) -> tuple[str, ...]:
+        """Return the custom filtering rules.
+
+        Returns
+        -------
+            The custom filtering rules, including comments.
+
+        """
+        return (await self.get()).user_rules
+
+    async def set_user_rules(self, rules: Iterable[str]) -> None:
+        """Replace the custom filtering rules.
+
+        Args:
+        ----
+            rules: The new custom filtering rules, one rule per item.
+
+        """
+        await self._request(
+            "filtering/set_rules", method="POST", json={"rules": list(rules)}
+        )
+
+    async def check_host(
+        self,
+        name: str,
+        *,
+        client: str | None = None,
+        qtype: str | None = None,
+    ) -> HostCheck:
+        """Check how AdGuard Home filters a host.
+
+        Args:
+        ----
+            name: The host name to check, like `example.com`.
+            client: Check for this client (IP address or name), which
+                matters when a client has its own settings.
+            qtype: Check for this DNS record type, like `AAAA`.
 
         Returns:
         -------
-            True if the filter subscription is enabled, False otherwise.
+            Whether, how, and by which rules the host is filtered.
 
         """
-        response = await self.adguard.request("filtering/status")
-        filter_type = "whitelist_filters" if allowlist else "filters"
-        filters = response.get(filter_type) or []
+        params = {"name": name}
+        if client is not None:
+            params["client"] = client
+        if qtype is not None:
+            params["qtype"] = qtype
 
-        return next(
-            (fil["enabled"] for fil in filters if fil["url"].lower() == url.lower()),
-            False,
+        return HostCheck.from_api(
+            await self._request("filtering/check_host", params=params)
         )
-
-    async def refresh(self, *, allowlist: bool, force: bool = False) -> None:
-        """Reload filtering subscriptions from URLs specified in AdGuard Home.
-
-        Args:
-        ----
-            force: Force the reload of all filter subscriptions.
-            allowlist: True to update the allowlists, False for the blocklists.
-
-        Raises:
-        ------
-            AdGuardHomeError: Failed to refresh filter subscriptions.
-
-        """
-        force_value = "true" if force else "false"
-
-        try:
-            await self.adguard.request(
-                "filtering/refresh",
-                method="POST",
-                json_data={"whitelist": allowlist},
-                params={"force": force_value},
-            )
-        except AdGuardHomeError as exception:
-            msg = "Failed refreshing filter URLs in AdGuard Home"
-            raise AdGuardHomeError(msg) from exception

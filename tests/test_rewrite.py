@@ -1,11 +1,12 @@
 """Tests for `adguardhome.rewrite`."""
 
-import pytest
+from typing import Any
+
 from aiointercept import CallbackResult, aiointercept
 from syrupy.assertion import SnapshotAssertion
+from yarl import URL
 
 from adguardhome import AdGuardHome, RewriteRule
-from adguardhome.exceptions import AdGuardHomeError
 
 from .conftest import FixtureLoader
 
@@ -14,96 +15,65 @@ URL_ADD = "http://example.com:3000/control/rewrite/add"
 URL_DELETE = "http://example.com:3000/control/rewrite/delete"
 
 
-async def test_list_rules(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    load_fixture: FixtureLoader,
-) -> None:
-    """Test listing all DNS rewrite rules."""
-    responses.get(URL_LIST, status=200, payload=load_fixture("rewrite_list"))
-
-    result = await adguard.rewrite.list_rules()
-
-    assert len(result) == 2
-    assert result[0] == RewriteRule(
-        domain="*.example.com", answer="192.168.1.2", enabled=True
-    )
-    assert result[1].enabled is False
-
-
-async def test_list_rules_snapshot(
+async def test_get(
     responses: aiointercept,
     adguard: AdGuardHome,
     load_fixture: FixtureLoader,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test rewrite rule parsing matches snapshot."""
+    """Test the DNS rewrite rules are parsed into models."""
     responses.get(URL_LIST, status=200, payload=load_fixture("rewrite_list"))
-    assert await adguard.rewrite.list_rules() == snapshot
+
+    rules = await adguard.rewrite.get()
+
+    assert rules == snapshot
+    assert rules == (
+        RewriteRule(domain="*.example.com", answer="192.168.1.2"),
+        RewriteRule(domain="ads.tracker.io", answer="127.0.0.1", enabled=False),
+    )
 
 
-async def test_list_rules_empty(
-    responses: aiointercept,
-    adguard: AdGuardHome,
+async def test_get_before_enabled(
+    responses: aiointercept, adguard: AdGuardHome
 ) -> None:
-    """Test listing rules returns empty list when none exist."""
-    responses.get(URL_LIST, status=200, payload=[])
-    assert await adguard.rewrite.list_rules() == []
+    """Test rules from before per-rule `enabled` count as enabled."""
+    responses.get(
+        URL_LIST,
+        status=200,
+        payload=[{"domain": "nas.lan", "answer": "192.168.1.5"}],
+    )
+
+    (rule,) = await adguard.rewrite.get()
+
+    assert rule.enabled
 
 
-async def test_add(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-) -> None:
+async def test_get_empty(responses: aiointercept, adguard: AdGuardHome) -> None:
+    """Test AdGuard Home without rules, which sends null."""
+    responses.get(URL_LIST, status=200, payload=None)
+
+    assert await adguard.rewrite.get() == ()
+
+
+async def test_add(responses: aiointercept, adguard: AdGuardHome) -> None:
     """Test adding a DNS rewrite rule."""
 
-    def callback(_url: str, **kwargs: object) -> CallbackResult:
-        assert kwargs["json"] == {
-            "domain": "*.example.com",
-            "answer": "192.168.1.2",
-        }
-        return CallbackResult(status=200, content_type="text/plain")
+    def callback(_url: URL, **kwargs: Any) -> CallbackResult:
+        assert kwargs["json"] == {"domain": "*.example.com", "answer": "192.168.1.2"}
+        return CallbackResult(status=200, body="OK\n", content_type="text/plain")
 
     responses.post(URL_ADD, callback=callback)
+
     await adguard.rewrite.add("*.example.com", "192.168.1.2")
 
 
-@pytest.mark.parametrize("status", [400, 500])
-async def test_add_error(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    status: int,
-) -> None:
-    """Test adding a DNS rewrite rule fails on HTTP error."""
-    responses.post(URL_ADD, status=status, body="Error", content_type="text/plain")
-    with pytest.raises(AdGuardHomeError):
-        await adguard.rewrite.add("*.example.com", "192.168.1.2")
+async def test_remove(responses: aiointercept, adguard: AdGuardHome) -> None:
+    """Test removing a DNS rewrite rule by its domain and answer."""
 
-
-async def test_delete(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-) -> None:
-    """Test deleting a DNS rewrite rule."""
-
-    def callback(_url: str, **kwargs: object) -> CallbackResult:
-        assert kwargs["json"] == {
-            "domain": "*.example.com",
-            "answer": "192.168.1.2",
-        }
-        return CallbackResult(status=200, content_type="text/plain")
+    def callback(_url: URL, **kwargs: Any) -> CallbackResult:
+        assert kwargs["json"] == {"domain": "*.example.com", "answer": "192.168.1.2"}
+        return CallbackResult(status=200, body="OK\n", content_type="text/plain")
 
     responses.post(URL_DELETE, callback=callback)
-    await adguard.rewrite.delete("*.example.com", "192.168.1.2")
 
-
-@pytest.mark.parametrize("status", [400, 500])
-async def test_delete_error(
-    responses: aiointercept,
-    adguard: AdGuardHome,
-    status: int,
-) -> None:
-    """Test deleting a DNS rewrite rule fails on HTTP error."""
-    responses.post(URL_DELETE, status=status, body="Error", content_type="text/plain")
-    with pytest.raises(AdGuardHomeError):
-        await adguard.rewrite.delete("*.example.com", "192.168.1.2")
+    await adguard.rewrite.remove("*.example.com", "192.168.1.2")

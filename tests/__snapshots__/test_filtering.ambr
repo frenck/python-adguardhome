@@ -1,0 +1,4 @@
+# serializer version: 1
+# name: test_get
+  FilteringStatus(enabled=True, update_interval=datetime.timedelta(days=1), blocklists=(FilterList(id=1, name='AdGuard DNS filter', url='https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt', enabled=True, rules_count=59321, last_updated=datetime.datetime(2025, 10, 3, 14, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=7200)))), FilterList(id=1700000000, name='Example ads', url='https://example.com/Ads.txt', enabled=False, rules_count=0, last_updated=None)), allowlists=(), user_rules=('||telemetry.example.com^', '! comment', '@@||allowed.example.com^'))
+# ---
