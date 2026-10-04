@@ -14,9 +14,10 @@ from ._model import (
     UnixMillisecondsStrategy,
 )
 
-# The release that introduced the current query log and statistics
-# configuration APIs, which replaced the endpoints this library used before.
-MINIMUM_VERSION = AwesomeVersion("v0.107.30")
+# The release that introduced the newest API this library relies on: the
+# `client` and `qtype` options of checking a host. Client search arrived just
+# before it, in v0.107.56.
+MINIMUM_VERSION = AwesomeVersion("v0.107.58")
 
 
 @dataclass(frozen=True, kw_only=True)

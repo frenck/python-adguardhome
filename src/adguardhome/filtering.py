@@ -41,6 +41,22 @@ class FilteringConfig(AdGuardHomeModel):
         metadata=field_options(alias="interval", serialization_strategy=HoursStrategy())
     )
 
+    def __post_init__(self) -> None:
+        """Reject an update interval that is not a whole number of hours.
+
+        The API takes whole hours, so anything else would get rounded down.
+        That changes the setting silently: 59 minutes would become 0, which
+        AdGuard Home reads as "never update".
+
+        Raises
+        ------
+            ValueError: The update interval is not a whole number of hours.
+
+        """
+        if self.update_interval % timedelta(hours=1):
+            msg = "The update interval must be a whole number of hours"
+            raise ValueError(msg)
+
 
 @dataclass(frozen=True, kw_only=True)
 class FilteringStatus(FilteringConfig):

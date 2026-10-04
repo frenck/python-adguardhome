@@ -102,6 +102,20 @@ async def test_set_config(responses: aiointercept, adguard: AdGuardHome) -> None
     )
 
 
+@pytest.mark.parametrize(
+    "update_interval",
+    [
+        timedelta(minutes=59),
+        timedelta(hours=1, seconds=1),
+        timedelta(days=1.5, minutes=1),
+    ],
+)
+def test_config_rejects_partial_hours(update_interval: timedelta) -> None:
+    """Test an update interval with a partial hour is rejected, not rounded."""
+    with pytest.raises(ValueError, match="whole number of hours"):
+        FilteringConfig(enabled=True, update_interval=update_interval)
+
+
 @pytest.mark.usefixtures("status")
 async def test_set_config_from_status(
     responses: aiointercept, adguard: AdGuardHome

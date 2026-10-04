@@ -192,7 +192,7 @@ AdGuardHome(
 
 ### Supported versions
 
-This library supports AdGuard Home v0.107.30 and newer. Check
+This library supports AdGuard Home v0.107.58 and newer. Check
 `status.supported` to see if the server you connect to qualifies. An API the
 server does not know raises `AdGuardHomeUnsupportedError`.
 
