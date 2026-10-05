@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import os
 import re
 import sys
 from dataclasses import dataclass
@@ -14,6 +15,7 @@ from typing import TYPE_CHECKING, Annotated, Any
 import typer
 from awesomeversion import AwesomeVersion
 from rich.console import Console
+from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 
@@ -36,6 +38,9 @@ cli = AsyncTyper(
 )
 console = Console()
 
+# Errors go to stderr, so they never end up in the output of --json.
+error_console = Console(stderr=True)
+
 JsonFlag = Annotated[
     bool,
     typer.Option("--json", help="Emit machine-readable JSON output"),
@@ -48,10 +53,13 @@ class Connection:
 
     url: str | None
     username: str | None
-    password: str | None = dataclasses.field(repr=False)
 
     def client(self) -> AdGuardHome:
         """Return an AdGuard Home client for these options.
+
+        The password comes from ADGUARD_HOME_PASSWORD, or from a hidden prompt.
+        It is not an option, as that would leave it in the shell history and
+        the process list.
 
         Raises
         ------
@@ -62,8 +70,14 @@ class Connection:
             msg = "Pass --url, or set ADGUARD_HOME_URL"
             raise typer.BadParameter(msg, param_hint="--url")
 
+        password = None
+        if self.username:
+            password = os.environ.get("ADGUARD_HOME_PASSWORD")
+            if password is None:
+                password = typer.prompt("Password", hide_input=True)
+
         try:
-            return AdGuardHome(self.url, username=self.username, password=self.password)
+            return AdGuardHome(self.url, username=self.username, password=password)
         except ValueError as exception:
             raise typer.BadParameter(str(exception), param_hint="--url") from exception
 
@@ -87,22 +101,16 @@ async def main(
             show_default=False,
         ),
     ] = None,
-    password: Annotated[
-        str | None,
-        typer.Option(
-            help="Password, if AdGuard Home requires one",
-            envvar="ADGUARD_HOME_PASSWORD",
-            show_default=False,
-        ),
-    ] = None,
 ) -> None:
     """Manage AdGuard Home from the command line."""
-    ctx.obj = Connection(url=url, username=username, password=password)
+    ctx.obj = Connection(url=url, username=username)
 
 
 def _error_panel(message: str, title: str) -> None:
     """Print an error in a red panel and exit."""
-    console.print(Panel(message, expand=False, title=title, border_style="red bold"))
+    error_console.print(
+        Panel(message, expand=False, title=title, border_style="red bold")
+    )
     sys.exit(1)
 
 
@@ -128,7 +136,7 @@ def authentication_error_handler(_: AdGuardHomeAuthenticationError) -> None:
 @cli.error_handler(AdGuardHomeError)
 def adguardhome_error_handler(err: AdGuardHomeError) -> None:
     """Handle any other AdGuard Home error."""
-    _error_panel(str(err), "AdGuard Home error")
+    _error_panel(_safe(err), "AdGuard Home error")
 
 
 # How to turn the values in models into something JSON can hold. Durations
@@ -163,6 +171,15 @@ def emit_json(data: Any) -> None:
     typer.echo(json.dumps(_plain(data), indent=2, ensure_ascii=False))
 
 
+def _safe(value: object) -> str:
+    """Return text from AdGuard Home, escaped so Rich shows it as is.
+
+    Rich reads square brackets as markup, so a filter rule or client name with
+    brackets would lose them, or crash the output on a stray closing tag.
+    """
+    return escape(str(value))
+
+
 def _yes_no(value: bool) -> str:  # noqa: FBT001
     """Return a value as a colored yes or no."""
     return "[green]yes[/green]" if value else "[red]no[/red]"
@@ -175,7 +192,9 @@ def _milliseconds(value: timedelta) -> str:
 
 def _top(counts: dict[str, int], limit: int = 5) -> str:
     """Return the first entries of a top list, one per line."""
-    return "\n".join(f"{key} ({count})" for key, count in list(counts.items())[:limit])
+    return "\n".join(
+        f"{_safe(key)} ({count})" for key, count in list(counts.items())[:limit]
+    )
 
 
 def parse_duration(value: str) -> timedelta:
@@ -232,11 +251,11 @@ async def status(ctx: typer.Context, output_json: JsonFlag = False) -> None:
     table = Table(title="AdGuard Home")
     table.add_column("Property", style="cyan bold")
     table.add_column("Value")
-    table.add_row("Version", str(server.version))
+    table.add_row("Version", _safe(server.version))
     table.add_row("Supported", _yes_no(server.supported))
     table.add_row("Running", _yes_no(server.running))
     table.add_row("Protection", protection)
-    table.add_row("DNS addresses", "\n".join(server.dns_addresses))
+    table.add_row("DNS addresses", _safe("\n".join(server.dns_addresses)))
     table.add_row("DNS port", str(server.dns_port))
     table.add_row("HTTP port", str(server.http_port))
     table.add_row("DHCP available", _yes_no(server.dhcp_available))
@@ -358,7 +377,7 @@ async def filters(ctx: typer.Context, output_json: JsonFlag = False) -> None:
             updated = filter_list.last_updated
             table.add_row(
                 kind,
-                filter_list.name,
+                _safe(filter_list.name),
                 _yes_no(filter_list.enabled),
                 str(filter_list.rules_count),
                 updated.astimezone().strftime("%Y-%m-%d %H:%M") if updated else "",
@@ -395,19 +414,19 @@ async def check(
         emit_json(dataclasses.asdict(result) | {"filtered": result.filtered})
         return
 
-    table = Table(title=host)
+    table = Table(title=_safe(host))
     table.add_column("Property", style="cyan bold")
     table.add_column("Value")
     table.add_row("Filtered", _yes_no(result.filtered))
     table.add_row("Reason", result.reason.value)
     for rule in result.rules:
-        table.add_row("Rule", rule.text)
+        table.add_row("Rule", _safe(rule.text))
     if result.service_name:
-        table.add_row("Blocked service", result.service_name)
+        table.add_row("Blocked service", _safe(result.service_name))
     if result.cname:
-        table.add_row("Rewritten to", result.cname)
+        table.add_row("Rewritten to", _safe(result.cname))
     if result.ip_addresses:
-        table.add_row("Answer", "\n".join(result.ip_addresses))
+        table.add_row("Answer", _safe("\n".join(result.ip_addresses)))
     console.print(table)
 
 
@@ -439,12 +458,12 @@ async def log(
     table.add_column("Result")
     for entry in query_log.entries:
         client_name = entry.client_info.name if entry.client_info else ""
-        result = "[red]blocked[/red]" if entry.filtered else entry.status or ""
+        result = "[red]blocked[/red]" if entry.filtered else _safe(entry.status or "")
         table.add_row(
             entry.time.astimezone().strftime("%H:%M:%S"),
-            client_name or entry.client_ip,
-            entry.question.unicode_name or entry.question.name,
-            entry.question.type,
+            _safe(client_name or entry.client_ip),
+            _safe(entry.question.unicode_name or entry.question.name),
+            _safe(entry.question.type),
             result,
         )
     console.print(table)
@@ -465,9 +484,13 @@ async def clients(ctx: typer.Context, output_json: JsonFlag = False) -> None:
     table.add_column("Addresses")
     table.add_column("Source")
     for configured in known.configured:
-        table.add_row(configured.name, "\n".join(configured.ids), "configured")
+        table.add_row(
+            _safe(configured.name), _safe("\n".join(configured.ids)), "configured"
+        )
     for runtime in known.runtime:
-        table.add_row(runtime.name, runtime.ip_address, runtime.source)
+        table.add_row(
+            _safe(runtime.name), _safe(runtime.ip_address), _safe(runtime.source)
+        )
     console.print(table)
 
 
@@ -495,9 +518,9 @@ async def update(
         console.print("[green]AdGuard Home is up to date.[/green]")
         return
 
-    console.print(f"[cyan bold]{available.announcement}[/cyan bold]")
+    console.print(f"[cyan bold]{_safe(available.announcement)}[/cyan bold]")
     if available.announcement_url:
-        console.print(available.announcement_url)
+        console.print(_safe(available.announcement_url))
     if not available.can_autoupdate:
         console.print("AdGuard Home cannot update itself on this system.")
 

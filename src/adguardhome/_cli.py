@@ -18,7 +18,7 @@ def main() -> None:
         # when the optional ``cli`` extra is not installed.
         # pylint: disable-next=import-outside-toplevel
         from adguardhome.cli import cli  # noqa: PLC0415
-    except ModuleNotFoundError as err:  # pragma: no cover
+    except ModuleNotFoundError as err:
         # Only convert to a friendly install hint when the *optional* deps
         # are missing. Anything else (e.g. a renamed internal module) must
         # still surface as a real error for debugging.

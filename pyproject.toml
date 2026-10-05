@@ -82,10 +82,6 @@ source = ["adguardhome"]
 [tool.coverage.report]
 show_missing = true
 fail_under = 100
-omit = [
-  "src/adguardhome/_cli.py",
-  "src/adguardhome/cli/async_typer.py",
-]
 
 [tool.ty.environment]
 python-version = "3.11"

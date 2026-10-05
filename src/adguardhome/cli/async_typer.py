@@ -2,7 +2,7 @@
 
 Adaptation of the snippet/code from:
 - https://github.com/tiangolo/typer/issues/88#issuecomment-1613013597
-- https://github.com/argilla-io/argilla/blob/e77ca86c629a492019f230ac55ebde207b280xc9c/src/argilla/cli/typer_ext.py
+- https://github.com/argilla-io/argilla/blob/e77ca86c629a492019f230ac55ebde207b280c9c/src/argilla/cli/typer_ext.py
 """
 
 #  Copyright 2021-present, the Recognai S.L. team.

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import sys
 import time
 from datetime import timedelta
 from typing import TYPE_CHECKING
@@ -18,7 +19,9 @@ from typer.testing import CliRunner
 from adguardhome import (
     AdGuardHomeAuthenticationError,
     AdGuardHomeConnectionError,
+    AdGuardHomeConnectionTimeoutError,
     AdGuardHomeError,
+    AdGuardHomeUnsupportedError,
     AvailableUpdate,
     Clients,
     FilteringStatus,
@@ -27,7 +30,9 @@ from adguardhome import (
     Stats,
     Status,
 )
+from adguardhome._cli import main
 from adguardhome.cli import Feature, cli, parse_duration
+from adguardhome.cli.async_typer import AsyncTyper
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -85,27 +90,51 @@ def test_cli_structure(snapshot: SnapshotAssertion) -> None:
     assert structure == snapshot
 
 
-def test_connection_options(runner: CliRunner, client: AsyncMock) -> None:
-    """Test the global options are what the client connects with."""
-    client.status.return_value = MagicMock()
+def test_connection_options(
+    runner: CliRunner, client: AsyncMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test the client connects with the URL, username, and password."""
+    monkeypatch.setenv("ADGUARD_HOME_PASSWORD", "zerocool")
 
     runner.invoke(
         cli,
-        [
-            "--url",
-            "https://dns.example.com/adguard",
-            "--username",
-            "frenck",
-            "--password",
-            "zerocool",
-            "update",
-        ],
+        ["--url", "https://dns.example.com/adguard", "--username", "frenck", "update"],
     )
 
     client.factory.assert_called_once_with(
         "https://dns.example.com/adguard",
         username="frenck",
         password="zerocool",  # noqa: S106
+    )
+
+
+def test_password_prompt(runner: CliRunner, client: AsyncMock) -> None:
+    """Test a username without a password asks for it, hiding the input."""
+    result = runner.invoke(cli, ["--username", "frenck", "update"], input="secret\n")
+
+    assert "Password:" in result.output
+    assert "secret" not in result.output
+    client.factory.assert_called_once_with(
+        "http://adguard.local:3000",
+        username="frenck",
+        password="secret",  # noqa: S106
+    )
+
+
+def test_no_password_option(runner: CliRunner) -> None:
+    """Test there is no password option, which would end up in shell history."""
+    result = runner.invoke(cli, ["--password", "zerocool", "status"])
+
+    assert result.exit_code == 2
+    assert "No such option" in result.output
+
+
+def test_without_username(runner: CliRunner, client: AsyncMock) -> None:
+    """Test no username means no credentials and no prompt."""
+    runner.invoke(cli, ["update"])
+
+    client.factory.assert_called_once_with(
+        "http://adguard.local:3000", username=None, password=None
     )
 
 
@@ -526,11 +555,132 @@ def test_error_handlers(
     snapshot: SnapshotAssertion,
     error: AdGuardHomeError,
 ) -> None:
-    """Test each error is shown in a panel, exiting with 1."""
+    """Test each error is shown in a panel on stderr, exiting with 1."""
     handler = cli.error_handlers[type(error)]
 
     with pytest.raises(SystemExit) as exc_info:
         handler(error)
 
+    output = capsys.readouterr()
     assert exc_info.value.code == 1
-    assert capsys.readouterr().out == snapshot
+    assert output.out == ""
+    assert output.err == snapshot
+
+
+@pytest.mark.parametrize(
+    ("error", "title"),
+    [
+        (AdGuardHomeConnectionTimeoutError("slow"), "Connection error"),
+        (AdGuardHomeAuthenticationError("rejected"), "Authentication error"),
+        (
+            AdGuardHomeUnsupportedError("too old", status=404, body=""),
+            "AdGuard Home error",
+        ),
+    ],
+)
+def test_error_dispatch(
+    client: AsyncMock,
+    capsys: pytest.CaptureFixture[str],
+    error: AdGuardHomeError,
+    title: str,
+) -> None:
+    """Test an error reaches the handler of its closest exception class."""
+    client.status.side_effect = error
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli(["status", "--json"], prog_name="adguardhome")
+
+    output = capsys.readouterr()
+    assert exc_info.value.code == 1
+    assert output.out == ""
+    assert title in output.err
+
+
+def test_error_dispatch_unhandled(client: AsyncMock) -> None:
+    """Test an error without a handler is raised as is."""
+    client.status.side_effect = RuntimeError("bug")
+
+    with pytest.raises(RuntimeError, match="bug"):
+        cli(["status"], prog_name="adguardhome")
+
+
+def test_error_message_with_brackets(capsys: pytest.CaptureFixture[str]) -> None:
+    """Test an error message from AdGuard Home keeps its square brackets."""
+    with pytest.raises(SystemExit):
+        cli.error_handlers[AdGuardHomeError](
+            AdGuardHomeError("invalid rule [/utm_] on line 3")
+        )
+
+    assert "invalid rule [/utm_] on line 3" in capsys.readouterr().err
+
+
+def test_markup_in_data(runner: CliRunner, client: AsyncMock) -> None:
+    """Test text from AdGuard Home with square brackets is shown as is."""
+    client.clients.get.return_value = Clients.from_api(
+        {
+            "clients": [{"name": "Kids [tablet]", "ids": ["192.168.1.30"]}],
+            "auto_clients": [
+                {"ip": "192.168.1.40", "name": "[/bold]", "source": "rDNS"}
+            ],
+        }
+    )
+
+    result = runner.invoke(cli, ["clients"])
+
+    assert result.exit_code == 0
+    assert "Kids [tablet]" in result.output
+    assert "[/bold]" in result.output
+
+
+def test_async_typer_sync_functions(runner: CliRunner) -> None:
+    """Test the async Typer wrapper also runs plain functions."""
+    # The wrapper is typed for async functions only, but also handles plain
+    # ones, which is what this tests.
+    app = AsyncTyper()
+    calls: list[str] = []
+
+    @app.callback()  # ty: ignore[invalid-argument-type]
+    def callback() -> None:
+        calls.append("callback")
+
+    @app.command()  # ty: ignore[invalid-argument-type]
+    def hello() -> None:
+        calls.append("hello")
+
+    # A second command, as Typer turns an app with only one command into
+    # that command, skipping the callback.
+    @app.command()  # ty: ignore[invalid-argument-type]
+    def bye() -> None:
+        calls.append("bye")
+
+    result = runner.invoke(app, ["hello"])
+
+    assert result.exit_code == 0
+    assert calls == ["callback", "hello"]
+
+
+def test_entry_point(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test the console script runs the CLI."""
+    app = MagicMock()
+    monkeypatch.setattr("adguardhome.cli.cli", app)
+
+    main()
+
+    app.assert_called_once_with()
+
+
+def test_entry_point_without_cli_extra(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test a missing `cli` extra explains how to install it."""
+    monkeypatch.setitem(sys.modules, "typer", None)
+    monkeypatch.delitem(sys.modules, "adguardhome.cli")
+
+    with pytest.raises(SystemExit, match=r"pip install 'adguardhome\[cli\]'"):
+        main()
+
+
+def test_entry_point_with_broken_install(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test a missing module that is not part of the extra is raised as is."""
+    monkeypatch.setitem(sys.modules, "adguardhome.cli", None)
+
+    with pytest.raises(ModuleNotFoundError):
+        main()

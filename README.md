@@ -41,9 +41,10 @@ pip install "adguardhome[cli]"
 ## CLI
 
 The optional CLI manages AdGuard Home from the terminal. Pass the URL of the
-web interface with `--url`, or set `ADGUARD_HOME_URL`. The same goes for
-`--username` and `--password`, with `ADGUARD_HOME_USERNAME` and
-`ADGUARD_HOME_PASSWORD`.
+web interface with `--url`, or set `ADGUARD_HOME_URL`, and the username with
+`--username`, or `ADGUARD_HOME_USERNAME`. The password comes from
+`ADGUARD_HOME_PASSWORD`, or the CLI asks for it. There is no option for it,
+so it stays out of your shell history and the process list.
 
 ```bash
 export ADGUARD_HOME_URL=http://192.168.1.2:3000
