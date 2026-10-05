@@ -67,7 +67,10 @@ async def test_get_off(
     assert tls.not_before is None
     assert tls.not_after is None
     assert tls.dns_names == ()
-    assert tls.port_https == 0
+    # The ports keep their defaults, also with encryption off.
+    assert tls.port_https == 443
+    assert tls.port_dns_over_tls == 853
+    assert tls.port_dns_over_quic == 853
 
 
 def test_private_key_not_in_repr() -> None:

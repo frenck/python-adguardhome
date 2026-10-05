@@ -149,6 +149,7 @@ async def test_external_session_is_not_closed(
     ("content_type", "body"),
     [
         ("text/plain", "OK\n"),
+        ("text/plain", "OK 1 rules\n"),
         ("text/plain", ""),
         ("application/json", ""),
     ],

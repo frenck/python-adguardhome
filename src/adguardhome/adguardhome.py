@@ -216,7 +216,8 @@ class AdGuardHome:
         Returns:
         -------
             The decoded JSON response, or None when AdGuard Home confirmed an
-            action, which it does with an empty response or a plain "OK".
+            action, which it does with an empty response, or one that starts
+            with "OK".
 
         Raises:
         ------
@@ -285,7 +286,8 @@ class AdGuardHome:
         _raise_for_status(path, url, status, location, text)
 
         if "application/json" not in content_type:
-            if text in ("", "OK"):
+            # Adding or removing a filter list answers like "OK 1234 rules".
+            if text in ("", "OK") or text.startswith("OK "):
                 return None
 
             msg = (
