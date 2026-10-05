@@ -1,68 +1,102 @@
 """Tests for the fixture that requires every mocked response to be used."""
 
 import re
-from types import SimpleNamespace
-from typing import Any
 
-import pytest
-from yarl import URL
+import aiohttp
+from aiointercept import MockResponse, aiointercept
 
-from .conftest import _unused
+from .conftest import unused_responses
 
 URL_STATUS = "http://example.com:3000/control/status"
 
 
-def mocker(requests: dict[tuple[str, str], int]) -> Any:
-    """Return a stand-in for aiointercept that made these requests."""
-    return SimpleNamespace(
-        requests={
-            (method, URL(url)): [object()] * count
-            for (method, url), count in requests.items()
-        }
-    )
+async def request(*urls: str) -> None:
+    """Send a GET request to each URL."""
+    async with aiohttp.ClientSession() as session:
+        for url in urls:
+            async with session.get(url) as response:
+                await response.read()
 
 
-@pytest.mark.parametrize(
-    ("registered", "requests", "unused"),
-    [
-        ([("GET", URL_STATUS, False)], {("GET", URL_STATUS): 1}, 0),
-        ([("GET", URL_STATUS, False)], {}, 1),
-        ([("GET", URL_STATUS, False)], {("POST", URL_STATUS): 1}, 1),
-        # Two responses for the same route need two requests.
-        (
-            [("GET", URL_STATUS, False), ("GET", URL_STATUS, False)],
-            {("GET", URL_STATUS): 1},
-            1,
-        ),
-        (
-            [("GET", URL_STATUS, False), ("GET", URL_STATUS, False)],
-            {("GET", URL_STATUS): 2},
-            0,
-        ),
-        # A response that repeats needs its count used up before the next one.
-        (
-            [("GET", URL_STATUS, 3), ("GET", URL_STATUS, True)],
-            {("GET", URL_STATUS): 3},
-            1,
-        ),
-        ([("GET", URL_STATUS, True)], {("GET", URL_STATUS): 5}, 0),
-        # Patterns, and query parameters in any order.
-        (
-            [("GET", re.compile(r"^http://example\.com:3000/control/"), False)],
-            {("GET", URL_STATUS): 1},
-            0,
-        ),
-        (
-            [("GET", f"{URL_STATUS}?a=1&b=2", False)],
-            {("GET", f"{URL_STATUS}?b=2&a=1"): 1},
-            0,
-        ),
-    ],
-)
-def test_unused(
-    registered: list[tuple[str, Any, bool | int]],
-    requests: dict[tuple[str, str], int],
-    unused: int,
-) -> None:
-    """Test a mocked response counts as used only when a request needed it."""
-    assert len(_unused(registered, mocker(requests))) == unused
+async def test_used_response() -> None:
+    """Test a response that served a request counts as used."""
+    async with aiointercept(mock_external_urls=True) as mocker:
+        mocked = [("GET status", mocker.get(URL_STATUS, payload={}))]
+
+        await request(URL_STATUS)
+
+        assert unused_responses(mocked) == []
+
+
+async def test_unrequested_response() -> None:
+    """Test a response without a request counts as unused."""
+    async with aiointercept(mock_external_urls=True) as mocker:
+        mocked = [("GET status", mocker.get(URL_STATUS, payload={}))]
+
+        assert unused_responses(mocked) == ["GET status"]
+
+
+async def test_two_responses_one_request() -> None:
+    """Test one request uses only one of two responses for the same URL."""
+    async with aiointercept(mock_external_urls=True) as mocker:
+        mocked: list[tuple[str, MockResponse]] = [
+            ("first", mocker.get(URL_STATUS, payload={})),
+            ("second", mocker.get(URL_STATUS, payload={})),
+        ]
+
+        await request(URL_STATUS)
+
+        assert unused_responses(mocked) == ["second"]
+
+
+async def test_response_replaced_by_repeating_one() -> None:
+    """Test a response replaced by a repeating one counts as unused.
+
+    aiointercept does not queue a response with repeat=True behind earlier ones
+    for the same URL, it replaces them. The earlier one never serves anything.
+    """
+    async with aiointercept(mock_external_urls=True) as mocker:
+        mocked = [
+            ("three times", mocker.get(URL_STATUS, payload={}, repeat=3)),
+            ("forever", mocker.get(URL_STATUS, payload={}, repeat=True)),
+        ]
+
+        await request(URL_STATUS, URL_STATUS, URL_STATUS)
+
+        assert unused_responses(mocked) == ["three times"]
+
+
+async def test_repeating_response_used_once() -> None:
+    """Test a response that repeats counts as used after a single request."""
+    async with aiointercept(mock_external_urls=True) as mocker:
+        mocked = [("forever", mocker.get(URL_STATUS, payload={}, repeat=True))]
+
+        await request(URL_STATUS)
+
+        assert unused_responses(mocked) == []
+
+
+async def test_overlapping_patterns() -> None:
+    """Test one request uses only one of two patterns it matches."""
+    async with aiointercept(mock_external_urls=True) as mocker:
+        mocked = [
+            ("control", mocker.get(re.compile(r"^http://example\.com:3000/control/"))),
+            ("status", mocker.get(re.compile(r".*/status$"))),
+        ]
+
+        await request(URL_STATUS)
+
+        assert len(unused_responses(mocked)) == 1
+
+
+async def test_reordered_query_parameters() -> None:
+    """Test one request uses only one of two URLs that differ in query order."""
+    async with aiointercept(mock_external_urls=True) as mocker:
+        mocked = [
+            ("a then b", mocker.get(f"{URL_STATUS}?a=1&b=2", payload={})),
+            ("b then a", mocker.get(f"{URL_STATUS}?b=2&a=1", payload={})),
+        ]
+
+        await request(f"{URL_STATUS}?a=1&b=2")
+
+        assert len(unused_responses(mocked)) == 1
