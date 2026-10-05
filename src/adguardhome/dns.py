@@ -105,6 +105,15 @@ class DnsConfig(AdGuardHomeModel):
         d = super().__pre_deserialize__(d)
         return {key: value for key, value in d.items() if value != ""}
 
+    def __post_serialize__(self, d: dict[Any, Any]) -> dict[Any, Any]:
+        """Send a cleared upstream file as empty, so it gets cleared.
+
+        AdGuard Home keeps the setting of a field that is left out, and an
+        empty string is how it says there is no upstream file.
+        """
+        d.setdefault("upstream_dns_file", "")
+        return d
+
     def __post_init__(self) -> None:
         """Reject durations that are not a whole number of seconds."""
         second = timedelta(seconds=1)
@@ -152,7 +161,7 @@ class AdGuardHomeDns(Area):
         self,
         upstream_dns: Iterable[str],
         *,
-        bootstrap_dns: Iterable[str] = (),
+        bootstrap_dns: Iterable[str] | None = None,
         fallback_dns: Iterable[str] = (),
         local_ptr_upstreams: Iterable[str] = (),
     ) -> dict[str, str | None]:
@@ -162,7 +171,7 @@ class AdGuardHomeDns(Area):
         ----
             upstream_dns: The upstream DNS servers to test.
             bootstrap_dns: The bootstrap DNS servers to resolve the upstreams
-                with. Empty uses the ones AdGuard Home has.
+                with. None uses the ones AdGuard Home is configured with.
             fallback_dns: The fallback DNS servers to test.
             local_ptr_upstreams: The private reverse DNS servers to test.
 
@@ -171,6 +180,11 @@ class AdGuardHomeDns(Area):
             For every server, None when it works, or the error otherwise.
 
         """
+        # Without bootstrap servers, AdGuard Home would test with its built-in
+        # ones, not with the ones it actually resolves the upstreams with.
+        if bootstrap_dns is None:
+            bootstrap_dns = (await self.config()).bootstrap_dns
+
         response = await self._request(
             "test_upstream_dns",
             method="POST",

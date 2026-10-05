@@ -110,6 +110,12 @@ See [AI_POLICY.md](AI_POLICY.md) for the contribution policy around AI tooling.
   with `require_whole()` instead of rounding them.
 - Go sends a time that is not set as `0001-01-01T00:00:00Z`, and an address
   that is not set as an empty string. Models turn both into `None`.
+- Settings endpoints mostly keep what is left out of a request. To clear a
+  setting, send its empty value; see `DnsConfig.__post_serialize__()`.
+- AdGuard Home looks up a query log page by the exact nanosecond time of its
+  cursor, which a `datetime` cannot hold. Pass the raw `QueryLog.cursor`.
+- `_request` does not follow redirects, since they would resend the body (a
+  TLS private key, for example) wherever they point, also to plain HTTP.
 - TLS certificates and keys travel base64-encoded, and AdGuard Home never sends
   a saved private key back. `TlsConfig` hides both, and keeps the key out of
   `repr()`. Never log or snapshot a private key.

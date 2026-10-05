@@ -121,6 +121,68 @@ async def test_set_config_new_key(
     await adguard.tls.set_config(replace(config, private_key=PEM_KEY))
 
 
+async def test_set_config_key_file_replaces_saved_key(
+    responses: aiointercept,
+    adguard: AdGuardHome,
+    load_fixture: FixtureLoader,
+) -> None:
+    """Test moving to a key file stops AdGuard Home from using the saved key."""
+    responses.get(f"{URL_BASE}/status", status=200, payload=load_fixture("tls_status"))
+
+    def callback(_url: URL, **kwargs: Any) -> CallbackResult:
+        sent = kwargs["json"]
+        assert sent["private_key_path"] == "/etc/ssl/dns.key"
+        assert sent["private_key_saved"] is False
+        return CallbackResult(status=200, payload=load_fixture("tls_status"))
+
+    responses.post(f"{URL_BASE}/configure", callback=callback)
+
+    config = await adguard.tls.config()
+    await adguard.tls.set_config(
+        replace(
+            config,
+            certificate_chain=None,
+            certificate_path="/etc/ssl/dns.pem",
+            private_key_path="/etc/ssl/dns.key",
+        )
+    )
+
+
+async def test_set_config_rejected(
+    responses: aiointercept,
+    adguard: AdGuardHome,
+    load_fixture: FixtureLoader,
+) -> None:
+    """Test settings AdGuard Home rejects raise, though it answers with 200."""
+    rejected = load_fixture("tls_status") | {
+        "valid_cert": False,
+        "warning_validation": "open /etc/ssl/missing.pem: no such file or directory",
+    }
+    responses.post(f"{URL_BASE}/configure", status=200, payload=rejected)
+
+    with pytest.raises(AdGuardHomeError, match="rejected the encryption settings"):
+        await adguard.tls.set_config(
+            TlsConfig(enabled=True, certificate_path="/etc/ssl/missing.pem")
+        )
+
+
+async def test_set_config_applied_with_warning(
+    responses: aiointercept,
+    adguard: AdGuardHome,
+    load_fixture: FixtureLoader,
+) -> None:
+    """Test a warning on valid settings is returned, as AdGuard Home applies them."""
+    warned = load_fixture("tls_status") | {
+        "warning_validation": "certificate chain is incomplete",
+    }
+    responses.post(f"{URL_BASE}/configure", status=200, payload=warned)
+
+    result = await adguard.tls.set_config(TlsConfig(enabled=True))
+
+    assert not result.rejected
+    assert result.warning_validation == "certificate chain is incomplete"
+
+
 async def test_validate(
     responses: aiointercept,
     adguard: AdGuardHome,

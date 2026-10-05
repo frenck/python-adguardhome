@@ -233,3 +233,17 @@ async def test_not_available(responses: aiointercept, adguard: AdGuardHome) -> N
         await adguard.dhcp.get()
 
     assert excinfo.value.status == 501
+
+
+def test_check_unexpected_value() -> None:
+    """Test a check answer other than yes, no, or error raises an error."""
+    with pytest.raises(AdGuardHomeError, match="Unexpected DhcpCheck data"):
+        DhcpCheck.from_api(
+            {
+                "v4": {
+                    "other_server": {"found": "maybe"},
+                    "static_ip": {"static": "yes"},
+                },
+                "v6": {"other_server": {"found": "no"}},
+            }
+        )

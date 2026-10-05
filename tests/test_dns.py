@@ -173,6 +173,46 @@ async def test_test_upstreams(responses: aiointercept, adguard: AdGuardHome) -> 
     }
 
 
+async def test_test_upstreams_configured_bootstrap(
+    responses: aiointercept,
+    adguard: AdGuardHome,
+    load_fixture: FixtureLoader,
+) -> None:
+    """Test upstreams are tested with the configured bootstrap servers."""
+    responses.get(URL_DNS_INFO, status=200, payload=load_fixture("dns_info"))
+
+    def callback(_url: URL, **kwargs: Any) -> CallbackResult:
+        assert kwargs["json"]["bootstrap_dns"] == ["9.9.9.10", "149.112.112.10"]
+        return CallbackResult(status=200, payload={"tls://1.1.1.1": "OK"})
+
+    responses.post(URL_TEST_UPSTREAMS, callback=callback)
+
+    assert await adguard.dns.test_upstreams(["tls://1.1.1.1"]) == {
+        "tls://1.1.1.1": None
+    }
+
+
+async def test_set_config_clears_upstream_file(
+    responses: aiointercept,
+    adguard: AdGuardHome,
+    load_fixture: FixtureLoader,
+) -> None:
+    """Test clearing the upstream file sends it empty, so it is not kept."""
+    data = load_fixture("dns_info") | {"upstream_dns_file": "/etc/upstreams.txt"}
+    responses.get(URL_DNS_INFO, status=200, payload=data)
+
+    def callback(_url: URL, **kwargs: Any) -> CallbackResult:
+        assert kwargs["json"]["upstream_dns_file"] == ""
+        return CallbackResult(status=200, body="OK\n", content_type="text/plain")
+
+    responses.post(URL_DNS_CONFIG, callback=callback)
+
+    config = await adguard.dns.config()
+    assert config.upstream_dns_file == "/etc/upstreams.txt"
+
+    await adguard.dns.set_config(replace(config, upstream_dns_file=None))
+
+
 async def test_test_upstreams_unexpected_response(
     responses: aiointercept, adguard: AdGuardHome
 ) -> None:
@@ -180,4 +220,4 @@ async def test_test_upstreams_unexpected_response(
     responses.post(URL_TEST_UPSTREAMS, status=200, payload=["OK"])
 
     with pytest.raises(AdGuardHomeError, match="Unexpected upstream test response"):
-        await adguard.dns.test_upstreams(["tls://1.1.1.1"])
+        await adguard.dns.test_upstreams(["tls://1.1.1.1"], bootstrap_dns=[])

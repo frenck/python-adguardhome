@@ -121,14 +121,20 @@ class QueryLog(AdGuardHomeModel):
         default=(), metadata=field_options(alias="data")
     )
 
-    # The time of the oldest entry on this page. Pass it as `older_than` to
-    # get the next page. None when the page is empty.
+    # The time of the oldest entry on this page. None when the page is empty.
     oldest: datetime | None = None
+
+    # The time of the oldest entry exactly as AdGuard Home sent it, to pass as
+    # `older_than` for the next page. AdGuard Home looks up that exact time,
+    # in nanoseconds, which a datetime cannot hold: it stops at microseconds.
+    cursor: str | None = None
 
     @classmethod
     def __pre_deserialize__(cls, d: dict[Any, Any]) -> dict[Any, Any]:
-        """Drop an empty `oldest`, which AdGuard Home sends for no entries."""
+        """Keep the exact cursor, and drop an empty one for no entries."""
         d = super().__pre_deserialize__(d)
+        if d.get("oldest"):
+            d["cursor"] = d["oldest"]
         return {key: value for key, value in d.items() if value != ""}
 
 
@@ -160,7 +166,7 @@ class AdGuardHomeQueryLog(Area):
         *,
         search: str | None = None,
         limit: int | None = None,
-        older_than: datetime | None = None,
+        older_than: datetime | str | None = None,
     ) -> QueryLog:
         """Return a page of the query log, newest entry first.
 
@@ -170,7 +176,7 @@ class AdGuardHomeQueryLog(Area):
             limit: The maximum number of entries to return. AdGuard Home
                 picks a default when left out.
             older_than: Only return entries older than this. Pass the
-                `oldest` of a page to get the next page.
+                `cursor` of a page to get the next page.
 
         Returns:
         -------
@@ -182,8 +188,10 @@ class AdGuardHomeQueryLog(Area):
             params["search"] = search
         if limit is not None:
             params["limit"] = str(limit)
-        if older_than is not None:
+        if isinstance(older_than, datetime):
             params["older_than"] = older_than.isoformat()
+        elif older_than is not None:
+            params["older_than"] = older_than
 
         return QueryLog.from_api(await self._request("querylog", params=params))
 

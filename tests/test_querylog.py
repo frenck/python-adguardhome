@@ -101,6 +101,27 @@ async def test_get_entry_filtered(
     assert entry.ecs == "192.168.1.0/24"
 
 
+async def test_get_next_page(responses: aiointercept, adguard: AdGuardHome) -> None:
+    """Test the next page continues from the exact nanosecond cursor."""
+    responses.get(
+        URL_QUERYLOG,
+        status=200,
+        payload={"data": [], "oldest": "2025-10-03T16:00:00.123456789+02:00"},
+    )
+    responses.get(
+        f"{URL_QUERYLOG}?older_than=2025-10-03T16:00:00.123456789%2B02:00",
+        status=200,
+        payload={"data": [], "oldest": ""},
+    )
+
+    page = await adguard.querylog.get()
+    next_page = await adguard.querylog.get(older_than=page.cursor)
+
+    assert page.cursor == "2025-10-03T16:00:00.123456789+02:00"
+    assert page.oldest == datetime(2025, 10, 3, 14, 0, 0, 123456, tzinfo=UTC)
+    assert next_page.cursor is None
+
+
 async def test_get_empty(responses: aiointercept, adguard: AdGuardHome) -> None:
     """Test an empty page, for which AdGuard Home sends an empty `oldest`."""
     responses.get(URL_QUERYLOG, status=200, payload={"data": [], "oldest": ""})

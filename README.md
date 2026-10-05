@@ -204,8 +204,8 @@ async with AdGuardHome("http://192.168.1.2:3000") as adguard:
     for entry in log.entries:
         print(entry.time, entry.client_ip, entry.question.name, entry.reason)
 
-    if log.oldest:
-        next_page = await adguard.querylog.get(older_than=log.oldest)
+    if log.cursor:
+        next_page = await adguard.querylog.get(older_than=log.cursor)
 ```
 
 And enable, disable, set retention, and clear it:
