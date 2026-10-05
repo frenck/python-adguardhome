@@ -140,6 +140,7 @@ async def test_add(responses: aiointercept, adguard: AdGuardHome) -> None:
                     "enabled": False,
                     "bing": False,
                     "duckduckgo": False,
+                    "ecosia": False,
                     "google": False,
                     "pixabay": False,
                     "yandex": False,

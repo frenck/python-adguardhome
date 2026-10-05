@@ -12,7 +12,11 @@ import orjson
 from yarl import URL
 
 from ._model import MILLISECOND
+from .access import AdGuardHomeAccess
+from .blocked_services import AdGuardHomeBlockedServices
 from .clients import AdGuardHomeClients
+from .dhcp import AdGuardHomeDhcp
+from .dns import AdGuardHomeDns
 from .exceptions import (
     AdGuardHomeAuthenticationError,
     AdGuardHomeConnectionError,
@@ -26,6 +30,7 @@ from .rewrite import AdGuardHomeRewrite
 from .safesearch import AdGuardHomeSafeSearch
 from .stats import AdGuardHomeStats
 from .status import MINIMUM_VERSION, Status
+from .tls import AdGuardHomeTls
 from .toggle import Toggle
 from .update import AdGuardHomeUpdate
 
@@ -89,7 +94,11 @@ class AdGuardHome:
         self.request_timeout = request_timeout
         self.verify_ssl = verify_ssl
 
+        self.access = AdGuardHomeAccess(self._request)
+        self.blocked_services = AdGuardHomeBlockedServices(self._request)
         self.clients = AdGuardHomeClients(self._request)
+        self.dhcp = AdGuardHomeDhcp(self._request)
+        self.dns = AdGuardHomeDns(self._request)
         self.filtering = AdGuardHomeFiltering(self._request)
         self.parental = Toggle(self._request, "parental")
         self.querylog = AdGuardHomeQueryLog(self._request)
@@ -97,6 +106,7 @@ class AdGuardHome:
         self.safebrowsing = Toggle(self._request, "safebrowsing")
         self.safesearch = AdGuardHomeSafeSearch(self._request)
         self.stats = AdGuardHomeStats(self._request)
+        self.tls = AdGuardHomeTls(self._request)
         self.update = AdGuardHomeUpdate(self._request)
 
     async def _request(

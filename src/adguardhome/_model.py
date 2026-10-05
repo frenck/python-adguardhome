@@ -51,6 +51,18 @@ class HoursStrategy(SerializationStrategy):
         return timedelta(hours=value)
 
 
+class WholeSecondsStrategy(SerializationStrategy):
+    """Convert a duration in whole seconds to a timedelta."""
+
+    def serialize(self, value: timedelta) -> int:
+        """Serialize to whole seconds."""
+        return value // timedelta(seconds=1)
+
+    def deserialize(self, value: int) -> timedelta:
+        """Deserialize from seconds."""
+        return timedelta(seconds=value)
+
+
 class SecondsStrategy(SerializationStrategy):
     """Convert a duration in (fractional) seconds to a timedelta."""
 
@@ -94,6 +106,29 @@ class UnixMillisecondsStrategy(SerializationStrategy):
     def deserialize(self, value: float) -> datetime:
         """Deserialize from a Unix timestamp in milliseconds."""
         return datetime.fromtimestamp(value / 1000, tz=UTC)
+
+
+def require_whole(value: timedelta, unit: timedelta, unit_name: str, name: str) -> None:
+    """Reject a duration that is not a whole number of the unit the API takes.
+
+    Sending it would round it down, which changes the setting silently, like
+    59 minutes becoming 0 hours.
+
+    Args:
+    ----
+        value: The duration to check.
+        unit: The unit the API takes the duration in, like one hour.
+        unit_name: The name of the unit, for the error message.
+        name: What the duration is, for the error message.
+
+    Raises:
+    ------
+        ValueError: The duration is not a whole number of the unit.
+
+    """
+    if value % unit:
+        msg = f"The {name} must be a whole number of {unit_name}"
+        raise ValueError(msg)
 
 
 class AdGuardHomeModel(DataClassORJSONMixin):

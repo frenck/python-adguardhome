@@ -84,6 +84,30 @@ async with AdGuardHome("http://192.168.1.2:3000") as adguard:
     print("Filtered?", result.filtered, result.reason)
 ```
 
+**Access lists**: which clients may use AdGuard Home, and which hosts it
+refuses:
+
+```python
+from dataclasses import replace
+
+async with AdGuardHome("http://192.168.1.2:3000") as adguard:
+    access = await adguard.access.config()
+    await adguard.access.set_config(
+        replace(access, disallowed_clients=("203.0.113.0/24",))
+    )
+```
+
+**Blocked services**: block whole services, like TikTok or Steam:
+
+```python
+async with AdGuardHome("http://192.168.1.2:3000") as adguard:
+    available = await adguard.blocked_services.get()
+    print([service.name for service in available.services])
+
+    await adguard.blocked_services.block("tiktok", "steam")
+    await adguard.blocked_services.unblock("steam")
+```
+
 **Clients**: configured clients with their own settings, and the clients
 AdGuard Home found by itself:
 
@@ -125,7 +149,19 @@ async with AdGuardHome("http://192.168.1.2:3000") as adguard:
     await adguard.safesearch.set_config(replace(config, enabled=True, youtube=False))
 ```
 
-**Query log**: enable, disable, set retention, and clear:
+**Query log**: read the logged DNS queries page by page, newest first:
+
+```python
+async with AdGuardHome("http://192.168.1.2:3000") as adguard:
+    log = await adguard.querylog.get(search="example.com", limit=50)
+    for entry in log.entries:
+        print(entry.time, entry.client_ip, entry.question.name, entry.reason)
+
+    if log.oldest:
+        next_page = await adguard.querylog.get(older_than=log.oldest)
+```
+
+And enable, disable, set retention, and clear it:
 
 ```python
 from dataclasses import replace
@@ -138,14 +174,59 @@ async with AdGuardHome("http://192.168.1.2:3000") as adguard:
     await adguard.querylog.clear()
 ```
 
+**DHCP server**: settings, leases, and static leases. Only on Linux, macOS,
+FreeBSD, and OpenBSD, check `status.dhcp_available` first:
+
+```python
+from adguardhome import StaticLease
+
+async with AdGuardHome("http://192.168.1.2:3000") as adguard:
+    check = await adguard.dhcp.check("eth0")
+    if check.v4.other_server.found is False:
+        await adguard.dhcp.enable()
+
+    dhcp = await adguard.dhcp.get()
+    for lease in dhcp.leases:
+        print(lease.hostname, lease.ip, "until", lease.expires)
+
+    await adguard.dhcp.add_static_lease(
+        StaticLease(mac="aa:bb:cc:dd:ee:02", ip="192.168.1.5", hostname="nas")
+    )
+```
+
+**DNS server**: upstreams, caching, rate limiting, and how to block:
+
+```python
+from dataclasses import replace
+
+from adguardhome import BlockingMode
+
+async with AdGuardHome("http://192.168.1.2:3000") as adguard:
+    results = await adguard.dns.test_upstreams(["tls://1.1.1.1"])
+    if all(error is None for error in results.values()):
+        config = await adguard.dns.config()
+        await adguard.dns.set_config(
+            replace(
+                config,
+                upstream_dns=("tls://1.1.1.1",),
+                blocking_mode=BlockingMode.NXDOMAIN,
+            )
+        )
+    await adguard.dns.clear_cache()
+```
+
 **DNS rewrites**: answer a domain with your own IP address or CNAME:
 
 ```python
 async with AdGuardHome("http://192.168.1.2:3000") as adguard:
     await adguard.rewrite.add("nas.lan", "192.168.1.5")
+    await adguard.rewrite.update("nas.lan", "192.168.1.5", new_answer="192.168.1.6")
+    await adguard.rewrite.update("nas.lan", "192.168.1.6", enabled=False)
     for rule in await adguard.rewrite.get():
         print(rule.domain, "->", rule.answer, "(on)" if rule.enabled else "(off)")
-    await adguard.rewrite.remove("nas.lan", "192.168.1.5")
+    await adguard.rewrite.remove("nas.lan", "192.168.1.6")
+
+    await adguard.rewrite.disable()  # stop applying all rules, keep them
 ```
 
 **Stats**: one request returns totals, top lists, and history:
@@ -163,6 +244,23 @@ async with AdGuardHome("http://192.168.1.2:3000") as adguard:
 
     config = await adguard.stats.config()
     await adguard.stats.set_config(replace(config, retention=timedelta(days=7)))
+```
+
+**Encryption**: HTTPS, DNS-over-TLS, DNS-over-QUIC, and the certificate.
+Certificates and keys are plain PEM text; AdGuard Home never sends a saved
+private key back:
+
+```python
+from dataclasses import replace
+
+async with AdGuardHome("http://192.168.1.2:3000") as adguard:
+    tls = await adguard.tls.get()
+    print("Certificate valid until:", tls.not_after)
+
+    new = replace(tls, certificate_chain=chain_pem, private_key=key_pem)
+    result = await adguard.tls.validate(new)
+    if result.valid_pair:
+        await adguard.tls.set_config(new)
 ```
 
 **Update check**: see if a new AdGuard Home release is available, and let
@@ -192,7 +290,7 @@ AdGuardHome(
 
 ### Supported versions
 
-This library supports AdGuard Home v0.107.58 and newer. Check
+This library supports AdGuard Home v0.107.68 and newer. Check
 `status.supported` to see if the server you connect to qualifies. An API the
 server does not know raises `AdGuardHomeUnsupportedError`.
 

@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 from mashumaro import field_options
 
 from ._area import Area, Requester
-from ._model import AdGuardHomeModel, HoursStrategy
+from ._model import AdGuardHomeModel, HoursStrategy, require_whole
 from .exceptions import AdGuardHomeError
 
 if TYPE_CHECKING:
@@ -35,8 +35,9 @@ class FilteringConfig(AdGuardHomeModel):
 
     enabled: bool
 
-    # How often AdGuard Home updates the filter lists. AdGuard Home only
-    # accepts 0 (never), 1, 12, 24, 72, or 168 hours.
+    # How often AdGuard Home updates the filter lists, in whole hours, where 0
+    # means never. Up to v0.107.77, AdGuard Home only accepts 0, 1, 12, 24,
+    # 72, or 168 hours. Newer versions accept anything up to 8760 (a year).
     update_interval: timedelta = field(
         metadata=field_options(alias="interval", serialization_strategy=HoursStrategy())
     )
@@ -44,18 +45,12 @@ class FilteringConfig(AdGuardHomeModel):
     def __post_init__(self) -> None:
         """Reject an update interval that is not a whole number of hours.
 
-        The API takes whole hours, so anything else would get rounded down.
-        That changes the setting silently: 59 minutes would become 0, which
-        AdGuard Home reads as "never update".
-
-        Raises
-        ------
-            ValueError: The update interval is not a whole number of hours.
-
+        Rounding it down would change the setting silently: 59 minutes would
+        become 0, which AdGuard Home reads as "never update".
         """
-        if self.update_interval % timedelta(hours=1):
-            msg = "The update interval must be a whole number of hours"
-            raise ValueError(msg)
+        require_whole(
+            self.update_interval, timedelta(hours=1), "hours", "update interval"
+        )
 
 
 @dataclass(frozen=True, kw_only=True)

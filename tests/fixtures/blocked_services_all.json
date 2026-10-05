@@ -1,0 +1,36 @@
+{
+  "blocked_services": [
+    {
+      "id": "youtube",
+      "name": "YouTube",
+      "icon_svg": "PHN2Zz48L3N2Zz4=",
+      "rules": ["||youtube.com^", "||ytimg.com^"],
+      "group_id": "streaming"
+    },
+    {
+      "id": "tiktok",
+      "name": "TikTok",
+      "icon_svg": "PHN2Zz48L3N2Zz4=",
+      "rules": ["||tiktok.com^"],
+      "group_id": "social_network"
+    },
+    {
+      "id": "steam",
+      "name": "Steam",
+      "icon_svg": "PHN2Zz48L3N2Zz4=",
+      "rules": ["||steampowered.com^"],
+      "group_id": "gaming"
+    }
+  ],
+  "groups": [
+    {
+      "id": "gaming"
+    },
+    {
+      "id": "social_network"
+    },
+    {
+      "id": "streaming"
+    }
+  ]
+}

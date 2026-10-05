@@ -1,0 +1,4 @@
+# serializer version: 1
+# name: test_get
+  DhcpStatus(enabled=True, interface_name='eth0', v4=DhcpV4Config(gateway_ip='192.168.1.1', subnet_mask='255.255.255.0', range_start='192.168.1.100', range_end='192.168.1.200', lease_duration=datetime.timedelta(days=1)), v6=DhcpV6Config(range_start=None, lease_duration=datetime.timedelta(0)), leases=(Lease(mac='aa:bb:cc:dd:ee:01', ip='192.168.1.101', hostname='phone', expires=datetime.datetime(2025, 10, 4, 16, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=7200)))),), static_leases=(StaticLease(mac='aa:bb:cc:dd:ee:02', ip='192.168.1.5', hostname='nas'),))
+# ---

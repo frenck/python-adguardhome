@@ -1,0 +1,18 @@
+{
+  "eth0": {
+    "name": "eth0",
+    "hardware_address": "aa:bb:cc:dd:ee:00",
+    "flags": "up|broadcast|multicast|running",
+    "gateway_ip": "192.168.1.1",
+    "ipv4_addresses": ["192.168.1.2"],
+    "ipv6_addresses": ["fe80::1"]
+  },
+  "wlan0": {
+    "name": "wlan0",
+    "hardware_address": "aa:bb:cc:dd:ee:ff",
+    "flags": "up|broadcast|multicast",
+    "gateway_ip": "",
+    "ipv4_addresses": null,
+    "ipv6_addresses": null
+  }
+}

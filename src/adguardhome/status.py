@@ -15,9 +15,8 @@ from ._model import (
 )
 
 # The release that introduced the newest API this library relies on: the
-# `client` and `qtype` options of checking a host. Client search arrived just
-# before it, in v0.107.56.
-MINIMUM_VERSION = AwesomeVersion("v0.107.58")
+# rewrite settings, and enabling or disabling a single rewrite rule.
+MINIMUM_VERSION = AwesomeVersion("v0.107.68")
 
 
 @dataclass(frozen=True, kw_only=True)

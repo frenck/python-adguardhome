@@ -1,0 +1,19 @@
+{
+  "enabled": false,
+  "force_https": false,
+  "port_dnscrypt": 0,
+  "dnscrypt_config_file": "",
+  "certificate_chain": "",
+  "private_key": "",
+  "certificate_path": "",
+  "private_key_path": "",
+  "private_key_saved": false,
+  "serve_plain_dns": true,
+  "not_before": "0001-01-01T00:00:00Z",
+  "not_after": "0001-01-01T00:00:00Z",
+  "dns_names": null,
+  "valid_cert": false,
+  "valid_chain": false,
+  "valid_key": false,
+  "valid_pair": false
+}

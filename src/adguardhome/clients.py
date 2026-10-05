@@ -3,50 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import timedelta
 
 from mashumaro import field_options
 
 from ._area import Area
-from ._model import AdGuardHomeModel, MillisecondsStrategy
+from ._model import AdGuardHomeModel
+from .blocked_services import Schedule
 from .exceptions import AdGuardHomeError
 from .safesearch import SafeSearchConfig
-
-
-@dataclass(frozen=True, kw_only=True)
-class DayRange(AdGuardHomeModel):
-    """A time range within a day, as time since midnight.
-
-    The range includes `start`, but stops just before `end`. An `end` of
-    24 hours runs until the end of the day.
-    """
-
-    start: timedelta = field(
-        metadata=field_options(serialization_strategy=MillisecondsStrategy())
-    )
-    end: timedelta = field(
-        metadata=field_options(serialization_strategy=MillisecondsStrategy())
-    )
-
-
-@dataclass(frozen=True, kw_only=True)
-class Schedule(AdGuardHomeModel):
-    """Weekly schedule of when blocked services are not blocked.
-
-    A day without a range has no pause at all.
-    """
-
-    # An IANA time zone, like `Europe/Amsterdam`, or `Local` for the time
-    # zone of the AdGuard Home server.
-    time_zone: str = "Local"
-
-    sun: DayRange | None = None
-    mon: DayRange | None = None
-    tue: DayRange | None = None
-    wed: DayRange | None = None
-    thu: DayRange | None = None
-    fri: DayRange | None = None
-    sat: DayRange | None = None
 
 
 @dataclass(frozen=True, kw_only=True)

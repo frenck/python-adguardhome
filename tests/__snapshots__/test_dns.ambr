@@ -1,0 +1,4 @@
+# serializer version: 1
+# name: test_config
+  DnsConfig(upstream_dns=('https://dns.quad9.net/dns-query', 'tls://1.1.1.1', '# comment'), upstream_dns_file=None, upstream_mode=<UpstreamMode.LOAD_BALANCE: 'load_balance'>, upstream_timeout=datetime.timedelta(seconds=10), bootstrap_dns=('9.9.9.10', '149.112.112.10'), fallback_dns=(), resolve_clients=True, use_private_ptr_resolvers=True, local_ptr_upstreams=(), ratelimit=20, ratelimit_subnet_len_ipv4=24, ratelimit_subnet_len_ipv6=56, ratelimit_allowlist=('192.168.1.2',), blocking_mode=<BlockingMode.DEFAULT: 'default'>, blocking_ipv4=None, blocking_ipv6=None, blocked_response_ttl=datetime.timedelta(seconds=10), edns_cs_enabled=False, edns_cs_use_custom=False, edns_cs_custom_ip=None, dnssec_enabled=True, disable_ipv6=False, cache_enabled=True, cache_size=4194304, cache_ttl_min=datetime.timedelta(0), cache_ttl_max=datetime.timedelta(days=1), cache_optimistic=True)
+# ---
