@@ -1,6 +1,7 @@
 # pylint: disable=protected-access
 """Tests for `adguardhome.adguardhome`."""
 
+import re
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import patch
@@ -173,24 +174,42 @@ async def test_response_not_json(responses: aiointercept, adguard: AdGuardHome) 
         await adguard.enable_protection()
 
 
+@pytest.mark.parametrize(
+    ("location", "message"),
+    [
+        ("https://example.com:443/control/status", "redirects to https://example.com,"),
+        (
+            "https://admin:secret@example.com/control/status",
+            "redirects to https://example.com,",
+        ),
+        ("/control/status", "redirects to http://example.com:3000,"),
+        (
+            "https://example.com/adguard/control/status",
+            "redirects to https://example.com/adguard,",
+        ),
+        ("ftp://example.com/control/status", "redirects elsewhere, check the URL"),
+        ("http://example.com:99999/", "redirects elsewhere, check the URL"),
+        ("", "redirects elsewhere, check the URL"),
+    ],
+)
 async def test_redirect_is_not_followed(
-    responses: aiointercept, adguard: AdGuardHome
+    responses: aiointercept, adguard: AdGuardHome, location: str, message: str
 ) -> None:
-    """Test a redirect is an error naming the target, instead of being followed."""
+    """Test a redirect is an error naming the web interface to use instead."""
     responses.get(
         URL_STATUS,
         status=307,
-        headers={"Location": "https://example.com:443/control/status"},
+        headers={"Location": location} if location else {},
+        body=f'<a href="{location}">Temporary Redirect</a>.',
     )
 
-    with pytest.raises(
-        AdGuardHomeResponseError,
-        match=r"redirects to https://example\.com:443, use that URL",
-    ) as excinfo:
+    with pytest.raises(AdGuardHomeResponseError, match=re.escape(message)) as excinfo:
         await adguard.status()
 
     assert excinfo.value.status == 307
+    assert excinfo.value.body == ""
     assert "/control" not in str(excinfo.value)
+    assert "secret" not in str(excinfo.value)
 
 
 async def test_session_raising_for_status(responses: aiointercept) -> None:

@@ -41,6 +41,85 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
+def _raise_for_status(
+    path: str, url: URL, status: int, location: str, text: str
+) -> None:
+    """Raise the exception that fits an error or redirect response.
+
+    Args:
+    ----
+        path: The API path of the request, relative to `/control`.
+        url: The URL of the request.
+        status: The HTTP status code of the response.
+        location: The redirect target, if the response is a redirect.
+        text: The body of the response, which holds the error message.
+
+    Raises:
+    ------
+        AdGuardHomeAuthenticationError: The credentials were rejected.
+        AdGuardHomeUnsupportedError: AdGuard Home does not know the endpoint.
+        AdGuardHomeResponseError: AdGuard Home responded with another error,
+            or with a redirect.
+
+    """
+    if status in (401, 403):
+        msg = "AdGuard Home rejected the credentials"
+        raise AdGuardHomeAuthenticationError(msg)
+
+    if status == 404:
+        msg = (
+            f"AdGuard Home does not support /control/{path}, "
+            f"version {MINIMUM_VERSION} or newer is required"
+        )
+        raise AdGuardHomeUnsupportedError(msg, status=status, body=text)
+
+    if status >= 400:
+        msg = f"AdGuard Home responded with HTTP {status}: {text}"
+        raise AdGuardHomeResponseError(msg, status=status, body=text)
+
+    if status >= 300:
+        # Like with force HTTPS enabled, which redirects to HTTPS. Leave out the
+        # body: Go repeats the redirect target in it, credentials and all.
+        msg = "AdGuard Home redirects elsewhere, check the URL"
+        if suggestion := _web_interface_url(url, location):
+            msg = f"AdGuard Home redirects to {suggestion}, use that URL instead"
+        raise AdGuardHomeResponseError(msg, status=status, body="")
+
+
+def _web_interface_url(request_url: URL, location: str) -> str | None:
+    """Return the web interface URL to use instead, after a redirect.
+
+    The client takes the URL of the web interface, so cut the API endpoint
+    off the redirect target. Credentials in the target are left out, as the
+    result ends up in an error message.
+
+    Args:
+    ----
+        request_url: The URL of the request that got redirected.
+        location: The redirect target, which may be relative.
+
+    Returns:
+    -------
+        The web interface URL, or None for a target that is not usable.
+
+    """
+    if not location:
+        return None
+
+    try:
+        target = request_url.join(URL(location))
+    except ValueError:
+        return None
+
+    if target.scheme not in ("http", "https") or not target.host:
+        return None
+
+    path, _, _ = target.path.partition("/control/")
+    return str(
+        target.with_user(None).with_path(path).with_query(None).with_fragment(None)
+    )
+
+
 # pylint: disable-next=too-many-instance-attributes
 class AdGuardHome:
     """Client for the AdGuard Home API."""
@@ -203,29 +282,7 @@ class AdGuardHome:
         # AdGuard Home sends its error messages as plain text.
         text = body.decode(errors="replace").strip()
 
-        if status in (401, 403):
-            msg = "AdGuard Home rejected the credentials"
-            raise AdGuardHomeAuthenticationError(msg)
-
-        if status == 404:
-            msg = (
-                f"AdGuard Home does not support /control/{path}, "
-                f"version {MINIMUM_VERSION} or newer is required"
-            )
-            raise AdGuardHomeUnsupportedError(msg, status=status, body=text)
-
-        if status >= 400:
-            msg = f"AdGuard Home responded with HTTP {status}: {text}"
-            raise AdGuardHomeResponseError(msg, status=status, body=text)
-
-        if status >= 300:
-            # Like with force HTTPS enabled, which redirects to HTTPS. Suggest
-            # the URL of the web interface, which is what the client takes.
-            msg = (
-                "AdGuard Home redirects to "
-                f"{location.split('/control/', 1)[0]}, use that URL instead"
-            )
-            raise AdGuardHomeResponseError(msg, status=status, body=text)
+        _raise_for_status(path, url, status, location, text)
 
         if "application/json" not in content_type:
             if text in ("", "OK"):
