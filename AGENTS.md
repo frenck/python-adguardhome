@@ -105,8 +105,14 @@ See [AI_POLICY.md](AI_POLICY.md) for the contribution policy around AI tooling.
 - The API still says `whitelist` for allowlists. Keep that on the wire only.
 - Filter lists are identified by their URL, which AdGuard Home matches exactly,
   including case. Rewrite rules are identified by their domain and answer.
-- AdGuard Home only accepts whole hours for the filter update interval, and 0
-  means "never". `FilteringConfig` rejects partial hours instead of rounding.
+- AdGuard Home only accepts whole units for durations, like hours for the
+  filter update interval and seconds for DNS TTLs. Models reject partial units
+  with `require_whole()` instead of rounding them.
+- Go sends a time that is not set as `0001-01-01T00:00:00Z`, and an address
+  that is not set as an empty string. Models turn both into `None`.
+- TLS certificates and keys travel base64-encoded, and AdGuard Home never sends
+  a saved private key back. `TlsConfig` hides both, and keeps the key out of
+  `repr()`. Never log or snapshot a private key.
 
 ## Where to read next
 

@@ -1,0 +1,4 @@
+# serializer version: 1
+# name: test_get
+  AvailableServices(services=(Service(id='youtube', name='YouTube', icon_svg='PHN2Zz48L3N2Zz4=', group_id='streaming', rules=('||youtube.com^', '||ytimg.com^')), Service(id='tiktok', name='TikTok', icon_svg='PHN2Zz48L3N2Zz4=', group_id='social_network', rules=('||tiktok.com^',)), Service(id='steam', name='Steam', icon_svg='PHN2Zz48L3N2Zz4=', group_id='gaming', rules=('||steampowered.com^',))), groups=(ServiceGroup(id='gaming'), ServiceGroup(id='social_network'), ServiceGroup(id='streaming')))
+# ---

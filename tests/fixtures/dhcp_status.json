@@ -1,0 +1,30 @@
+{
+  "interface_name": "eth0",
+  "v4": {
+    "gateway_ip": "192.168.1.1",
+    "subnet_mask": "255.255.255.0",
+    "range_start": "192.168.1.100",
+    "range_end": "192.168.1.200",
+    "lease_duration": 86400
+  },
+  "v6": {
+    "range_start": "",
+    "lease_duration": 0
+  },
+  "leases": [
+    {
+      "mac": "aa:bb:cc:dd:ee:01",
+      "ip": "192.168.1.101",
+      "hostname": "phone",
+      "expires": "2025-10-04T16:00:00+02:00"
+    }
+  ],
+  "static_leases": [
+    {
+      "mac": "aa:bb:cc:dd:ee:02",
+      "ip": "192.168.1.5",
+      "hostname": "nas"
+    }
+  ],
+  "enabled": true
+}

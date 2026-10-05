@@ -192,7 +192,7 @@ async def test_unsupported_error(responses: aiointercept, adguard: AdGuardHome) 
     """Test an unknown endpoint raises an unsupported error."""
     responses.get(URL_STATUS, status=404, body="404 page not found\n")
 
-    with pytest.raises(AdGuardHomeUnsupportedError, match=r"v0\.107\.58") as excinfo:
+    with pytest.raises(AdGuardHomeUnsupportedError, match=r"v0\.107\.68") as excinfo:
         await adguard._request("status")
 
     assert excinfo.value.status == 404
@@ -225,7 +225,7 @@ async def test_status(
     status = await adguard.status()
 
     assert status == snapshot
-    assert status.version == AwesomeVersion("v0.107.62")
+    assert status.version == AwesomeVersion("v0.107.79")
     assert status.protection_enabled
     assert status.protection_resumes_in is None
     assert status.started_at == datetime(2025, 10, 3, 14, 0, 0, 123400, tzinfo=UTC)
@@ -252,8 +252,8 @@ async def test_status_paused(
     ("version", "supported"),
     [
         ("v0.107.30", False),
-        ("v0.107.57", False),
-        ("v0.107.58", True),
+        ("v0.107.67", False),
+        ("v0.107.68", True),
         ("v0.108.0-b.1", True),
         ("v0.106.3", False),
         ("undefined", True),

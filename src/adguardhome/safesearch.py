@@ -15,13 +15,11 @@ class SafeSearchConfig(AdGuardHomeModel):
     enabled: bool
     bing: bool = False
     duckduckgo: bool = False
+    ecosia: bool = False
     google: bool = False
     pixabay: bool = False
     yandex: bool = False
     youtube: bool = False
-
-    # Added in AdGuard Home v0.107.53, older versions leave it out.
-    ecosia: bool | None = None
 
 
 class AdGuardHomeSafeSearch(Area):

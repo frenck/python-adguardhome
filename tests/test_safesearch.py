@@ -40,20 +40,6 @@ async def test_config(responses: aiointercept, adguard: AdGuardHome) -> None:
     assert config.to_dict() == CONFIG
 
 
-async def test_config_before_ecosia(
-    responses: aiointercept, adguard: AdGuardHome
-) -> None:
-    """Test a configuration from before Ecosia support does not send it back."""
-    data = CONFIG.copy()
-    del data["ecosia"]
-    responses.get(URL_STATUS, status=200, payload=data)
-
-    config = await adguard.safesearch.config()
-
-    assert config.ecosia is None
-    assert config.to_dict() == data
-
-
 @pytest.mark.parametrize(("method", "enabled"), [("enable", True), ("disable", False)])
 async def test_enable_disable(
     responses: aiointercept, adguard: AdGuardHome, method: str, enabled: bool

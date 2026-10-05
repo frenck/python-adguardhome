@@ -1,0 +1,89 @@
+{
+  "data": [
+    {
+      "answer": [
+        {
+          "type": "A",
+          "value": "93.184.215.14",
+          "ttl": 3600
+        },
+        {
+          "type": "A",
+          "value": "93.184.215.15",
+          "ttl": 3600
+        }
+      ],
+      "answer_dnssec": false,
+      "cached": false,
+      "client": "192.168.1.20",
+      "client_info": {
+        "whois": {},
+        "name": "laptop.lan",
+        "disallowed_rule": "",
+        "disallowed": false
+      },
+      "client_proto": "",
+      "elapsedMs": "12.345678",
+      "question": {
+        "class": "IN",
+        "name": "example.com",
+        "type": "A"
+      },
+      "reason": "NotFilteredNotFound",
+      "rules": [],
+      "status": "NOERROR",
+      "time": "2025-10-03T16:00:01.123456789+02:00",
+      "upstream": "https://dns.quad9.net:443/dns-query"
+    },
+    {
+      "answer": [
+        {
+          "type": "A",
+          "value": "0.0.0.0",
+          "ttl": 10
+        }
+      ],
+      "original_answer": [
+        {
+          "type": "A",
+          "value": "203.0.113.10",
+          "ttl": 300
+        }
+      ],
+      "answer_dnssec": false,
+      "cached": true,
+      "client": "192.168.1.30",
+      "client_id": "kids-tablet",
+      "client_info": {
+        "whois": {
+          "country": "NL"
+        },
+        "name": "Kids devices",
+        "disallowed_rule": "",
+        "disallowed": false
+      },
+      "client_proto": "doh",
+      "ecs": "192.168.1.0/24",
+      "elapsedMs": "0.051",
+      "filterId": 1,
+      "question": {
+        "class": "IN",
+        "name": "xn--mgbh0fb.xn--kgbechtv",
+        "unicode_name": "مثال.إختبار",
+        "type": "A"
+      },
+      "reason": "FilteredBlackList",
+      "rule": "||xn--mgbh0fb.xn--kgbechtv^",
+      "rules": [
+        {
+          "text": "||xn--mgbh0fb.xn--kgbechtv^",
+          "filter_list_id": 1
+        }
+      ],
+      "status": "NOERROR",
+      "time": "2025-10-03T16:00:00.5+02:00",
+      "upstream": ""
+    }
+  ],
+  "oldest": "2025-10-03T16:00:00.5+02:00"
+}

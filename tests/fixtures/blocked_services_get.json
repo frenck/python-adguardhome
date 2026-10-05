@@ -1,0 +1,10 @@
+{
+  "schedule": {
+    "time_zone": "Europe/Amsterdam",
+    "sat": {
+      "start": 36000000,
+      "end": 64800000
+    }
+  },
+  "ids": ["youtube", "tiktok"]
+}
