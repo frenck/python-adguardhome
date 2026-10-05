@@ -273,6 +273,8 @@ def test_parse_duration(value: str, expected: timedelta) -> None:
         ("", "longer than zero"),
         ("999999999999999999999h", "too long"),
         ("9" * 30, "too long"),
+        ("9" * 5000, "too long"),
+        ("9" * 5000 + "h", "too long"),
     ],
 )
 def test_parse_duration_invalid(value: str, message: str) -> None:
@@ -654,6 +656,23 @@ def test_control_characters_in_data(runner: CliRunner, client: AsyncMock) -> Non
     assert "\x1b" not in result.output
     assert "\x07" not in result.output
     assert "evil" in result.output
+
+
+def test_control_characters_in_json(runner: CliRunner, client: AsyncMock) -> None:
+    """Test the JSON output escapes the control characters JSON would keep."""
+    client.clients.get.return_value = Clients.from_api(
+        {
+            "auto_clients": [
+                {"ip": "192.168.1.40", "name": "evil\x9b2J", "source": "rDNS"}
+            ]
+        }
+    )
+
+    result = runner.invoke(cli, ["clients", "--json"])
+
+    assert "\x9b" not in result.output
+    assert "\\u009b" in result.output
+    assert json.loads(result.output)["runtime"][0]["name"] == "evil\x9b2J"
 
 
 def test_async_typer_sync_functions(runner: CliRunner) -> None:

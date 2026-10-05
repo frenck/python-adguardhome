@@ -166,9 +166,20 @@ def _plain(value: Any) -> Any:
     return value
 
 
+# JSON already escapes the C0 control characters, but keeps DEL and the C1
+# ones as is when it keeps non-ASCII text readable, and some terminals act on
+# those. They can only appear inside JSON strings, so escaping them is safe.
+_JSON_UNESCAPED_CONTROL_CHARACTERS = re.compile(r"[\x7f-\x9f]")
+
+
 def emit_json(data: Any) -> None:
     """Emit a model, or a collection of models, as indented JSON on stdout."""
-    typer.echo(json.dumps(_plain(data), indent=2, ensure_ascii=False))
+    output = json.dumps(_plain(data), indent=2, ensure_ascii=False)
+    typer.echo(
+        _JSON_UNESCAPED_CONTROL_CHARACTERS.sub(
+            lambda match: f"\\u{ord(match.group()):04x}", output
+        )
+    )
 
 
 # Control characters, except tabs and newlines. Text from AdGuard Home, like a
@@ -221,7 +232,9 @@ def parse_duration(value: str) -> timedelta:
         else:
             msg = f"Not a duration: {value}. Use something like 90s, 10m, or 1h30m"
             raise typer.BadParameter(msg)
-    except OverflowError as exception:
+    except (OverflowError, ValueError) as exception:
+        # Python refuses integers of thousands of digits, and timedelta
+        # anything beyond a billion days.
         msg = f"The duration is too long: {value}"
         raise typer.BadParameter(msg) from exception
 

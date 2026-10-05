@@ -218,13 +218,25 @@ async def test_reset(responses: aiointercept, adguard: AdGuardHome) -> None:
     assert ("POST", URL(URL_STATS_RESET)) in responses.requests
 
 
-def test_stats_top_list_counts_are_numbers(load_fixture: FixtureLoader) -> None:
-    """Test counts in the top lists are numbers, and anything else is an error."""
+@pytest.mark.parametrize("count", ["1021", 1021.5, True, None])
+def test_stats_top_list_counts_must_be_whole_numbers(
+    load_fixture: FixtureLoader, count: object
+) -> None:
+    """Test a count that is not a whole number is rejected, not coerced."""
     data = load_fixture("stats")
-    data["top_clients"] = [{"192.168.1.20": "1021"}]
+    data["top_clients"] = [{"192.168.1.20": count}]
 
-    assert Stats.from_api(data).top_clients == {"192.168.1.20": 1021}
+    with pytest.raises(AdGuardHomeError, match="Unexpected Stats data"):
+        Stats.from_api(data)
 
-    data["top_clients"] = [{"192.168.1.20": "many"}]
+
+@pytest.mark.parametrize("seconds", ["0.1", True])
+def test_stats_top_list_durations_must_be_numbers(
+    load_fixture: FixtureLoader, seconds: object
+) -> None:
+    """Test an upstream response time that is not a number is rejected."""
+    data = load_fixture("stats")
+    data["top_upstreams_avg_time"] = [{"tls://1.1.1.1": seconds}]
+
     with pytest.raises(AdGuardHomeError, match="Unexpected Stats data"):
         Stats.from_api(data)

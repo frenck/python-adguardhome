@@ -48,12 +48,19 @@ async def test_api_url(responses: aiointercept, url: str, expected: str) -> None
 
 
 @pytest.mark.parametrize(
-    "url", ["http://admin:secret@example.com", "http://admin@example.com"]
+    "url",
+    [
+        "http://admin:secret@example.com",
+        "http://admin@example.com",
+        "ftp://admin:secret@example.com",
+    ],
 )
 def test_url_with_credentials(url: str) -> None:
-    """Test credentials in the URL are rejected, so they never end up in logs."""
-    with pytest.raises(ValueError, match="not in the URL"):
+    """Test credentials in the URL are rejected, without repeating them."""
+    with pytest.raises(ValueError, match="not in the URL") as excinfo:
         AdGuardHome(url)
+
+    assert "secret" not in str(excinfo.value)
 
 
 @pytest.mark.parametrize("url", ["example.com", "ftp://example.com", "http://"])
@@ -177,11 +184,13 @@ async def test_redirect_is_not_followed(
     )
 
     with pytest.raises(
-        AdGuardHomeResponseError, match=r"redirects to https://example\.com:443"
+        AdGuardHomeResponseError,
+        match=r"redirects to https://example\.com:443, use that URL",
     ) as excinfo:
         await adguard.status()
 
     assert excinfo.value.status == 307
+    assert "/control" not in str(excinfo.value)
 
 
 async def test_session_raising_for_status(responses: aiointercept) -> None:

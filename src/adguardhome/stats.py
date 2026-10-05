@@ -34,7 +34,7 @@ class TopCountsStrategy(SerializationStrategy):
 
     def deserialize(self, value: list[dict[str, int]]) -> dict[str, int]:
         """Deserialize from a list of single-key objects."""
-        return {key: int(count) for entry in value for key, count in entry.items()}
+        return {key: _count(count) for entry in value for key, count in entry.items()}
 
 
 class TopDurationsStrategy(SerializationStrategy):
@@ -47,10 +47,41 @@ class TopDurationsStrategy(SerializationStrategy):
     def deserialize(self, value: list[dict[str, float]]) -> dict[str, timedelta]:
         """Deserialize from a list of single-key objects in seconds."""
         return {
-            key: timedelta(seconds=float(seconds))
+            key: timedelta(seconds=_seconds(seconds))
             for entry in value
             for key, seconds in entry.items()
         }
+
+
+def _count(value: object) -> int:
+    """Return a count from a top list, rejecting anything that is not one.
+
+    Mashumaro does not check what a strategy returns, and Python would happily
+    turn a string, a fraction, or a boolean into a count.
+
+    Raises
+    ------
+        TypeError: The value is not a whole number.
+
+    """
+    if isinstance(value, bool) or not isinstance(value, int):
+        msg = f"Expected a count, got {value!r}"
+        raise TypeError(msg)
+    return value
+
+
+def _seconds(value: object) -> float:
+    """Return a duration in seconds from a top list, rejecting anything else.
+
+    Raises
+    ------
+        TypeError: The value is not a number.
+
+    """
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        msg = f"Expected a number of seconds, got {value!r}"
+        raise TypeError(msg)
+    return float(value)
 
 
 def _top_counts(alias: str) -> dict[str, object]:

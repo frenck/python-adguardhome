@@ -77,13 +77,15 @@ class AdGuardHome:
 
         """
         self.url = URL(url)
-        if self.url.scheme not in ("http", "https") or not self.url.host:
-            msg = f"Invalid AdGuard Home URL: {url}"
-            raise ValueError(msg)
 
-        # Credentials in the URL would end up in logs and error messages.
+        # Credentials in the URL would end up in logs and error messages, so
+        # check for them first: the next error message includes the URL.
         if self.url.user or self.url.password:
             msg = "Pass the username and password separately, not in the URL"
+            raise ValueError(msg)
+
+        if self.url.scheme not in ("http", "https") or not self.url.host:
+            msg = f"Invalid AdGuard Home URL: {url}"
             raise ValueError(msg)
 
         # The API lives under /control, relative to the web interface.
@@ -217,8 +219,12 @@ class AdGuardHome:
             raise AdGuardHomeResponseError(msg, status=status, body=text)
 
         if status >= 300:
-            # Like with force HTTPS enabled, which redirects to HTTPS.
-            msg = f"AdGuard Home redirects to {location}, use that URL instead"
+            # Like with force HTTPS enabled, which redirects to HTTPS. Suggest
+            # the URL of the web interface, which is what the client takes.
+            msg = (
+                "AdGuard Home redirects to "
+                f"{location.split('/control/', 1)[0]}, use that URL instead"
+            )
             raise AdGuardHomeResponseError(msg, status=status, body=text)
 
         if "application/json" not in content_type:
