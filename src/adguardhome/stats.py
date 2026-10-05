@@ -34,7 +34,7 @@ class TopCountsStrategy(SerializationStrategy):
 
     def deserialize(self, value: list[dict[str, int]]) -> dict[str, int]:
         """Deserialize from a list of single-key objects."""
-        return {key: count for entry in value for key, count in entry.items()}
+        return {key: int(count) for entry in value for key, count in entry.items()}
 
 
 class TopDurationsStrategy(SerializationStrategy):
@@ -47,7 +47,7 @@ class TopDurationsStrategy(SerializationStrategy):
     def deserialize(self, value: list[dict[str, float]]) -> dict[str, timedelta]:
         """Deserialize from a list of single-key objects in seconds."""
         return {
-            key: timedelta(seconds=seconds)
+            key: timedelta(seconds=float(seconds))
             for entry in value
             for key, seconds in entry.items()
         }

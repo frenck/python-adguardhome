@@ -72,12 +72,18 @@ class AdGuardHome:
 
         Raises:
         ------
-            ValueError: The URL is not an HTTP or HTTPS URL.
+            ValueError: The URL is not an HTTP or HTTPS URL, or it holds
+                credentials.
 
         """
         self.url = URL(url)
         if self.url.scheme not in ("http", "https") or not self.url.host:
             msg = f"Invalid AdGuard Home URL: {url}"
+            raise ValueError(msg)
+
+        # Credentials in the URL would end up in logs and error messages.
+        if self.url.user or self.url.password:
+            msg = "Pass the username and password separately, not in the URL"
             raise ValueError(msg)
 
         # The API lives under /control, relative to the web interface.
@@ -128,8 +134,8 @@ class AdGuardHome:
 
         Returns:
         -------
-            The decoded JSON response, or None when AdGuard Home responded
-            without JSON. Most actions respond with a plain "OK".
+            The decoded JSON response, or None when AdGuard Home confirmed an
+            action, which it does with an empty response or a plain "OK".
 
         Raises:
         ------
@@ -140,7 +146,8 @@ class AdGuardHome:
             AdGuardHomeUnsupportedError: AdGuard Home does not know the
                 endpoint, which means it is too old for this library.
             AdGuardHomeResponseError: AdGuard Home responded with an error,
-                or with JSON we could not decode.
+                a redirect, JSON we could not decode, or something else than
+                JSON or "OK", like the login page of a reverse proxy.
 
         """
         url = self._api_url / path
@@ -148,6 +155,10 @@ class AdGuardHome:
         if self._session is None:
             self._session = aiohttp.ClientSession()
             self._close_session = True
+
+        if self._session.closed:
+            msg = "The session to communicate with AdGuard Home is closed"
+            raise AdGuardHomeConnectionError(msg)
 
         # Without a body, aiohttp would still add a content type header.
         # Only send one when there actually is JSON to send.
@@ -166,10 +177,17 @@ class AdGuardHome:
                     params=params,
                     skip_auto_headers=skip_auto_headers,
                     ssl=self.verify_ssl,
+                    # A redirect would send the request, including a TLS
+                    # private key, on to wherever it points, also plain HTTP.
+                    allow_redirects=False,
+                    # A shared session may raise on errors itself, before we
+                    # can tell an authentication error from a server error.
+                    raise_for_status=False,
                 ) as response,
             ):
                 status = response.status
                 content_type = response.headers.get("Content-Type", "")
+                location = response.headers.get("Location", "")
                 body = await response.read()
         except TimeoutError as exception:
             msg = "Timeout occurred while connecting to AdGuard Home"
@@ -198,7 +216,22 @@ class AdGuardHome:
             msg = f"AdGuard Home responded with HTTP {status}: {text}"
             raise AdGuardHomeResponseError(msg, status=status, body=text)
 
-        if "application/json" not in content_type or not body:
+        if status >= 300:
+            # Like with force HTTPS enabled, which redirects to HTTPS.
+            msg = f"AdGuard Home redirects to {location}, use that URL instead"
+            raise AdGuardHomeResponseError(msg, status=status, body=text)
+
+        if "application/json" not in content_type:
+            if text in ("", "OK"):
+                return None
+
+            msg = (
+                "AdGuard Home responded with something else than JSON, "
+                "check if the URL points to AdGuard Home"
+            )
+            raise AdGuardHomeResponseError(msg, status=status, body=text)
+
+        if not body:
             return None
 
         try:

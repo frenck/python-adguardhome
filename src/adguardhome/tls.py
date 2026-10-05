@@ -12,6 +12,7 @@ from mashumaro.types import SerializationStrategy
 
 from ._area import Area
 from ._model import AdGuardHomeModel
+from .exceptions import AdGuardHomeError
 
 # How Go encodes a time that is not set, like the expiry of a missing
 # certificate.
@@ -80,9 +81,10 @@ class TlsConfig(AdGuardHomeModel):
         """Make AdGuard Home use a new private key, instead of the saved one.
 
         While `private_key_saved` is true, AdGuard Home ignores the private key
-        in the request and keeps the one it has.
+        in the request and puts the saved one back. With a key file, that
+        leaves it with both a key and a key file, which it rejects.
         """
-        if "private_key" in d:
+        if "private_key" in d or "private_key_path" in d:
             d["private_key_saved"] = False
         return d
 
@@ -105,6 +107,19 @@ class TlsStatus(TlsConfig):
 
     # Why the certificate or key is not valid, if it is not.
     warning_validation: str | None = None
+
+    @property
+    def rejected(self) -> bool:
+        """Return if AdGuard Home rejects these settings.
+
+        AdGuard Home also warns about problems it does not mind, like an
+        incomplete certificate chain. It only rejects the settings when the
+        certificate, the key, or the pair of them is not valid.
+        """
+        if not self.warning_validation:
+            return False
+
+        return not (self.valid_cert and self.valid_key and self.valid_pair)
 
 
 class AdGuardHomeTls(Area):
@@ -150,7 +165,7 @@ class AdGuardHomeTls(Area):
         )
         return TlsStatus.from_api(response)
 
-    async def set_config(self, config: TlsConfig) -> None:
+    async def set_config(self, config: TlsConfig) -> TlsStatus:
         """Replace the encryption settings.
 
         Changing the HTTPS settings restarts the web interface of AdGuard
@@ -160,8 +175,31 @@ class AdGuardHomeTls(Area):
         ----
             config: The new encryption settings.
 
+        Returns:
+        -------
+            What AdGuard Home found in the certificate and private key,
+            including warnings it applied the settings despite.
+
+        Raises:
+        ------
+            AdGuardHomeError: AdGuard Home rejected the settings, and kept
+                the ones it had.
+
         """
-        await self._request("tls/configure", method="POST", json=_settings(config))
+        response = await self._request(
+            "tls/configure", method="POST", json=_settings(config)
+        )
+        result = TlsStatus.from_api(response)
+
+        # AdGuard Home answers a rejection like a success, with the reason.
+        if result.rejected:
+            msg = (
+                "AdGuard Home rejected the encryption settings: "
+                f"{result.warning_validation}"
+            )
+            raise AdGuardHomeError(msg)
+
+        return result
 
 
 def _settings(config: TlsConfig) -> dict[str, Any]:

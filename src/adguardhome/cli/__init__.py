@@ -171,13 +171,20 @@ def emit_json(data: Any) -> None:
     typer.echo(json.dumps(_plain(data), indent=2, ensure_ascii=False))
 
 
+# Control characters, except tabs and newlines. Text from AdGuard Home, like a
+# client name, could otherwise move the cursor, clear the screen, or worse, in
+# the terminal of whoever runs the CLI.
+_CONTROL_CHARACTERS = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f]")
+
+
 def _safe(value: object) -> str:
-    """Return text from AdGuard Home, escaped so Rich shows it as is.
+    """Return text from AdGuard Home, made safe to show in a terminal.
 
     Rich reads square brackets as markup, so a filter rule or client name with
     brackets would lose them, or crash the output on a stray closing tag.
+    Control characters are replaced, so they cannot control the terminal.
     """
-    return escape(str(value))
+    return escape(_CONTROL_CHARACTERS.sub("\N{REPLACEMENT CHARACTER}", str(value)))
 
 
 def _yes_no(value: bool) -> str:  # noqa: FBT001
@@ -205,14 +212,18 @@ def parse_duration(value: str) -> timedelta:
         typer.BadParameter: The value is not a positive duration.
 
     """
-    if value.isdigit():
-        duration = timedelta(seconds=int(value))
-    elif match := re.fullmatch(r"(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?", value):
-        hours, minutes, seconds = (int(part or 0) for part in match.groups())
-        duration = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-    else:
-        msg = f"Not a duration: {value}. Use something like 90s, 10m, or 1h30m"
-        raise typer.BadParameter(msg)
+    try:
+        if value.isdigit():
+            duration = timedelta(seconds=int(value))
+        elif match := re.fullmatch(r"(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?", value):
+            hours, minutes, seconds = (int(part or 0) for part in match.groups())
+            duration = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+        else:
+            msg = f"Not a duration: {value}. Use something like 90s, 10m, or 1h30m"
+            raise typer.BadParameter(msg)
+    except OverflowError as exception:
+        msg = f"The duration is too long: {value}"
+        raise typer.BadParameter(msg) from exception
 
     if not duration:
         msg = "The duration must be longer than zero"

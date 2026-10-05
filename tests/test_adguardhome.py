@@ -47,6 +47,15 @@ async def test_api_url(responses: aiointercept, url: str, expected: str) -> None
         assert await adguard._request("status") == {"ok": True}
 
 
+@pytest.mark.parametrize(
+    "url", ["http://admin:secret@example.com", "http://admin@example.com"]
+)
+def test_url_with_credentials(url: str) -> None:
+    """Test credentials in the URL are rejected, so they never end up in logs."""
+    with pytest.raises(ValueError, match="not in the URL"):
+        AdGuardHome(url)
+
+
 @pytest.mark.parametrize("url", ["example.com", "ftp://example.com", "http://"])
 def test_invalid_url(url: str) -> None:
     """Test an URL that is not HTTP or HTTPS is rejected."""
@@ -132,6 +141,7 @@ async def test_external_session_is_not_closed(
     ("content_type", "body"),
     [
         ("text/plain", "OK\n"),
+        ("text/plain", ""),
         ("application/json", ""),
     ],
 )
@@ -141,6 +151,58 @@ async def test_response_without_json(
     """Test a response without a JSON body returns None."""
     responses.post(URL_PROTECTION, status=200, body=body, content_type=content_type)
     assert await adguard._request("protection", method="POST") is None
+
+
+async def test_response_not_json(responses: aiointercept, adguard: AdGuardHome) -> None:
+    """Test a page that is not from AdGuard Home, like a proxy login, is an error."""
+    responses.post(
+        URL_PROTECTION,
+        status=200,
+        body="<html><body>Please log in</body></html>",
+        content_type="text/html",
+    )
+
+    with pytest.raises(AdGuardHomeResponseError, match="something else than JSON"):
+        await adguard.enable_protection()
+
+
+async def test_redirect_is_not_followed(
+    responses: aiointercept, adguard: AdGuardHome
+) -> None:
+    """Test a redirect is an error naming the target, instead of being followed."""
+    responses.get(
+        URL_STATUS,
+        status=307,
+        headers={"Location": "https://example.com:443/control/status"},
+    )
+
+    with pytest.raises(
+        AdGuardHomeResponseError, match=r"redirects to https://example\.com:443"
+    ) as excinfo:
+        await adguard.status()
+
+    assert excinfo.value.status == 307
+
+
+async def test_session_raising_for_status(responses: aiointercept) -> None:
+    """Test a shared session that raises on errors still gets our exceptions."""
+    responses.get(URL_STATUS, status=401, body="Unauthorized")
+
+    async with aiohttp.ClientSession(raise_for_status=True) as session:
+        adguard = AdGuardHome("http://example.com:3000", session=session)
+
+        with pytest.raises(AdGuardHomeAuthenticationError):
+            await adguard.status()
+
+
+async def test_closed_session() -> None:
+    """Test a request on a closed session is a connection error."""
+    session = aiohttp.ClientSession()
+    await session.close()
+    adguard = AdGuardHome("http://example.com:3000", session=session)
+
+    with pytest.raises(AdGuardHomeConnectionError, match="session"):
+        await adguard.status()
 
 
 async def test_response_invalid_json(

@@ -128,9 +128,18 @@ class YesNoErrorStrategy(SerializationStrategy):
         return "yes" if value else "no"
 
     def deserialize(self, value: str) -> bool | None:
-        """Deserialize from `yes`, `no`, or `error`."""
+        """Deserialize from `yes`, `no`, or `error`.
+
+        Raises
+        ------
+            ValueError: The value is something else.
+
+        """
         if value == "error":
             return None
+        if value not in ("yes", "no"):
+            msg = f"Expected yes, no, or error, got {value!r}"
+            raise ValueError(msg)
         return value == "yes"
 
 

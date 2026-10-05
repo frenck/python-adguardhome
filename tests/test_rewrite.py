@@ -7,7 +7,7 @@ from aiointercept import CallbackResult, aiointercept
 from syrupy.assertion import SnapshotAssertion
 from yarl import URL
 
-from adguardhome import AdGuardHome, RewriteConfig, RewriteRule
+from adguardhome import AdGuardHome, AdGuardHomeError, RewriteConfig, RewriteRule
 
 from .conftest import FixtureLoader
 
@@ -148,3 +148,14 @@ async def test_enable_disable(
     responses.put(URL_SETTINGS_UPDATE, callback=expect_json({"enabled": enabled}))
 
     await getattr(adguard.rewrite, method)()
+
+
+@pytest.mark.parametrize("payload", [42, {"domain": "nas.lan"}, "rules"])
+async def test_get_unexpected_response(
+    responses: aiointercept, adguard: AdGuardHome, payload: Any
+) -> None:
+    """Test a rewrite list that is not a list raises an error."""
+    responses.get(URL_LIST, status=200, payload=payload)
+
+    with pytest.raises(AdGuardHomeError, match="Unexpected rewrite rules"):
+        await adguard.rewrite.get()

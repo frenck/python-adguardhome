@@ -6,6 +6,7 @@ from dataclasses import dataclass, replace
 
 from ._area import Area
 from ._model import AdGuardHomeModel
+from .exceptions import AdGuardHomeError
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -45,7 +46,16 @@ class AdGuardHomeRewrite(Area):
 
         """
         response = await self._request("rewrite/list")
-        return tuple(RewriteRule.from_api(entry) for entry in response or [])
+
+        # AdGuard Home sends no rules as null.
+        if response is None:
+            return ()
+
+        if not isinstance(response, list):
+            msg = "Unexpected rewrite rules from AdGuard Home"
+            raise AdGuardHomeError(msg)
+
+        return tuple(RewriteRule.from_api(entry) for entry in response)
 
     async def add(self, domain: str, answer: str, *, enabled: bool = True) -> None:
         """Add a DNS rewrite rule.

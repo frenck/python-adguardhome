@@ -216,3 +216,15 @@ async def test_reset(responses: aiointercept, adguard: AdGuardHome) -> None:
 
     assert responses.requests is not None
     assert ("POST", URL(URL_STATS_RESET)) in responses.requests
+
+
+def test_stats_top_list_counts_are_numbers(load_fixture: FixtureLoader) -> None:
+    """Test counts in the top lists are numbers, and anything else is an error."""
+    data = load_fixture("stats")
+    data["top_clients"] = [{"192.168.1.20": "1021"}]
+
+    assert Stats.from_api(data).top_clients == {"192.168.1.20": 1021}
+
+    data["top_clients"] = [{"192.168.1.20": "many"}]
+    with pytest.raises(AdGuardHomeError, match="Unexpected Stats data"):
+        Stats.from_api(data)
