@@ -39,6 +39,12 @@ dependencies = [
   'yarl (>=1.6.0)',
 ]
 
+[project.optional-dependencies]
+cli = ["rich>=13.0.0", "typer>=0.15.1"]
+
+[project.scripts]
+adguardhome = "adguardhome._cli:main"
+
 [tool.poetry]
 requires-poetry = '>=2.0'
 
@@ -65,6 +71,7 @@ ruff = "0.15.11"
 safety = "3.7.0"
 syrupy = "5.1.0"
 ty = "0.0.31"
+typer = "0.24.1"
 yamllint = "1.38.0"
 zizmor = "1.24.1"
 
@@ -75,6 +82,10 @@ source = ["adguardhome"]
 [tool.coverage.report]
 show_missing = true
 fail_under = 100
+omit = [
+  "src/adguardhome/_cli.py",
+  "src/adguardhome/cli/async_typer.py",
+]
 
 [tool.ty.environment]
 python-version = "3.11"
@@ -116,6 +127,9 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
+"src/adguardhome/cli/__init__.py" = [
+  "FBT002", # Typer reads options from the signature, boolean flags included
+]
 "tests/**/*.py" = [
   "FBT001", # Boolean positional args are idiomatic in parametrized tests
   "FBT002", # Boolean defaults are idiomatic in parametrized tests

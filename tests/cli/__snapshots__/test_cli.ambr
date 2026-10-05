@@ -1,0 +1,195 @@
+# serializer version: 1
+# name: test_check[filtering_check_host_blocked]
+  '''
+                example.com              
+  ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃ Property ┃ Value                    ┃
+  ┡━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │ Filtered │ yes                      │
+  │ Reason   │ FilteredBlackList        │
+  │ Rule     │ ||telemetry.example.com^ │
+  └──────────┴──────────────────────────┘
+  
+  '''
+# ---
+# name: test_check[filtering_check_host_rewrite]
+  '''
+           example.com          
+  ┏━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓
+  ┃ Property     ┃ Value       ┃
+  ┡━━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩
+  │ Filtered     │ no          │
+  │ Reason       │ Rewrite     │
+  │ Rewritten to │ nas.lan     │
+  │ Answer       │ 192.168.1.5 │
+  │              │ fd00::5     │
+  └──────────────┴─────────────┘
+  
+  '''
+# ---
+# name: test_cli_structure
+  dict({
+    'check': list([
+      'client',
+      'host',
+      'output_json',
+    ]),
+    'clear-cache': list([
+    ]),
+    'clients': list([
+      'output_json',
+    ]),
+    'disable': list([
+      'duration',
+      'feature',
+    ]),
+    'enable': list([
+      'feature',
+    ]),
+    'filters': list([
+      'output_json',
+    ]),
+    'log': list([
+      'limit',
+      'output_json',
+      'search',
+    ]),
+    'refresh': list([
+    ]),
+    'stats': list([
+      'output_json',
+    ]),
+    'status': list([
+      'output_json',
+    ]),
+    'update': list([
+      'output_json',
+      'recheck',
+    ]),
+  })
+# ---
+# name: test_clients
+  '''
+                       Clients                     
+  ┏━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+  ┃ Name         ┃ Addresses         ┃ Source     ┃
+  ┡━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+  │ Kids devices │ 192.168.1.30      │ configured │
+  │              │ 192.168.1.31      │            │
+  │              │ aa:bb:cc:dd:ee:ff │            │
+  │ phone.lan    │ 192.168.1.10      │ rDNS       │
+  │              │ 203.0.113.7       │ WHOIS      │
+  └──────────────┴───────────────────┴────────────┘
+  
+  '''
+# ---
+# name: test_error_handlers[error0]
+  '''
+  ╭──────────────────────────────────────── Connection error ────────────────────────────────────────╮
+  │ Could not connect to AdGuard Home. Check the URL, and that AdGuard Home is running and reachable │
+  │ on the network.                                                                                  │
+  ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+  
+  '''
+# ---
+# name: test_error_handlers[error1]
+  '''
+  ╭───────────── Authentication error ──────────────╮
+  │ AdGuard Home rejected the username or password. │
+  ╰─────────────────────────────────────────────────╯
+  
+  '''
+# ---
+# name: test_error_handlers[error2]
+  '''
+  ╭─ AdGuard Home error ─╮
+  │ something went wrong │
+  ╰──────────────────────╯
+  
+  '''
+# ---
+# name: test_filters
+  '''
+                               Filter lists                              
+  ┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
+  ┃ Kind      ┃ Name               ┃ Enabled ┃ Rules ┃ Updated          ┃
+  ┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━┩
+  │ blocklist │ AdGuard DNS filter │ yes     │ 59321 │ 2025-10-03 12:00 │
+  │ blocklist │ Example ads        │ no      │     0 │                  │
+  └───────────┴────────────────────┴─────────┴───────┴──────────────────┘
+  
+  '''
+# ---
+# name: test_log
+  '''
+                          Query log                         
+  ┏━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━┓
+  ┃ Time     ┃ Client       ┃ Domain      ┃ Type ┃ Result  ┃
+  ┡━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━┩
+  │ 14:00:01 │ laptop.lan   │ example.com │ A    │ NOERROR │
+  │ 14:00:00 │ Kids devices │ مثال.إختبار │ A    │ blocked │
+  └──────────┴──────────────┴─────────────┴──────┴─────────┘
+  
+  '''
+# ---
+# name: test_stats
+  '''
+                               Statistics                              
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃ Property                    ┃ Value                               ┃
+  ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │ DNS queries                 │ 1440                                │
+  │ Blocked by filters          │ 265 (18.4%)                         │
+  │ Blocked by safe browsing    │ 2                                   │
+  │ Blocked by parental control │ 0                                   │
+  │ Enforced safe search        │ 0                                   │
+  │ Average processing time     │ 18.74 ms                            │
+  │ Top queried domains         │ connectivity-check.ubuntu.com (412) │
+  │                             │ api.github.com (233)                │
+  │                             │ time.cloudflare.com (96)            │
+  │ Top blocked domains         │ telemetry.example.com (188)         │
+  │                             │ ads.example.net (77)                │
+  │ Top clients                 │ 192.168.1.20 (1021)                 │
+  │                             │ 192.168.1.33 (419)                  │
+  └─────────────────────────────┴─────────────────────────────────────┘
+  
+  '''
+# ---
+# name: test_status
+  '''
+                      AdGuard Home                     
+  ┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃ Property       ┃ Value                            ┃
+  ┡━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+  │ Version        │ v0.107.79                        │
+  │ Supported      │ yes                              │
+  │ Running        │ yes                              │
+  │ Protection     │ yes                              │
+  │ DNS addresses  │ 127.0.0.1                        │
+  │                │ 192.168.1.2                      │
+  │                │ fe80::1                          │
+  │ DNS port       │ 53                               │
+  │ HTTP port      │ 3000                             │
+  │ DHCP available │ yes                              │
+  │ Started at     │ 2025-10-03T14:00:00.123400+00:00 │
+  └────────────────┴──────────────────────────────────┘
+  
+  '''
+# ---
+# name: test_status_json
+  dict({
+    'dhcp_available': False,
+    'dns_addresses': list([
+      '127.0.0.1',
+    ]),
+    'dns_port': 53,
+    'http_port': 80,
+    'language': 'nl',
+    'protection_enabled': False,
+    'protection_resumes_in': 29.5,
+    'running': True,
+    'started_at': None,
+    'supported': True,
+    'version': 'v0.107.68',
+  })
+# ---

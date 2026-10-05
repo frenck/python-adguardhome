@@ -32,6 +32,52 @@ automations that turn on parental controls when the kids get home.
 pip install adguardhome
 ```
 
+For the command-line interface, install the `cli` extra:
+
+```bash
+pip install "adguardhome[cli]"
+```
+
+## CLI
+
+The optional CLI manages AdGuard Home from the terminal. Pass the URL of the
+web interface with `--url`, or set `ADGUARD_HOME_URL`. The same goes for
+`--username` and `--password`, with `ADGUARD_HOME_USERNAME` and
+`ADGUARD_HOME_PASSWORD`.
+
+```bash
+export ADGUARD_HOME_URL=http://192.168.1.2:3000
+
+# Show the status of AdGuard Home
+adguardhome status
+
+# Pause protection for ten minutes, or turn a feature off and on
+adguardhome disable protection --for 10m
+adguardhome disable parental
+adguardhome enable parental
+
+# Show the statistics and the most recent DNS queries
+adguardhome stats
+adguardhome log --search example.com --limit 50
+
+# Check how a host is filtered, and update the filter lists
+adguardhome check ads.example.com --client 192.168.1.20
+adguardhome refresh
+
+# Show the filter lists and the clients
+adguardhome filters
+adguardhome clients
+
+# See if a new AdGuard Home version is available
+adguardhome update --recheck
+
+# Clear the DNS cache
+adguardhome clear-cache
+
+# Emit machine-readable JSON
+adguardhome stats --json
+```
+
 ## Usage
 
 The client is an async context manager; every API call is a coroutine. A
