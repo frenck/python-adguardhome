@@ -74,7 +74,7 @@ source = ["adguardhome"]
 
 [tool.coverage.report]
 show_missing = true
-fail_under = 95
+fail_under = 100
 
 [tool.ty.environment]
 python-version = "3.11"
@@ -136,6 +136,9 @@ runtime-evaluated-base-classes = [
 
 [tool.ruff.lint.mccabe]
 max-complexity = 25
+
+[tool.codespell]
+ignore-words-list = "hass"
 
 [build-system]
 requires = ["poetry-core>=2.0"]

@@ -7,6 +7,11 @@ before making a change.
 Please note we have a code of conduct, please follow it in all your interactions
 with the project.
 
+AI tools are welcome as an aid, but you are responsible for everything you
+submit: review and understand it before opening a pull request. Autonomous
+agents are not allowed, and unreviewed AI output will be closed. Read the
+[AI policy][ai-policy] before contributing.
+
 ## Issues and feature requests
 
 You've found a bug in the source code, a mistake in the documentation or maybe
@@ -25,5 +30,6 @@ Even better: You could submit a pull request with a fix / new feature!
    developers, or if you do not have permission to do that, you may request
    the second reviewer to merge it for you.
 
+[ai-policy]: https://github.com/frenck/python-adguardhome/blob/main/AI_POLICY.md
 [github]: https://github.com/frenck/python-adguardhome/issues
 [prs]: https://github.com/frenck/python-adguardhome/pulls
